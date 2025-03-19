@@ -157,7 +157,7 @@ const BlogPost = () => {
           {blog.title}
         </h1>
         
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center">
             <User className="h-4 w-4 mr-2" />
             {blog.author}
@@ -175,21 +175,26 @@ const BlogPost = () => {
       
       {/* Featured Image */}
       {blog.image && (
-        <div 
-          className="w-full h-64 md:h-96 bg-cover bg-center rounded-lg overflow-hidden mb-8"
-          style={{ backgroundImage: `url(${blog.image})` }}
-        ></div>
+        <div className="mb-8">
+          <div 
+            className="w-full h-64 md:h-96 bg-cover bg-center rounded-lg overflow-hidden shadow-md"
+            style={{ backgroundImage: `url(${blog.image})` }}
+          ></div>
+        </div>
       )}
       
       {/* Blog Content */}
-      <article className="prose prose-gray max-w-none lg:prose-lg">
-        <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+      <article className="prose prose-gray dark:prose-invert prose-headings:font-display prose-headings:font-semibold prose-h2:text-2xl prose-h3:text-xl prose-h4:text-lg prose-a:text-primary hover:prose-a:text-primary/80 prose-a:transition-colors prose-img:rounded-md max-w-none mb-8">
+        <div 
+          dangerouslySetInnerHTML={{ __html: blog.content }}
+          className="blog-content"
+        />
       </article>
       
       <Separator className="my-8" />
       
       {/* Author Section */}
-      <div className="bg-secondary/30 rounded-lg p-6 flex flex-col md:flex-row items-center md:items-start gap-4">
+      <div className="bg-secondary/30 rounded-lg p-6 flex flex-col md:flex-row items-center md:items-start gap-4 mb-8">
         <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
           <User className="h-8 w-8 text-primary" />
         </div>
@@ -200,6 +205,16 @@ const BlogPost = () => {
             Passionate about sharing knowledge and insights on various technical and business topics.
           </p>
         </div>
+      </div>
+      
+      {/* Next/Previous Navigation */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4 mt-12">
+        <Button variant="outline" asChild className="w-full sm:w-auto">
+          <Link to="/portfolio/blogs" className="flex items-center justify-center">
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back to All Blogs
+          </Link>
+        </Button>
       </div>
     </motion.div>
   );
