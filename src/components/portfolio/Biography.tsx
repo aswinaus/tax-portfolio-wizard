@@ -5,20 +5,19 @@ const Biography = () => {
       <h2 className="text-2xl font-display font-semibold">Biography</h2>
       <div className="text-muted-foreground space-y-4">
         <p>
-          I am a Principal Consultant at Hexaware Technologies with over 15 years of experience in international tax planning, 
-          transfer pricing, and financial services. I specialize in building AI-powered tax applications and developing innovative 
-          tax strategies for multinational corporations.
+          Experienced Cloud Solution Architect, with comprehensive technical strengths essential for designing and implementing robust and scalable solutions. Proven track record in leading large cross-functional teams and mentoring. Skilled in identifying emerging technologies and trends to improve system performance and customer satisfaction, focusing on cost optimization.
         </p>
         <p>
-          My expertise spans across tax compliance, financial analysis, and strategic business planning 
-          with a strong focus on creating efficient solutions for complex tax challenges. I have a proven 
-          track record of helping organizations navigate the intricate landscape of global taxation while 
-          ensuring compliance with international regulations.
+          Effective engineering and professional experience in Microsoft Azure OpenAI, Azure AI Search, Semantic Kernel, SharePoint Online, Databases (Azure SQL, SQL 2016 & Cosmos DB), LangChain, LlamaIndex, Vector DB such ChromaDB, and GraphDB such as Neo4J.
         </p>
         <p>
-          Throughout my career, I've combined my technical knowledge with leadership skills to drive 
-          successful tax initiatives and mentor teams for optimal performance in demanding business 
-          environments.
+          Proven track record of developing end-to-end technical solutions that leverage appropriate technologies, platforms, and frameworks to meet performance, reliability, and maintainability requirements.
+        </p>
+        <p>
+          Skilled in creating architectural blueprints, diagrams, and documentation that outline the structure, components, interfaces, and dependencies of proposed solutions, ensuring alignment with industry best practices and compliance requirements.
+        </p>
+        <p>
+          Research and evaluate emerging technologies, tools, and methodologies to identify opportunities for innovation and optimization within solution architecture, making recommendations based on feasibility and cost-effectiveness.
         </p>
       </div>
     </section>
