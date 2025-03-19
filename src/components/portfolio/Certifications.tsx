@@ -56,7 +56,7 @@ const certifications = [
 const Certifications = () => {
   return (
     <section className="space-y-4">
-      <h2 className="text-2xl font-display font-semibold">Professional Certifications</h2>
+      <h2 className="text-2xl font-display font-semibold text-teal-600">Professional Certifications</h2>
       
       <div className="space-y-4">
         {certifications.map((certification, index) => (
@@ -68,11 +68,11 @@ const Certifications = () => {
           >
             <Card className="overflow-hidden border-border/60">
               <CardHeader className="pb-3 flex flex-row items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center flex-shrink-0">
-                  <BadgeCheck className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                  <BadgeCheck className="h-6 w-6 text-teal-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl">{certification.title}</CardTitle>
+                  <CardTitle className="text-xl text-teal-700">{certification.title}</CardTitle>
                   <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-1">
                     <span>{certification.organization}</span>
                     <span className="hidden sm:inline">•</span>
@@ -81,13 +81,13 @@ const Certifications = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{certification.description}</p>
+                <p className="text-teal-600">{certification.description}</p>
                 {certification.credentialUrl && (
                   <a 
                     href={certification.credentialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-3 inline-block text-sm text-primary hover:text-primary/80 underline underline-offset-4"
+                    className="mt-3 inline-block text-sm text-teal-600 hover:text-teal-800 underline underline-offset-4"
                   >
                     View Credential →
                   </a>
