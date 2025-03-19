@@ -1,6 +1,6 @@
 
 import { FC } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   User,
   Briefcase,
@@ -42,6 +42,35 @@ const SidebarItem: FC<SidebarItemProps> = ({
   onClick,
   children
 }) => {
+  const navigate = useNavigate();
+  
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      onClick();
+      return;
+    }
+    
+    if (external) return;
+    
+    e.preventDefault();
+    
+    // Handle hash navigation properly
+    if (to.includes('#')) {
+      const [path, hash] = to.split('#');
+      navigate(path);
+      
+      // Wait a moment for the navigation to complete before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      navigate(to);
+    }
+  };
+  
   const content = (
     <>
       <div 
@@ -81,9 +110,9 @@ const SidebarItem: FC<SidebarItemProps> = ({
   }
 
   return (
-    <Link to={to} className="block" onClick={onClick}>
+    <a href={to} className="block" onClick={handleClick}>
       {content}
-    </Link>
+    </a>
   );
 };
 
@@ -105,6 +134,7 @@ const SidebarSection: FC<SidebarSectionProps> = ({ title, children }) => {
 export const MainSidebar: FC = () => {
   const location = useLocation();
   const pathname = location.pathname;
+  const hash = location.hash;
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -126,19 +156,19 @@ export const MainSidebar: FC = () => {
             icon={User} 
             label="About Me" 
             to="/portfolio" 
-            isActive={pathname === "/portfolio"} 
+            isActive={pathname === "/portfolio" && !hash} 
           />
           <SidebarItem 
             icon={Award} 
             label="Achievements" 
             to="/portfolio#achievements" 
-            isActive={pathname === "/portfolio" && location.hash === "#achievements"} 
+            isActive={pathname === "/portfolio" && hash === "#achievements"} 
           />
           <SidebarItem 
             icon={BadgeCheck} 
             label="Certifications" 
             to="/portfolio#certifications" 
-            isActive={pathname === "/portfolio" && location.hash === "#certifications"} 
+            isActive={pathname === "/portfolio" && hash === "#certifications"} 
           />
           <SidebarItem 
             icon={Newspaper} 
@@ -150,7 +180,7 @@ export const MainSidebar: FC = () => {
             icon={Github} 
             label="GitHub Repos" 
             to="/portfolio#github" 
-            isActive={pathname === "/portfolio" && location.hash === "#github"} 
+            isActive={pathname === "/portfolio" && hash === "#github"} 
           />
         </SidebarSection>
 
