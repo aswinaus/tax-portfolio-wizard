@@ -1,3 +1,4 @@
+
 import { FC } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -13,6 +14,7 @@ import {
   ArrowUpRight,
   BadgeCheck,
   Trophy,
+  Folder,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -188,6 +190,12 @@ export const MainSidebar: FC = () => {
         </SidebarSection>
 
         <SidebarSection title="Business">
+          <SidebarItem 
+            icon={Folder} 
+            label="My Forms" 
+            to="/" 
+            isActive={pathname === "/"} 
+          />
           <SidebarItem 
             icon={FileText} 
             label="Form 990" 

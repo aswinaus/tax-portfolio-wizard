@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, User, FileText, BarChart2 } from 'lucide-react';
+import { ArrowRight, User, FileText, BarChart2, Folder } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -37,6 +38,46 @@ const Index = () => {
             Explore my portfolio, use specialized business tools for Form 990 submissions, 
             and access transfer pricing benchmarking resources.
           </p>
+        </motion.div>
+      </section>
+
+      {/* My Forms Section */}
+      <section className="py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-4"
+        >
+          <h2 className="text-2xl font-display font-medium flex items-center gap-2">
+            <Folder className="h-6 w-6 text-primary" />
+            My Forms
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card className="hover:shadow-md transition-shadow border-border/60">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Form 990
+                </CardTitle>
+                <CardDescription>
+                  Tax-exempt organization income tax return
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground pb-3">
+                Complete and submit your Form 990 tax forms to the IRS with our streamlined process.
+              </CardContent>
+              <CardFooter>
+                <Link to="/business/form990" className="w-full">
+                  <Button variant="outline" className="w-full group">
+                    <span>Access Form</span>
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          </div>
         </motion.div>
       </section>
 
