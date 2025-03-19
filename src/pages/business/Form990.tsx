@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -12,7 +13,8 @@ import {
   ChevronDown,
   CheckCircle2,
   Clock,
-  MessageSquare
+  MessageSquare,
+  Folder
 } from 'lucide-react';
 import { 
   Card, 
@@ -227,13 +229,13 @@ const Form990 = () => {
           <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Info className="h-5 w-5 text-primary" />
+                <Folder className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-medium text-base mb-1">Form 990 Filing Tips</h3>
+                <h3 className="font-medium text-base mb-1">My Forms</h3>
                 <p className="text-muted-foreground text-sm">
-                  Complete your forms in advance of deadlines. Forms are due by the 15th day of the 5th month 
-                  after your fiscal year end. Filing late can result in penalties and possibly loss of tax-exempt status.
+                  View, edit, and manage all your Form 990 submissions from this dashboard.
+                  Track progress, meet deadlines, and keep your tax-exempt status in good standing.
                 </p>
               </div>
             </div>
@@ -241,7 +243,10 @@ const Form990 = () => {
           
           {sampleDrafts.length > 0 ? (
             <div className="space-y-4">
-              <h2 className="text-xl font-display font-medium">Your Draft Forms</h2>
+              <h2 className="text-xl font-display font-medium flex items-center gap-2">
+                <Folder className="h-5 w-5 text-primary" />
+                Your Draft Forms
+              </h2>
               
               {sampleDrafts.map((draft) => (
                 <Card key={draft.id} className="border-border/60 hover:shadow-sm transition-shadow">
@@ -301,6 +306,11 @@ const Form990 = () => {
                   </CardFooter>
                 </Card>
               ))}
+              
+              <Button variant="outline" className="w-full">
+                <FileText className="h-4 w-4 mr-2" />
+                View All Forms
+              </Button>
             </div>
           ) : (
             <div className="text-center py-16 bg-secondary/40 rounded-lg">
@@ -567,3 +577,4 @@ const Form990 = () => {
 };
 
 export default Form990;
+
