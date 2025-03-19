@@ -1,6 +1,6 @@
 
 import { motion } from 'framer-motion';
-import { BadgeCheck, BookOpen, Award, Certificate } from 'lucide-react';
+import { BadgeCheck, BookOpen, Award } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Certifications data
@@ -50,27 +50,6 @@ const certifications = [
     year: 'August 2022',
     description: 'Completed training for the CISSP certification program.',
     credentialUrl: 'https://www.linkedin.com/posts/aswin-bhaskaran-39624a13_activity-6964451739668291584-XKiG?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAK0kaIBF-Oh8fcp-MRi-MUW_nnw2axojIg'
-  },
-  {
-    id: 7,
-    title: 'Certified Public Accountant (CPA)',
-    organization: 'American Institute of CPAs',
-    year: '2015',
-    description: 'Licensed CPA with expertise in tax accounting and financial reporting.'
-  },
-  {
-    id: 8,
-    title: 'Chartered Financial Analyst (CFA)',
-    organization: 'CFA Institute',
-    year: '2017',
-    description: 'Designation focused on investment analysis, portfolio management, and advanced financial concepts.'
-  },
-  {
-    id: 9,
-    title: 'Certified Information Systems Auditor (CISA)',
-    organization: 'ISACA',
-    year: '2019',
-    description: 'Specialization in information systems auditing, control, and security.'
   }
 ];
 
