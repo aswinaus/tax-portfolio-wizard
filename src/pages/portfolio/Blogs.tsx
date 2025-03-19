@@ -1,74 +1,33 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, PlusCircle, BookOpen, Calendar, Clock, ArrowUpRight, ChevronLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Search, PlusCircle, BookOpen, Calendar, Clock, ArrowUpRight, ChevronLeft, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// Blog post interface
-interface BlogPost {
-  id: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  date: string;
-  readTime: string;
-  tags: string[];
-  image?: string;
-}
-
-// Sample blog posts data
-const sampleBlogs: BlogPost[] = [
-  {
-    id: '1',
-    title: 'Understanding Modern Web Development Practices',
-    excerpt: 'An overview of current best practices in web development and how they impact project success.',
-    content: 'Full content here...',
-    author: 'Aswin Auswin',
-    date: '2023-10-15',
-    readTime: '5 min read',
-    tags: ['Web Development', 'Best Practices', 'Technology'],
-    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop'
-  },
-  {
-    id: '2',
-    title: 'The Future of AI in Business Applications',
-    excerpt: 'Exploring how artificial intelligence is transforming business operations and decision-making processes.',
-    content: 'Full content here...',
-    author: 'Aswin Auswin',
-    date: '2023-09-28',
-    readTime: '7 min read',
-    tags: ['AI', 'Business', 'Technology Trends'],
-    image: 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?q=80&w=2070&auto=format&fit=crop'
-  },
-  {
-    id: '3',
-    title: 'Essential Tax Preparation Tips for Non-Profits',
-    excerpt: 'Key insights and strategies for non-profit organizations preparing their annual tax submissions.',
-    content: 'Full content here...',
-    author: 'Aswin Auswin',
-    date: '2023-08-12',
-    readTime: '6 min read',
-    tags: ['Non-Profit', 'Tax', 'Form 990'],
-    image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2011&auto=format&fit=crop'
-  }
-];
+import { Skeleton } from '@/components/ui/skeleton';
+import { fetchBlogs, BlogPost } from '@/services/blogService';
 
 const Blogs = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [blogs] = useState<BlogPost[]>(sampleBlogs);
   const [activeTab, setActiveTab] = useState('all');
+  
+  // Fetch blogs using React Query
+  const { data: blogs = [], isLoading, isError } = useQuery({
+    queryKey: ['blogs'],
+    queryFn: fetchBlogs
+  });
   
   // Filter blogs based on search term and active tab
   const filteredBlogs = blogs.filter(blog => {
-    const matchesSearch = blog.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         blog.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = 
+      blog.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      blog.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
     if (activeTab === 'all') return matchesSearch;
     return matchesSearch && blog.tags.some(tag => tag.toLowerCase().includes(activeTab.toLowerCase()));
@@ -95,7 +54,7 @@ const Blogs = () => {
             <Badge variant="outline" className="mb-2">Blog</Badge>
             <h1 className="text-3xl font-display font-bold">My Blog Posts</h1>
             <p className="text-muted-foreground mt-1">
-              Thoughts, insights, and expertise on various topics
+              Thoughts, insights, and expertise from abtechnet.com
             </p>
           </div>
           <Link to="/portfolio/blogs/create">
@@ -129,8 +88,55 @@ const Blogs = () => {
         </Tabs>
       </div>
       
+      {/* Loading State */}
+      {isLoading && (
+        <div className="space-y-6">
+          {[1, 2, 3].map((index) => (
+            <Card key={index} className="overflow-hidden border-border/60">
+              <div className="md:flex">
+                <div className="md:w-1/3">
+                  <Skeleton className="h-48 md:h-full" />
+                </div>
+                <div className="md:w-2/3">
+                  <CardHeader>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {[1, 2].map((i) => (
+                        <Skeleton key={i} className="h-5 w-16" />
+                      ))}
+                    </div>
+                    <Skeleton className="h-8 w-full mb-2" />
+                    <Skeleton className="h-4 w-32" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </CardContent>
+                  <CardFooter>
+                    <Skeleton className="h-4 w-24" />
+                  </CardFooter>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+      
+      {/* Error State */}
+      {isError && (
+        <div className="text-center py-16 bg-secondary/40 rounded-lg">
+          <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">Failed to load blogs</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            There was an error loading blogs from abtechnet.com. Please try again later.
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      )}
+      
       {/* Blog List */}
-      {filteredBlogs.length > 0 ? (
+      {!isLoading && !isError && filteredBlogs.length > 0 ? (
         <div className="space-y-6">
           {filteredBlogs.map((blog, index) => (
             <motion.div
@@ -179,13 +185,24 @@ const Blogs = () => {
                         {blog.excerpt}
                       </p>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex justify-between items-center">
                       <Link 
                         to={`/portfolio/blogs/${blog.id}`}
                         className="text-primary text-sm hover:underline flex items-center"
                       >
                         Read more <ArrowUpRight className="ml-1 h-3 w-3" />
                       </Link>
+                      
+                      {blog.url && (
+                        <a 
+                          href={blog.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground text-xs hover:text-foreground flex items-center"
+                        >
+                          Original post <ExternalLink className="ml-1 h-3 w-3" />
+                        </a>
+                      )}
                     </CardFooter>
                   </div>
                 </div>
@@ -193,14 +210,14 @@ const Blogs = () => {
             </motion.div>
           ))}
         </div>
-      ) : (
+      ) : !isLoading && !isError ? (
         <div className="text-center py-16 bg-secondary/40 rounded-lg">
           <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">No blog posts found</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             {searchTerm 
               ? `No results for "${searchTerm}". Try a different search term.` 
-              : "Start creating your first blog post to share your knowledge."}
+              : "No blog posts available at the moment."}
           </p>
           {!searchTerm && (
             <Link to="/portfolio/blogs/create">
@@ -211,7 +228,7 @@ const Blogs = () => {
             </Link>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
