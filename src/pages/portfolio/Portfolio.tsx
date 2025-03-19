@@ -11,10 +11,12 @@ import Skills from '@/components/portfolio/Skills';
 import GitHubProjects from '@/components/portfolio/GitHubProjects';
 import BlogsSection from '@/components/portfolio/BlogsSection';
 import Achievements from '@/components/portfolio/Achievements';
+import Certifications from '@/components/portfolio/Certifications';
 
 const Portfolio = () => {
   const location = useLocation();
   const githubRef = useRef<HTMLDivElement>(null);
+  const certificationsRef = useRef<HTMLDivElement>(null);
   
   // Determine active tab based on URL hash
   const activeTab = location.hash === '#achievements' ? 'achievements' : 'about';
@@ -22,6 +24,8 @@ const Portfolio = () => {
   useEffect(() => {
     if (location.hash === '#github' && githubRef.current) {
       githubRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else if (location.hash === '#certifications' && certificationsRef.current) {
+      certificationsRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [location.hash]);
 
@@ -33,19 +37,18 @@ const Portfolio = () => {
       className="container max-w-4xl mx-auto px-4 py-8"
     >
       {/* Header Section */}
-      <section className="space-y-4 mb-12">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Badge className="mb-4" variant="outline">Portfolio</Badge>
-          <h1 className="text-4xl font-display font-bold tracking-tight">Aswin Bhaskaran</h1>
-          <p className="text-xl text-muted-foreground mt-2">
-            Senior Tax Director with expertise in international tax planning and financial services
-          </p>
-        </motion.div>
-      </section>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="space-y-4 mb-12"
+      >
+        <Badge className="mb-4" variant="outline">Portfolio</Badge>
+        <h1 className="text-4xl font-display font-bold tracking-tight">Aswin Bhaskaran</h1>
+        <p className="text-xl text-muted-foreground mt-2">
+          Senior Tax Director with expertise in international tax planning and financial services
+        </p>
+      </motion.div>
 
       {/* Main Content Tabs */}
       <Tabs defaultValue={activeTab} className="w-full">
@@ -62,9 +65,14 @@ const Portfolio = () => {
           {/* Skills Component */}
           <Skills />
           
+          {/* Certifications Component */}
+          <div ref={certificationsRef} id="certifications">
+            <Certifications />
+          </div>
+          
           {/* GitHub Projects Component */}
-          <div ref={githubRef}>
-            <GitHubProjects id="github" />
+          <div ref={githubRef} id="github">
+            <GitHubProjects />
           </div>
           
           {/* Blogs Section Component */}

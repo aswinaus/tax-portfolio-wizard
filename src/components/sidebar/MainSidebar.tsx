@@ -12,6 +12,7 @@ import {
   BookOpen,
   ChevronDown,
   ArrowUpRight,
+  BadgeCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -132,6 +133,12 @@ export const MainSidebar: FC = () => {
             label="Achievements" 
             to="/portfolio#achievements" 
             isActive={pathname === "/portfolio" && location.hash === "#achievements"} 
+          />
+          <SidebarItem 
+            icon={BadgeCheck} 
+            label="Certifications" 
+            to="/portfolio#certifications" 
+            isActive={pathname === "/portfolio" && location.hash === "#certifications"} 
           />
           <SidebarItem 
             icon={Newspaper} 
