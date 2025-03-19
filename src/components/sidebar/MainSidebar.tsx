@@ -1,4 +1,3 @@
-
 import { FC } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -141,10 +140,9 @@ export const MainSidebar: FC = () => {
           />
           <SidebarItem 
             icon={Github} 
-            label="GitHub" 
-            to="https://github.com/aswinaus" 
-            isActive={false} 
-            external 
+            label="GitHub Repos" 
+            to="/portfolio#github" 
+            isActive={pathname === "/portfolio" && location.hash === "#github"} 
           />
         </SidebarSection>
 

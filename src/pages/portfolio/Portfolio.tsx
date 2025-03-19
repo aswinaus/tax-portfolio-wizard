@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { Award, Github, ExternalLink, ArrowRight, BookOpen, FileText } from 'lucide-react';
@@ -7,108 +7,81 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { fetchGitHubRepos, GitHubRepo } from '@/services/githubService';
+import { toast } from 'sonner';
 
-// GitHub Repository interface
-interface GitHubRepo {
-  id: number;
-  name: string;
-  description: string;
-  html_url: string;
-  stargazers_count: number;
-  forks_count: number;
-  language: string;
-}
+// Skills data
+const skills = [
+  { name: 'Web Development', category: 'technical' },
+  { name: 'Data Analysis', category: 'technical' },
+  { name: 'React', category: 'technical' },
+  { name: 'Python', category: 'technical' },
+  { name: 'TypeScript', category: 'technical' },
+  { name: 'Project Management', category: 'soft' },
+  { name: 'Leadership', category: 'soft' },
+  { name: 'Strategic Planning', category: 'soft' },
+  { name: 'Problem Solving', category: 'soft' }
+];
+
+// Achievements data
+const achievements = [
+  {
+    id: 1,
+    title: 'Excellence in Innovation Award',
+    organization: 'Tech Innovators Association',
+    year: 2023,
+    description: 'Recognized for outstanding contributions to technological innovation in the field of data science.'
+  },
+  {
+    id: 2,
+    title: 'Leadership Recognition',
+    organization: 'Business Leaders Forum',
+    year: 2022,
+    description: 'Awarded for exemplary leadership in digital transformation initiatives.'
+  },
+  {
+    id: 3,
+    title: 'Project Management Professional (PMP)',
+    organization: 'Project Management Institute',
+    year: 2021,
+    description: 'Obtained professional certification for project management excellence.'
+  }
+];
 
 const Portfolio = () => {
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const location = useLocation();
+  const githubRef = useRef<HTMLDivElement>(null);
   
   // Determine active tab based on URL hash
   const activeTab = location.hash === '#achievements' ? 'achievements' : 'about';
 
   useEffect(() => {
-    const fetchGitHubData = async () => {
+    if (location.hash === '#github' && githubRef.current) {
+      githubRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [location.hash]);
+
+  useEffect(() => {
+    const loadGitHubRepos = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://api.github.com/users/aswinaus/repos');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch GitHub repositories');
-        }
-        
-        const data = await response.json();
-        setRepos(data.slice(0, 4)); // Get first 4 repositories
+        const fetchedRepos = await fetchGitHubRepos();
+        setRepos(fetchedRepos);
+        setError(null);
       } catch (err) {
-        console.error('Error fetching GitHub data:', err);
+        console.error('Error in GitHub component:', err);
         setError('Unable to load GitHub repositories');
-        // Set some mock data for demo purposes
-        setRepos([
-          {
-            id: 1,
-            name: 'project-alpha',
-            description: 'A modern web application built with React and TypeScript',
-            html_url: 'https://github.com/aswinaus/project-alpha',
-            stargazers_count: 12,
-            forks_count: 3,
-            language: 'TypeScript'
-          },
-          {
-            id: 2,
-            name: 'data-analyzer',
-            description: 'Python utility for analyzing large datasets',
-            html_url: 'https://github.com/aswinaus/data-analyzer',
-            stargazers_count: 8,
-            forks_count: 2,
-            language: 'Python'
-          }
-        ]);
+        toast.error('Failed to load GitHub repositories');
       } finally {
         setLoading(false);
       }
     };
     
-    fetchGitHubData();
+    loadGitHubRepos();
   }, []);
-
-  // Skills data
-  const skills = [
-    { name: 'Web Development', category: 'technical' },
-    { name: 'Data Analysis', category: 'technical' },
-    { name: 'React', category: 'technical' },
-    { name: 'Python', category: 'technical' },
-    { name: 'TypeScript', category: 'technical' },
-    { name: 'Project Management', category: 'soft' },
-    { name: 'Leadership', category: 'soft' },
-    { name: 'Strategic Planning', category: 'soft' },
-    { name: 'Problem Solving', category: 'soft' }
-  ];
-
-  // Achievements data
-  const achievements = [
-    {
-      id: 1,
-      title: 'Excellence in Innovation Award',
-      organization: 'Tech Innovators Association',
-      year: 2023,
-      description: 'Recognized for outstanding contributions to technological innovation in the field of data science.'
-    },
-    {
-      id: 2,
-      title: 'Leadership Recognition',
-      organization: 'Business Leaders Forum',
-      year: 2022,
-      description: 'Awarded for exemplary leadership in digital transformation initiatives.'
-    },
-    {
-      id: 3,
-      title: 'Project Management Professional (PMP)',
-      organization: 'Project Management Institute',
-      year: 2021,
-      description: 'Obtained professional certification for project management excellence.'
-    }
-  ];
 
   return (
     <motion.div 
@@ -180,7 +153,7 @@ const Portfolio = () => {
           </section>
           
           {/* GitHub Projects */}
-          <section className="space-y-6">
+          <section className="space-y-6" id="github" ref={githubRef}>
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-display font-semibold">GitHub Projects</h2>
               <a 
@@ -200,6 +173,10 @@ const Portfolio = () => {
             ) : error ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">{error}</p>
+              </div>
+            ) : repos.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No repositories found</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -264,12 +241,12 @@ const Portfolio = () => {
               <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Share Your Thoughts</h3>
               <p className="text-muted-foreground mb-4">
-                Start writing blogs to showcase your expertise and share knowledge.
+                View blogs or showcase your expertise and share knowledge.
               </p>
-              <Link to="/portfolio/blogs/create">
+              <Link to="/portfolio/blogs">
                 <Button>
                   <FileText className="mr-2 h-4 w-4" />
-                  Create New Blog
+                  View Blogs
                 </Button>
               </Link>
             </div>
