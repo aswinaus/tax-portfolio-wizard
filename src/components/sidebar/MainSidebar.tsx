@@ -1,4 +1,3 @@
-
 import { FC } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -13,6 +12,7 @@ import {
   ChevronDown,
   ArrowUpRight,
   BadgeCheck,
+  Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -46,6 +46,7 @@ const SidebarItem: FC<SidebarItemProps> = ({
   
   const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
+      e.preventDefault();
       onClick();
       return;
     }
@@ -57,15 +58,17 @@ const SidebarItem: FC<SidebarItemProps> = ({
     // Handle hash navigation properly
     if (to.includes('#')) {
       const [path, hash] = to.split('#');
+      
+      // First navigate to the path
       navigate(path);
       
-      // Wait a moment for the navigation to complete before scrolling
+      // Then scroll to the element after a short delay
       setTimeout(() => {
         const element = document.getElementById(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
         }
-      }, 100);
+      }, 300); // Increased delay to ensure page loads
     } else {
       navigate(to);
     }
@@ -159,7 +162,7 @@ export const MainSidebar: FC = () => {
             isActive={pathname === "/portfolio" && !hash} 
           />
           <SidebarItem 
-            icon={Award} 
+            icon={Trophy} 
             label="Achievements" 
             to="/portfolio#achievements" 
             isActive={pathname === "/portfolio" && hash === "#achievements"} 
