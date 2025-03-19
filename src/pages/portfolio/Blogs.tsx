@@ -10,17 +10,26 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { fetchBlogs, BlogPost } from '@/services/blogService';
+import { fetchBlogs, fetchTechnologyBlogs, BlogPost } from '@/services/blogService';
 
 const Blogs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   
-  // Fetch blogs using React Query
-  const { data: blogs = [], isLoading, isError } = useQuery({
+  // Fetch all blogs using React Query
+  const { data: allBlogs = [], isLoading: isLoadingAll, isError: isErrorAll } = useQuery({
     queryKey: ['blogs'],
     queryFn: fetchBlogs
   });
+  
+  // Fetch technology blogs using React Query
+  const { data: techBlogs = [], isLoading: isLoadingTech, isError: isErrorTech } = useQuery({
+    queryKey: ['blogs', 'technology'],
+    queryFn: fetchTechnologyBlogs
+  });
+  
+  // Determine which blogs to display based on active tab
+  const blogs = activeTab === 'technology' ? techBlogs : allBlogs;
   
   // Filter blogs based on search term and active tab
   const filteredBlogs = blogs.filter(blog => {
@@ -30,6 +39,7 @@ const Blogs = () => {
       blog.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
     if (activeTab === 'all') return matchesSearch;
+    if (activeTab === 'technology') return matchesSearch && blog.category === 'technology';
     return matchesSearch && blog.tags.some(tag => tag.toLowerCase().includes(activeTab.toLowerCase()));
   });
 
@@ -89,7 +99,7 @@ const Blogs = () => {
       </div>
       
       {/* Loading State */}
-      {isLoading && (
+      {(isLoadingAll || isLoadingTech) && (
         <div className="space-y-6">
           {[1, 2, 3].map((index) => (
             <Card key={index} className="overflow-hidden border-border/60">
@@ -122,7 +132,7 @@ const Blogs = () => {
       )}
       
       {/* Error State */}
-      {isError && (
+      {(isErrorAll || isErrorTech) && (
         <div className="text-center py-16 bg-secondary/40 rounded-lg">
           <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">Failed to load blogs</h3>
@@ -135,8 +145,61 @@ const Blogs = () => {
         </div>
       )}
       
+      {/* Technology Blogs Highlight Section (when viewing all blogs) */}
+      {activeTab === 'all' && techBlogs.length > 0 && !isLoadingAll && !isErrorAll && (
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-display font-bold">Technology Articles</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setActiveTab('technology')}
+            >
+              View all tech articles
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {techBlogs.slice(0, 4).map((blog, index) => (
+              <Card key={blog.id} className="overflow-hidden border-border/60 hover:shadow-sm transition-shadow h-full">
+                {blog.image && (
+                  <div 
+                    className="h-32 w-full bg-cover bg-center"
+                    style={{ backgroundImage: `url(${blog.image})` }}
+                  ></div>
+                )}
+                <CardHeader className="pb-2">
+                  <div className="flex flex-wrap gap-2 mb-1">
+                    <Badge variant="secondary" className="text-xs">Technology</Badge>
+                  </div>
+                  <CardTitle className="text-base font-display line-clamp-2">
+                    <Link to={`/portfolio/blogs/${blog.id}`} className="hover:text-primary transition-colors">
+                      {blog.title}
+                    </Link>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <p className="text-muted-foreground text-sm line-clamp-2">
+                    {blog.excerpt}
+                  </p>
+                </CardContent>
+                <CardFooter className="pt-0">
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {formatDate(blog.date)}
+                    <span className="mx-2">•</span>
+                    <Clock className="h-3 w-3 mr-1" />
+                    {blog.readTime}
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+      
       {/* Blog List */}
-      {!isLoading && !isError && filteredBlogs.length > 0 ? (
+      {!isLoadingAll && !isErrorAll && filteredBlogs.length > 0 ? (
         <div className="space-y-6">
           {filteredBlogs.map((blog, index) => (
             <motion.div
@@ -158,8 +221,13 @@ const Blogs = () => {
                   <div className={`md:${blog.image ? 'w-2/3' : 'w-full'}`}>
                     <CardHeader>
                       <div className="flex flex-wrap gap-2 mb-2">
+                        {blog.category && (
+                          <Badge variant="secondary" className="text-xs capitalize">
+                            {blog.category}
+                          </Badge>
+                        )}
                         {blog.tags.map((tag, i) => (
-                          <Badge key={i} variant="secondary" className="text-xs">
+                          <Badge key={i} variant="outline" className="text-xs">
                             {tag}
                           </Badge>
                         ))}
@@ -210,14 +278,14 @@ const Blogs = () => {
             </motion.div>
           ))}
         </div>
-      ) : !isLoading && !isError ? (
+      ) : !isLoadingAll && !isErrorAll ? (
         <div className="text-center py-16 bg-secondary/40 rounded-lg">
           <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">No blog posts found</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             {searchTerm 
               ? `No results for "${searchTerm}". Try a different search term.` 
-              : "No blog posts available at the moment."}
+              : "No blog posts available in this category at the moment."}
           </p>
           {!searchTerm && (
             <Link to="/portfolio/blogs/create">

@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 
 export interface BlogPost {
@@ -12,6 +11,7 @@ export interface BlogPost {
   tags: string[];
   image?: string;
   url?: string;
+  category?: string;
 }
 
 // Function to estimate read time based on content length
@@ -25,10 +25,9 @@ const calculateReadTime = (content: string): string => {
 // Function to extract tags from categories or content
 const extractTags = (categories: string[] = [], content: string = ''): string[] => {
   if (categories && categories.length > 0) {
-    return categories.slice(0, 5); // Limit to 5 tags max
+    return categories.slice(0, 5);
   }
   
-  // Fallback: Try to extract some keywords from content
   const commonTechTerms = [
     'Technology', 'Web Development', 'Programming', 'Business', 
     'AI', 'Machine Learning', 'Cloud', 'DevOps', 'Blockchain',
@@ -40,10 +39,44 @@ const extractTags = (categories: string[] = [], content: string = ''): string[] 
   ).slice(0, 3);
 };
 
+// Function to determine the primary category
+const determineCategory = (categories: string[] = [], content: string = ''): string => {
+  const techKeywords = ['Technology', 'Web Development', 'Programming', 'Software', 'AI', 'Machine Learning', 'Cloud', 'DevOps', 'Blockchain', 'Coding', 'Tech'];
+  const businessKeywords = ['Business', 'Strategy', 'Management', 'Entrepreneurship', 'Marketing'];
+  const taxKeywords = ['Form 990', 'Tax', 'Non-Profit', 'Transfer Pricing', 'IRS', 'Taxation'];
+  
+  for (const category of categories) {
+    if (techKeywords.some(keyword => category.toLowerCase().includes(keyword.toLowerCase()))) {
+      return 'technology';
+    }
+    if (businessKeywords.some(keyword => category.toLowerCase().includes(keyword.toLowerCase()))) {
+      return 'business';
+    }
+    if (taxKeywords.some(keyword => category.toLowerCase().includes(keyword.toLowerCase()))) {
+      return 'tax';
+    }
+  }
+  
+  const contentLower = content.toLowerCase();
+  
+  const techCount = techKeywords.filter(keyword => contentLower.includes(keyword.toLowerCase())).length;
+  const businessCount = businessKeywords.filter(keyword => contentLower.includes(keyword.toLowerCase())).length;
+  const taxCount = taxKeywords.filter(keyword => contentLower.includes(keyword.toLowerCase())).length;
+  
+  if (techCount >= businessCount && techCount >= taxCount) {
+    return 'technology';
+  } else if (businessCount >= techCount && businessCount >= taxCount) {
+    return 'business';
+  } else if (taxCount >= techCount && taxCount >= businessCount) {
+    return 'tax';
+  }
+  
+  return 'general';
+};
+
 export const fetchBlogs = async (): Promise<BlogPost[]> => {
   try {
-    // Attempt to fetch blogs from abtechnet.com
-    const response = await fetch('https://abtechnet.com/wp-json/wp/v2/posts?_embed&per_page=10');
+    const response = await fetch('https://abtechnet.com/wp-json/wp/v2/posts?_embed&per_page=20');
     
     if (!response.ok) {
       throw new Error(`Failed to fetch blogs: ${response.status}`);
@@ -52,7 +85,6 @@ export const fetchBlogs = async (): Promise<BlogPost[]> => {
     const postsData = await response.json();
     
     return postsData.map((post: any) => {
-      // Extract featured image if available
       let featuredImage = undefined;
       if (post._embedded && 
           post._embedded['wp:featuredmedia'] && 
@@ -61,7 +93,6 @@ export const fetchBlogs = async (): Promise<BlogPost[]> => {
         featuredImage = post._embedded['wp:featuredmedia'][0].source_url;
       }
       
-      // Extract categories/tags if available
       let categories: string[] = [];
       if (post._embedded && 
           post._embedded['wp:term'] && 
@@ -69,10 +100,8 @@ export const fetchBlogs = async (): Promise<BlogPost[]> => {
         categories = post._embedded['wp:term'][0].map((term: any) => term.name);
       }
       
-      // Parse content and remove HTML tags for excerpt if needed
       const content = post.content.rendered;
       let excerpt = post.excerpt.rendered;
-      // Remove HTML tags for clean excerpt
       excerpt = excerpt.replace(/<\/?[^>]+(>|$)/g, "").trim();
       
       return {
@@ -85,16 +114,25 @@ export const fetchBlogs = async (): Promise<BlogPost[]> => {
         readTime: calculateReadTime(content),
         tags: extractTags(categories, content),
         image: featuredImage,
-        url: post.link
+        url: post.link,
+        category: determineCategory(categories, content)
       };
     });
   } catch (error) {
     console.error('Error fetching blogs from abtechnet.com:', error);
     toast.error('Failed to load blogs from abtechnet.com');
     
-    // Return empty array on error
     return [];
   }
+};
+
+export const fetchBlogsByCategory = async (category: string): Promise<BlogPost[]> => {
+  const allBlogs = await fetchBlogs();
+  return allBlogs.filter(blog => blog.category === category);
+};
+
+export const fetchTechnologyBlogs = async (): Promise<BlogPost[]> => {
+  return fetchBlogsByCategory('technology');
 };
 
 export const fetchBlogById = async (id: string): Promise<BlogPost | null> => {
@@ -107,7 +145,6 @@ export const fetchBlogById = async (id: string): Promise<BlogPost | null> => {
     
     const post = await response.json();
     
-    // Extract featured image if available
     let featuredImage = undefined;
     if (post._embedded && 
         post._embedded['wp:featuredmedia'] && 
@@ -116,7 +153,6 @@ export const fetchBlogById = async (id: string): Promise<BlogPost | null> => {
       featuredImage = post._embedded['wp:featuredmedia'][0].source_url;
     }
     
-    // Extract categories/tags if available
     let categories: string[] = [];
     if (post._embedded && 
         post._embedded['wp:term'] && 
@@ -124,10 +160,8 @@ export const fetchBlogById = async (id: string): Promise<BlogPost | null> => {
       categories = post._embedded['wp:term'][0].map((term: any) => term.name);
     }
     
-    // Parse content and excerpt
     const content = post.content.rendered;
     let excerpt = post.excerpt.rendered;
-    // Remove HTML tags for clean excerpt
     excerpt = excerpt.replace(/<\/?[^>]+(>|$)/g, "").trim();
     
     return {
