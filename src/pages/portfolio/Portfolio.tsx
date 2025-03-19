@@ -19,7 +19,10 @@ const skills = [
   { name: 'Project Management', category: 'soft' },
   { name: 'Leadership', category: 'soft' },
   { name: 'Strategic Planning', category: 'soft' },
-  { name: 'Problem Solving', category: 'soft' }
+  { name: 'Problem Solving', category: 'soft' },
+  { name: 'Tax & Accounting', category: 'technical' },
+  { name: 'Financial Analysis', category: 'technical' },
+  { name: 'Business Strategy', category: 'soft' }
 ];
 
 // Achievements data
@@ -99,7 +102,7 @@ const Portfolio = () => {
           <Badge className="mb-4" variant="outline">Portfolio</Badge>
           <h1 className="text-4xl font-display font-bold tracking-tight">Aswin Bhaskaran</h1>
           <p className="text-xl text-muted-foreground mt-2">
-            Technology professional with expertise in software development and business solutions
+            Senior Tax Director with expertise in international tax planning and financial services
           </p>
         </motion.div>
       </section>
@@ -118,13 +121,20 @@ const Portfolio = () => {
             <h2 className="text-2xl font-display font-semibold">Biography</h2>
             <div className="text-muted-foreground space-y-4">
               <p>
-                I am a passionate technologist with a strong background in software development and 
-                business solutions. With years of experience in the industry, I have developed a diverse 
-                skill set that allows me to bridge the gap between technical implementation and business strategy.
+                I am a Senior Tax Director with over 15 years of experience in international tax planning, 
+                transfer pricing, and financial services. Currently serving at PricewaterhouseCoopers (PwC), 
+                I specialize in developing innovative tax strategies for multinational corporations.
               </p>
               <p>
-                My expertise spans across web development, data analysis, and project management, 
-                with a particular focus on creating efficient and scalable solutions for complex business problems.
+                My expertise spans across tax compliance, financial analysis, and strategic business planning 
+                with a strong focus on creating efficient solutions for complex tax challenges. I have a proven 
+                track record of helping organizations navigate the intricate landscape of global taxation while 
+                ensuring compliance with international regulations.
+              </p>
+              <p>
+                Throughout my career, I've combined my technical knowledge with leadership skills to drive 
+                successful tax initiatives and mentor teams for optimal performance in demanding business 
+                environments.
               </p>
             </div>
           </section>
