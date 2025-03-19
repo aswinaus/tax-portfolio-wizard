@@ -5,9 +5,9 @@ const Biography = () => {
       <h2 className="text-2xl font-display font-semibold">Biography</h2>
       <div className="text-muted-foreground space-y-4">
         <p>
-          I am a Senior Tax Director with over 15 years of experience in international tax planning, 
-          transfer pricing, and financial services. Currently serving at PricewaterhouseCoopers (PwC), 
-          I specialize in developing innovative tax strategies for multinational corporations.
+          I am a Principal Consultant at Hexaware Technologies with over 15 years of experience in international tax planning, 
+          transfer pricing, and financial services. I specialize in building AI-powered tax applications and developing innovative 
+          tax strategies for multinational corporations.
         </p>
         <p>
           My expertise spans across tax compliance, financial analysis, and strategic business planning 

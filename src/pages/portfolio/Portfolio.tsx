@@ -46,7 +46,7 @@ const Portfolio = () => {
         <Badge className="mb-4" variant="outline">Portfolio</Badge>
         <h1 className="text-4xl font-display font-bold tracking-tight">Aswin Bhaskaran</h1>
         <p className="text-xl text-muted-foreground mt-2">
-          Senior Tax Director with expertise in international tax planning and financial services
+          Principal Consultant at Hexaware Technologies. Building AI-Powered Tax Applications.
         </p>
       </motion.div>
 
