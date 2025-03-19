@@ -19,13 +19,8 @@ const BlogErrorState = () => {
       <AlertTitle className="ml-2">Failed to load blogs</AlertTitle>
       <AlertDescription className="mt-2">
         <p className="mb-4">
-          There was an error loading blogs from abtechnet.com. This could be due to:
+          There was an error loading the blogs. Please try again.
         </p>
-        <ul className="list-disc pl-5 mb-4 text-sm">
-          <li>Internet connection issues</li>
-          <li>The blog server may be temporarily unavailable</li>
-          <li>CORS policy restrictions</li>
-        </ul>
         <Button 
           onClick={handleRetry} 
           variant="outline" 
