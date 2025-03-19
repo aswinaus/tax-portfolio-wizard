@@ -1,3 +1,4 @@
+
 import { FC } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -112,7 +113,7 @@ export const MainSidebar: FC = () => {
           <User size={24} className="text-primary" />
         </div>
         <div className="text-center">
-          <h1 className="font-display font-medium">Aswin</h1>
+          <h1 className="font-display font-medium">Aswin Bhaskaran</h1>
           <p className="text-xs text-foreground/60">Portfolio & Business Tools</p>
         </div>
       </div>
@@ -165,7 +166,7 @@ export const MainSidebar: FC = () => {
       {/* Footer */}
       <div className="mt-auto pt-4 border-t border-border">
         <div className="text-xs text-foreground/50 px-3 pb-2">
-          &copy; {new Date().getFullYear()} Aswin
+          &copy; {new Date().getFullYear()} Aswin Bhaskaran
         </div>
       </div>
     </div>

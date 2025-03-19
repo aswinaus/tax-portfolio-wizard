@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
@@ -98,7 +97,7 @@ const Portfolio = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <Badge className="mb-4" variant="outline">Portfolio</Badge>
-          <h1 className="text-4xl font-display font-bold tracking-tight">Aswin Auswin</h1>
+          <h1 className="text-4xl font-display font-bold tracking-tight">Aswin Bhaskaran</h1>
           <p className="text-xl text-muted-foreground mt-2">
             Technology professional with expertise in software development and business solutions
           </p>
