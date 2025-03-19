@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -12,7 +11,8 @@ import {
   ArrowRight, 
   ChevronDown,
   CheckCircle2,
-  Clock
+  Clock,
+  MessageSquare
 } from 'lucide-react';
 import { 
   Card, 
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import LyzrAgentChat from '@/components/business/LyzrAgentChat';
 
 // Form type interface
 interface FormType {
@@ -147,6 +148,7 @@ const faqs: FAQ[] = [
 
 const Form990 = () => {
   const [selectedFormType, setSelectedFormType] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
   
   const handleCreateForm = () => {
     if (!selectedFormType) {
@@ -178,11 +180,42 @@ const Form990 = () => {
         </p>
       </div>
       
+      {/* Floating AI Assistant Button */}
+      <div className="fixed bottom-6 right-6 z-10">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Button 
+            onClick={() => setChatOpen(!chatOpen)}
+            className="h-14 w-14 rounded-full bg-primary shadow-lg hover:shadow-xl transition-all"
+            size="icon"
+          >
+            <MessageSquare className="h-6 w-6" />
+          </Button>
+        </motion.div>
+      </div>
+      
+      {/* AI Assistant Chat Panel */}
+      {chatOpen && (
+        <motion.div 
+          className="fixed bottom-24 right-6 w-[400px] z-10 shadow-xl"
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <LyzrAgentChat />
+        </motion.div>
+      )}
+      
       <Tabs defaultValue="forms" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="forms" className="text-sm">My Forms</TabsTrigger>
           <TabsTrigger value="create" className="text-sm">Create New Form</TabsTrigger>
           <TabsTrigger value="help" className="text-sm">Help & Resources</TabsTrigger>
+          <TabsTrigger value="assistant" className="text-sm">AI Assistant</TabsTrigger>
         </TabsList>
         
         {/* My Forms Tab */}
@@ -480,6 +513,26 @@ const Form990 = () => {
               ))}
             </Accordion>
           </div>
+        </TabsContent>
+        
+        {/* AI Assistant Tab */}
+        <TabsContent value="assistant" className="space-y-6">
+          <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Info className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium text-base mb-1">Form 990 Filing Assistant</h3>
+                <p className="text-muted-foreground text-sm">
+                  Our AI assistant can answer your questions about Form 990 filing requirements, deadlines, 
+                  extensions, and more. Just ask a question to get started.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <LyzrAgentChat />
         </TabsContent>
       </Tabs>
     </motion.div>
