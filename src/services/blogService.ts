@@ -14,6 +14,9 @@ export interface BlogPost {
   category?: string;
 }
 
+// In-memory storage for locally created blog posts
+const localBlogCache: Record<string, BlogPost> = {};
+
 // Function to estimate read time based on content length
 const calculateReadTime = (content: string): string => {
   const wordsPerMinute = 200;
@@ -93,6 +96,9 @@ export const createBlogPost = (blog: Omit<BlogPost, 'id' | 'date' | 'readTime'>)
     readTime,
   };
   
+  // Store in local cache
+  localBlogCache[id] = newBlog;
+  
   // In a real app, this would be saved to a database
   // For now, we'll just return the new blog
   return newBlog;
@@ -121,7 +127,7 @@ export const fetchBlogs = async (): Promise<BlogPost[]> => {
     const postsData = await response.json();
     console.log('Successfully fetched blog posts:', postsData.length);
     
-    return postsData.map((post: any) => {
+    const remoteBlogs = postsData.map((post: any) => {
       let featuredImage = undefined;
       if (post._embedded && 
           post._embedded['wp:featuredmedia'] && 
@@ -151,10 +157,13 @@ export const fetchBlogs = async (): Promise<BlogPost[]> => {
         readTime: calculateReadTime(content),
         tags: extractTags(categories, content),
         image: featuredImage,
-        url: post.link,
-        category: determineCategory(categories, content)
+        url: post.link
       };
     });
+    
+    // Combine remote blogs with local blogs
+    const localBlogs = Object.values(localBlogCache);
+    return [...remoteBlogs, ...localBlogs];
   } catch (error: any) {
     console.error('Error fetching blogs from abtechnet.com:', error);
     
@@ -169,7 +178,8 @@ export const fetchBlogs = async (): Promise<BlogPost[]> => {
       toast.error('Failed to load blogs from abtechnet.com');
     }
     
-    return [];
+    // Return local blogs if remote fetch fails
+    return Object.values(localBlogCache);
   }
 };
 
@@ -183,6 +193,11 @@ export const fetchTechnologyBlogs = async (): Promise<BlogPost[]> => {
 };
 
 export const fetchBlogById = async (id: string): Promise<BlogPost | null> => {
+  // First check local cache
+  if (localBlogCache[id]) {
+    return localBlogCache[id];
+  }
+  
   try {
     const response = await fetch(`https://abtechnet.com/wp-json/wp/v2/posts/${id}?_embed`);
     
@@ -225,6 +240,12 @@ export const fetchBlogById = async (id: string): Promise<BlogPost | null> => {
     };
   } catch (error) {
     console.error(`Error fetching blog ${id} from abtechnet.com:`, error);
+    
+    // Check if it's in the local cache after a failed remote fetch
+    if (localBlogCache[id]) {
+      return localBlogCache[id];
+    }
+    
     toast.error('Failed to load blog post');
     return null;
   }
