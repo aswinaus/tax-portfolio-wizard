@@ -1,29 +1,75 @@
 
 import { motion } from 'framer-motion';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, BookOpen, Award, Certificate } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Certifications data
 const certifications = [
   {
     id: 1,
-    title: 'Certified Public Accountant (CPA)',
-    organization: 'American Institute of CPAs',
-    year: 2015,
-    description: 'Licensed CPA with expertise in tax accounting and financial reporting.'
+    title: 'Reinforcement Learning From Human Feedback',
+    organization: 'learn.deeplearning.ai',
+    year: 'February 2024',
+    description: 'Completed training in Reinforcement Learning From Human Feedback techniques.',
+    credentialUrl: 'https://www.linkedin.com/posts/aswin-bhaskaran-39624a13_aswin-bhaskaran-congratulations-on-completing-activity-7298172024466669568-1sPB?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAK0kaIBF-Oh8fcp-MRi-MUW_nnw2axojIg'
   },
   {
     id: 2,
-    title: 'Chartered Financial Analyst (CFA)',
-    organization: 'CFA Institute',
-    year: 2017,
-    description: 'Designation focused on investment analysis, portfolio management, and advanced financial concepts.'
+    title: 'Learn AI Agents',
+    organization: 'Coursera',
+    year: 'December 2024',
+    description: 'Credential ID: US2Z0ACMYRLE',
+    credentialUrl: 'https://www.coursera.org/account/accomplishments/records/US2Z0ACMYRLE'
   },
   {
     id: 3,
+    title: 'Risk Management Framework for Systems and Organizations',
+    organization: 'National Institute of Standards and Technology (NIST)',
+    year: 'October 2024',
+    description: 'Training in implementing the Risk Management Framework for Systems and Organizations.'
+  },
+  {
+    id: 4,
+    title: 'Payment Technology Fundamentals',
+    organization: 'Corporate Finance Institute® (CFI)',
+    year: 'August 2024',
+    description: 'Credential ID: 114163005',
+    credentialUrl: 'http://credentials.corporatefinanceinstitute.com/e3cf08d5-4b3d-4425-a5ba-95d65dcc5f20'
+  },
+  {
+    id: 5,
+    title: 'Cypher Fundamentals',
+    organization: 'neo4j GraphAcademy',
+    year: 'December 2023',
+    description: 'Certificate ID: 070ec344-53ba-4969-9c7b-8157b3736103'
+  },
+  {
+    id: 6,
+    title: 'Certified Information Systems Security Professional (Online Self-Paced)',
+    organization: 'ISC2 - Certificate of Course Completion',
+    year: 'August 2022',
+    description: 'Completed training for the CISSP certification program.',
+    credentialUrl: 'https://www.linkedin.com/posts/aswin-bhaskaran-39624a13_activity-6964451739668291584-XKiG?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAK0kaIBF-Oh8fcp-MRi-MUW_nnw2axojIg'
+  },
+  {
+    id: 7,
+    title: 'Certified Public Accountant (CPA)',
+    organization: 'American Institute of CPAs',
+    year: '2015',
+    description: 'Licensed CPA with expertise in tax accounting and financial reporting.'
+  },
+  {
+    id: 8,
+    title: 'Chartered Financial Analyst (CFA)',
+    organization: 'CFA Institute',
+    year: '2017',
+    description: 'Designation focused on investment analysis, portfolio management, and advanced financial concepts.'
+  },
+  {
+    id: 9,
     title: 'Certified Information Systems Auditor (CISA)',
     organization: 'ISACA',
-    year: 2019,
+    year: '2019',
     description: 'Specialization in information systems auditing, control, and security.'
   }
 ];
@@ -57,6 +103,16 @@ const Certifications = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">{certification.description}</p>
+                {certification.credentialUrl && (
+                  <a 
+                    href={certification.credentialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block text-sm text-primary hover:text-primary/80 underline underline-offset-4"
+                  >
+                    View Credential →
+                  </a>
+                )}
               </CardContent>
             </Card>
           </motion.div>
