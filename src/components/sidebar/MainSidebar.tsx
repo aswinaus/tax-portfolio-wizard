@@ -192,7 +192,7 @@ export const MainSidebar: FC = () => {
         <SidebarSection title="Business">
           <SidebarItem 
             icon={Folder} 
-            label="My Forms" 
+            label="My Documents Repository" 
             to="/" 
             isActive={pathname === "/"} 
           />
