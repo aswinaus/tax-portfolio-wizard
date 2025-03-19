@@ -1,19 +1,41 @@
 
-import { BookOpen } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useQueryClient } from '@tanstack/react-query';
 
 const BlogErrorState = () => {
+  const queryClient = useQueryClient();
+
+  const handleRetry = () => {
+    // Invalidate all blog-related queries to trigger a refetch
+    queryClient.invalidateQueries({ queryKey: ['blogs'] });
+    queryClient.invalidateQueries({ queryKey: ['blogs', 'technology'] });
+  };
+
   return (
-    <div className="text-center py-16 bg-secondary/40 rounded-lg">
-      <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-      <h3 className="text-lg font-medium mb-2">Failed to load blogs</h3>
-      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-        There was an error loading blogs from abtechnet.com. Please try again later.
-      </p>
-      <Button onClick={() => window.location.reload()}>
-        Retry
-      </Button>
-    </div>
+    <Alert variant="destructive" className="my-6">
+      <AlertCircle className="h-5 w-5" />
+      <AlertTitle className="ml-2">Failed to load blogs</AlertTitle>
+      <AlertDescription className="mt-2">
+        <p className="mb-4">
+          There was an error loading blogs from abtechnet.com. This could be due to:
+        </p>
+        <ul className="list-disc pl-5 mb-4 text-sm">
+          <li>Internet connection issues</li>
+          <li>The blog server may be temporarily unavailable</li>
+          <li>CORS policy restrictions</li>
+        </ul>
+        <Button 
+          onClick={handleRetry} 
+          variant="outline" 
+          className="mt-2 bg-background"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Retry
+        </Button>
+      </AlertDescription>
+    </Alert>
   );
 };
 

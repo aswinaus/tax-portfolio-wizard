@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 
 export interface BlogPost {
@@ -76,13 +77,26 @@ const determineCategory = (categories: string[] = [], content: string = ''): str
 
 export const fetchBlogs = async (): Promise<BlogPost[]> => {
   try {
-    const response = await fetch('https://abtechnet.com/wp-json/wp/v2/posts?_embed&per_page=20');
+    // Add a timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+    const response = await fetch('https://abtechnet.com/wp-json/wp/v2/posts?_embed&per_page=20', {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch blogs: ${response.status}`);
+      throw new Error(`Failed to fetch blogs: ${response.status} ${response.statusText}`);
     }
     
     const postsData = await response.json();
+    console.log('Successfully fetched blog posts:', postsData.length);
     
     return postsData.map((post: any) => {
       let featuredImage = undefined;
@@ -118,9 +132,19 @@ export const fetchBlogs = async (): Promise<BlogPost[]> => {
         category: determineCategory(categories, content)
       };
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching blogs from abtechnet.com:', error);
-    toast.error('Failed to load blogs from abtechnet.com');
+    
+    // Provide more specific error messages based on the error type
+    if (error.name === 'AbortError') {
+      toast.error('Request timeout: The server took too long to respond');
+    } else if (error.message.includes('NetworkError') || !navigator.onLine) {
+      toast.error('Network error: Please check your internet connection');
+    } else if (error.message.includes('CORS')) {
+      toast.error('CORS error: Unable to access the blog server due to cross-origin restrictions');
+    } else {
+      toast.error('Failed to load blogs from abtechnet.com');
+    }
     
     return [];
   }

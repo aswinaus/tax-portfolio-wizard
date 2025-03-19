@@ -8,11 +8,15 @@ interface BlogListProps {
 }
 
 const BlogList = ({ blogs, formatDate }: BlogListProps) => {
+  if (!blogs || blogs.length === 0) {
+    return null;
+  }
+  
   return (
     <div className="space-y-6">
       {blogs.map((blog, index) => (
         <BlogCard 
-          key={blog.id}
+          key={blog.id || index}
           blog={blog}
           index={index}
           formatDate={formatDate}
