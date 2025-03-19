@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -62,6 +61,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				'green': {
+					100: 'hsl(120, 40%, 95%)',  // Light green background
+					200: 'hsl(120, 35%, 90%)',
+					300: 'hsl(120, 30%, 85%)',
+					400: 'hsl(120, 30%, 70%)',
+					500: 'hsl(120, 40%, 55%)',
+					600: 'hsl(120, 50%, 45%)',
+					700: 'hsl(120, 60%, 35%)',
+					800: 'hsl(120, 60%, 25%)',  // Dark green text
+					900: 'hsl(120, 70%, 15%)',
 				}
 			},
 			fontFamily: {
