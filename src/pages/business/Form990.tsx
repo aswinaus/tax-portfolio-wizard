@@ -34,6 +34,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import LyzrAgentChat from '@/components/business/LyzrAgentChat';
+import Form990PartI from '@/components/business/Form990PartI';
 
 // Form type interface
 interface FormType {
@@ -149,6 +150,7 @@ const faqs: FAQ[] = [
 const Form990 = () => {
   const [selectedFormType, setSelectedFormType] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   
   const handleCreateForm = () => {
     if (!selectedFormType) {
@@ -157,6 +159,7 @@ const Form990 = () => {
     }
     
     toast.success(`Starting new Form ${selectedFormType} filing`);
+    setShowForm(true);
     // In a real app, this would redirect to the form editor
   };
   
@@ -210,10 +213,11 @@ const Form990 = () => {
         </motion.div>
       )}
       
-      <Tabs defaultValue="forms" className="w-full">
+      <Tabs defaultValue={showForm ? "fill" : "forms"} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="forms" className="text-sm">My Forms</TabsTrigger>
           <TabsTrigger value="create" className="text-sm">Create New Form</TabsTrigger>
+          <TabsTrigger value="fill" className="text-sm">Fill Form</TabsTrigger>
           <TabsTrigger value="help" className="text-sm">Help & Resources</TabsTrigger>
           <TabsTrigger value="assistant" className="text-sm">AI Assistant</TabsTrigger>
         </TabsList>
@@ -394,6 +398,29 @@ const Form990 = () => {
               </Button>
             </div>
           </div>
+        </TabsContent>
+        
+        {/* Fill Form Tab */}
+        <TabsContent value="fill" className="space-y-6">
+          {showForm ? (
+            <Form990PartI />
+          ) : (
+            <div className="text-center py-16 bg-secondary/40 rounded-lg">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No form selected</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Please select a form type from the "Create New Form" tab first.
+              </p>
+              <Button onClick={() => {
+                document.querySelector('[data-value="create"]')?.dispatchEvent(
+                  new MouseEvent('click', { bubbles: true })
+                );
+              }}>
+                <FileText className="mr-2 h-4 w-4" />
+                Select Form Type
+              </Button>
+            </div>
+          )}
         </TabsContent>
         
         {/* Help & Resources Tab */}
