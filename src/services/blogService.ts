@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 
 export interface BlogPost {
@@ -73,6 +72,30 @@ const determineCategory = (categories: string[] = [], content: string = ''): str
   }
   
   return 'general';
+};
+
+// Function to create a new blog post
+export const createBlogPost = (blog: Omit<BlogPost, 'id' | 'date' | 'readTime'>): BlogPost => {
+  // Generate a unique ID
+  const id = Date.now().toString();
+  
+  // Use current date
+  const date = new Date().toISOString();
+  
+  // Calculate read time
+  const readTime = calculateReadTime(blog.content);
+  
+  // Create the blog post
+  const newBlog: BlogPost = {
+    ...blog,
+    id,
+    date,
+    readTime,
+  };
+  
+  // In a real app, this would be saved to a database
+  // For now, we'll just return the new blog
+  return newBlog;
 };
 
 export const fetchBlogs = async (): Promise<BlogPost[]> => {

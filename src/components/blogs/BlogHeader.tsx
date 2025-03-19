@@ -1,8 +1,14 @@
 
 import { Link } from 'react-router-dom';
-import { ChevronLeft, PlusCircle } from 'lucide-react';
+import { ChevronLeft, PlusCircle, Presentation } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const BlogHeader = () => {
   return (
@@ -21,12 +27,29 @@ const BlogHeader = () => {
             Thoughts, insights, and expertise from abtechnet.com
           </p>
         </div>
-        <Link to="/portfolio/blogs/create">
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create New Post
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Presentation className="mr-2 h-4 w-4" />
+                Templates
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/portfolio/blogs/create?template=llm-evals">
+                  LLM Evals Presentation
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Link to="/portfolio/blogs/create">
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create New Post
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
