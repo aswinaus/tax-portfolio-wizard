@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -8,82 +7,82 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 120 60% 25%;  /* Dark green text */
+    --foreground: 222.2 84% 4.9%;  /* Reverted to original dark text color */
 
     --card: 0 0% 100%;
-    --card-foreground: 120 60% 25%;  /* Dark green */
+    --card-foreground: 222.2 84% 4.9%;  /* Reverted to original dark color */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 120 60% 25%;  /* Dark green */
+    --popover-foreground: 222.2 84% 4.9%;  /* Reverted to original dark color */
 
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 120 60% 25%;  /* Dark green */
+    --secondary-foreground: 222.2 47.4% 11.2%;  /* Reverted to original */
 
     --muted: 240 4.8% 95.9%;
-    --muted-foreground: 120 30% 40%;  /* Muted dark green */
+    --muted-foreground: 215.4 16.3% 46.9%;  /* Reverted to original */
 
     --accent: 240 4.8% 95.9%;
-    --accent-foreground: 120 60% 25%;  /* Dark green */
+    --accent-foreground: 222.2 47.4% 11.2%;  /* Reverted to original */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 120 60% 35%;
+    --ring: 222.2 84% 4.9%;  /* Reverted to original */
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 120 60% 25%;  /* Dark green */
+    --sidebar-foreground: 222.2 84% 4.9%;  /* Reverted to original */
     --sidebar-primary: 221.2 83.2% 53.3%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 120 60% 25%;  /* Dark green */
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;  /* Reverted to original */
     --sidebar-border: 240 5.9% 90%;
-    --sidebar-ring: 120 60% 35%;
+    --sidebar-ring: 222.2 84% 4.9%;  /* Reverted to original */
   }
 
   .dark {
     --background: 240 10% 3.9%;
-    --foreground: 120 60% 85%;  /* Light green text for dark mode */
+    --foreground: 210 40% 98%;  /* Reverted to original light text color */
 
     --card: 240 10% 3.9%;
-    --card-foreground: 120 60% 85%;  /* Light green */
+    --card-foreground: 210 40% 98%;  /* Reverted to original light color */
 
     --popover: 240 10% 3.9%;
-    --popover-foreground: 120 60% 85%;  /* Light green */
+    --popover-foreground: 210 40% 98%;  /* Reverted to original light color */
 
-    --primary: 120 60% 50%;
-    --primary-foreground: 240 5.9% 10%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 120 60% 85%;  /* Light green */
+    --secondary-foreground: 210 40% 98%;  /* Reverted to original */
 
     --muted: 240 3.7% 15.9%;
-    --muted-foreground: 120 40% 70%;  /* Muted light green */
+    --muted-foreground: 215 20.2% 65.1%;  /* Reverted to original */
 
     --accent: 240 3.7% 15.9%;
-    --accent-foreground: 120 60% 85%;  /* Light green */
+    --accent-foreground: 210 40% 98%;  /* Reverted to original */
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 120 60% 85%;  /* Light green */
+    --destructive-foreground: 210 40% 98%;  /* Reverted to original */
 
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 120 70% 45%;
+    --ring: 216 34% 17%;  /* Reverted to original */
 
     --sidebar-background: 240 10% 3.9%;
-    --sidebar-foreground: 120 60% 85%;  /* Light green */
-    --sidebar-primary: 120 60% 50%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-foreground: 210 40% 98%;  /* Reverted to original */
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
     --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 120 60% 85%;  /* Light green */
+    --sidebar-accent-foreground: 210 40% 98%;  /* Reverted to original */
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 120 70% 45%;
+    --sidebar-ring: 216 34% 17%;  /* Reverted to original */
   }
 
   * {
@@ -94,14 +93,12 @@
     @apply bg-background text-foreground font-sans antialiased;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-image: none; /* Removed the green gradient background */
+    background-image: none;
     background-attachment: fixed;
-    color: hsl(120, 60%, 25%); /* Dark green color override */
   }
 
   ::selection {
     @apply bg-primary/20;
-    color: hsl(120, 60%, 25%); /* Dark green for selected text */
   }
 }
 

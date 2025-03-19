@@ -4,7 +4,6 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
-  color: hsl(120, 60%, 25%); /* Dark green color */
 }
 
 .logo {
@@ -37,9 +36,8 @@
 
 .card {
   padding: 2em;
-  color: hsl(120, 60%, 25%); /* Dark green color */
 }
 
 .read-the-docs {
-  color: hsl(120, 40%, 40%); /* Muted dark green */
+  color: #888;  /* Reverted to original muted color */
 }
