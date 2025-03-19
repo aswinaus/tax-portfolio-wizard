@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -6,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 120 40% 95%; /* Light green background */
+    --background: 0 0% 100%;
     --foreground: 120 60% 25%;  /* Dark green text */
 
     --card: 0 0% 100%;
@@ -18,70 +19,70 @@
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 120 35% 95%;
+    --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 120 60% 25%;  /* Dark green */
 
-    --muted: 120 35% 95%;
+    --muted: 240 4.8% 95.9%;
     --muted-foreground: 120 30% 40%;  /* Muted dark green */
 
-    --accent: 120 40% 92%;
+    --accent: 240 4.8% 95.9%;
     --accent-foreground: 120 60% 25%;  /* Dark green */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 120 20% 85%;
-    --input: 120 20% 85%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
     --ring: 120 60% 35%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 120 40% 95%; /* Light green */
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 120 60% 25%;  /* Dark green */
     --sidebar-primary: 221.2 83.2% 53.3%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 120 40% 92%;
+    --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 120 60% 25%;  /* Dark green */
-    --sidebar-border: 120 20% 85%;
+    --sidebar-border: 240 5.9% 90%;
     --sidebar-ring: 120 60% 35%;
   }
 
   .dark {
-    --background: 120 25% 20%;
+    --background: 240 10% 3.9%;
     --foreground: 120 60% 85%;  /* Light green text for dark mode */
 
-    --card: 120 25% 20%;
+    --card: 240 10% 3.9%;
     --card-foreground: 120 60% 85%;  /* Light green */
 
-    --popover: 120 25% 20%;
+    --popover: 240 10% 3.9%;
     --popover-foreground: 120 60% 85%;  /* Light green */
 
     --primary: 120 60% 50%;
-    --primary-foreground: 120 25% 10%;
+    --primary-foreground: 240 5.9% 10%;
 
-    --secondary: 120 25% 30%;
+    --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 120 60% 85%;  /* Light green */
 
-    --muted: 120 25% 30%;
+    --muted: 240 3.7% 15.9%;
     --muted-foreground: 120 40% 70%;  /* Muted light green */
 
-    --accent: 120 25% 30%;
+    --accent: 240 3.7% 15.9%;
     --accent-foreground: 120 60% 85%;  /* Light green */
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 120 60% 85%;  /* Light green */
 
-    --border: 120 25% 30%;
-    --input: 120 25% 30%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
     --ring: 120 70% 45%;
 
-    --sidebar-background: 120 25% 20%;
+    --sidebar-background: 240 10% 3.9%;
     --sidebar-foreground: 120 60% 85%;  /* Light green */
     --sidebar-primary: 120 60% 50%;
-    --sidebar-primary-foreground: 120 25% 10%;
-    --sidebar-accent: 120 25% 30%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 120 60% 85%;  /* Light green */
-    --sidebar-border: 120 25% 30%;
+    --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 120 70% 45%;
   }
 
@@ -93,7 +94,7 @@
     @apply bg-background text-foreground font-sans antialiased;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-image: linear-gradient(109.6deg, rgba(220, 245, 220, 0.9) 11.2%, rgba(240, 255, 240, 0.9) 91.1%);
+    background-image: none; /* Removed the green gradient background */
     background-attachment: fixed;
     color: hsl(120, 60%, 25%); /* Dark green color override */
   }
