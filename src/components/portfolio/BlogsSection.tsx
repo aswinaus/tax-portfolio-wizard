@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, FileText, Shield } from 'lucide-react';
+import { ArrowRight, BookOpen, FileText, Shield, BookMarked } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,30 @@ const BlogsSection = () => {
       </div>
       
       <div className="grid grid-cols-1 gap-4">
+        <Card className="overflow-hidden border-border/60 hover:shadow-sm transition-shadow">
+          <CardHeader>
+            <Badge variant="secondary" className="w-fit mb-2">Machine Learning</Badge>
+            <CardTitle className="text-lg font-display">
+              <Link to="/portfolio/blogs/6" className="hover:text-primary transition-colors">
+                Understanding Reinforcement Learning through Markov Decision Processes
+              </Link>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-sm">
+              Explore the foundational concepts of Reinforcement Learning, including Markov Decision Processes, policies, value functions, and how agents learn to maximize rewards through sequential decision making.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Link to="/portfolio/blogs/6">
+              <Button variant="outline" className="mt-2">
+                <BookMarked className="mr-2 h-4 w-4" />
+                Read Blog Post
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+        
         <Card className="overflow-hidden border-border/60 hover:shadow-sm transition-shadow">
           <CardHeader>
             <Badge variant="secondary" className="w-fit mb-2">Security</Badge>
