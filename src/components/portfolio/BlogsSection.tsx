@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, FileText, Presentation } from 'lucide-react';
+import { ArrowRight, BookOpen, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,22 +23,22 @@ const BlogsSection = () => {
           <CardHeader>
             <Badge variant="secondary" className="w-fit mb-2">Technology</Badge>
             <CardTitle className="text-lg font-display">
-              <Link to="/portfolio/blogs" className="hover:text-primary transition-colors">
-                LLM Evals: A Comprehensive Guide to Evaluating Language Models
+              <Link to="/portfolio/blogs/4" className="hover:text-primary transition-colors">
+                LLM Quantization: Making Large Language Models More Efficient
               </Link>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-sm">
-              Explore the essential frameworks and metrics for evaluating Large Language Models (LLMs), 
-              understanding why robust evaluation matters, and how to prepare effective datasets for testing.
+              Explore how quantization techniques can significantly reduce the computational requirements of LLMs 
+              while maintaining performance. Learn about different quantization methods and their real-world applications.
             </p>
           </CardContent>
           <CardFooter>
-            <Link to="/portfolio/blogs">
+            <Link to="/portfolio/blogs/4">
               <Button variant="outline" className="mt-2">
-                <Presentation className="mr-2 h-4 w-4" />
-                View Presentation
+                <FileText className="mr-2 h-4 w-4" />
+                Read Blog Post
               </Button>
             </Link>
           </CardFooter>
