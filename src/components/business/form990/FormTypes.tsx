@@ -1,155 +1,184 @@
 
-import { FileText } from 'lucide-react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { FileText, FilePlus, ArrowRight } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Form type interface
-interface FormType {
-  id: string;
-  name: string;
+interface FormTypeProps {
+  title: string;
   description: string;
-  forWho: string;
-  status: 'available' | 'coming_soon';
+  for: string;
+  requirements: string[];
 }
 
-// Form types data
-const formTypes: FormType[] = [
+const formTypes: FormTypeProps[] = [
   {
-    id: '990',
-    name: 'Form 990',
-    description: 'Return of Organization Exempt From Income Tax',
-    forWho: 'Most tax-exempt organizations with gross receipts ≥ $200,000 or total assets ≥ $500,000',
-    status: 'available'
+    title: "Form 990",
+    description: "Return of Organization Exempt From Income Tax",
+    for: "Most tax-exempt organizations",
+    requirements: [
+      "Gross receipts ≥ $200,000", 
+      "Total assets ≥ $500,000"
+    ]
   },
   {
-    id: '990-EZ',
-    name: 'Form 990-EZ',
-    description: 'Short Form Return of Organization Exempt From Income Tax',
-    forWho: 'Most tax-exempt organizations with gross receipts < $200,000 and total assets < $500,000',
-    status: 'available'
+    title: "Form 990-EZ",
+    description: "Short Form Return of Organization Exempt From Income Tax",
+    for: "Small tax-exempt organizations",
+    requirements: [
+      "Gross receipts < $200,000", 
+      "Total assets < $500,000"
+    ]
   },
   {
-    id: '990-N',
-    name: 'Form 990-N',
-    description: 'Electronic Notice (e-Postcard)',
-    forWho: 'Small tax-exempt organizations with gross receipts ≤ $50,000',
-    status: 'available'
+    title: "Form 990-N",
+    description: "e-Postcard",
+    for: "Very small tax-exempt organizations",
+    requirements: [
+      "Gross receipts ≤ $50,000"
+    ]
   },
   {
-    id: '990-PF',
-    name: 'Form 990-PF',
-    description: 'Return of Private Foundation',
-    forWho: 'Private foundations, regardless of financial status',
-    status: 'available'
-  },
-  {
-    id: '990-T',
-    name: 'Form 990-T',
-    description: 'Exempt Organization Business Income Tax Return',
-    forWho: 'Organizations with unrelated business income',
-    status: 'coming_soon'
+    title: "Form 990-PF",
+    description: "Return of Private Foundation",
+    for: "Private foundations",
+    requirements: [
+      "All private foundations regardless of size"
+    ]
   }
 ];
 
-interface FormTypesProps {
-  selectedFormType: string | null;
-  setSelectedFormType: (formType: string) => void;
-  handleCreateForm: () => void;
-}
-
-const FormTypes = ({ selectedFormType, setSelectedFormType, handleCreateForm }: FormTypesProps) => {
+const FormTypes = () => {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Info Banner */}
       <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
             <FileText className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h3 className="font-medium text-base mb-1">Before you begin</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Make sure you have the following information ready:
+            <h3 className="font-medium text-base mb-1">IRS Form 990 Series</h3>
+            <p className="text-muted-foreground text-sm">
+              The Form 990 series is a set of tax forms used by tax-exempt organizations to file annual returns with the IRS. 
+              Select the appropriate form based on your organization's size and type.
             </p>
-            <ul className="text-sm space-y-2 text-muted-foreground">
-              <li className="flex items-start">
-                <ChevronRight className="h-4 w-4 mr-2 mt-0.5 text-primary" />
-                <span>Organization's EIN (Employer Identification Number)</span>
-              </li>
-              <li className="flex items-start">
-                <ChevronRight className="h-4 w-4 mr-2 mt-0.5 text-primary" />
-                <span>Financial statements for the tax year</span>
-              </li>
-              <li className="flex items-start">
-                <ChevronRight className="h-4 w-4 mr-2 mt-0.5 text-primary" />
-                <span>List of officers, directors, and key employees with compensation information</span>
-              </li>
-              <li className="flex items-start">
-                <ChevronRight className="h-4 w-4 mr-2 mt-0.5 text-primary" />
-                <span>Program service accomplishments and expenses</span>
-              </li>
-            </ul>
           </div>
         </div>
       </div>
       
-      <div className="space-y-4">
-        <h2 className="text-xl font-display font-medium">Select Form Type</h2>
+      {/* Form Type Tabs */}
+      <Tabs defaultValue="standard">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="standard">Standard Forms</TabsTrigger>
+          <TabsTrigger value="schedules">Schedules & Add-ons</TabsTrigger>
+        </TabsList>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {formTypes.map((form) => (
-            <Card 
-              key={form.id}
-              className={`border cursor-pointer transition-all ${
-                selectedFormType === form.id 
-                  ? 'border-primary bg-primary/5' 
-                  : form.status === 'coming_soon' 
-                    ? 'opacity-60 cursor-not-allowed' 
-                    : 'border-border/60 hover:border-primary/50'
-              }`}
-              onClick={() => form.status === 'available' && setSelectedFormType(form.id)}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <FileText className="h-5 w-5" />
-                    {form.name}
-                  </CardTitle>
-                  {form.status === 'coming_soon' && (
-                    <Badge variant="outline" className="bg-secondary">Coming Soon</Badge>
-                  )}
-                </div>
-                <CardDescription>{form.description}</CardDescription>
+        <TabsContent value="standard" className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {formTypes.map((form, index) => (
+              <Card key={index}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{form.title}</CardTitle>
+                  <CardDescription>{form.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm font-medium mb-1">For:</div>
+                      <div className="text-sm text-muted-foreground">{form.for}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium mb-1">Requirements:</div>
+                      <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                        {form.requirements.map((req, idx) => (
+                          <li key={idx}>{req}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button className="w-full">
+                    <FilePlus className="mr-2 h-4 w-4" />
+                    Create {form.title}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="schedules" className="pt-6">
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Schedule A</CardTitle>
+                <CardDescription>Public Charity Status and Public Support</CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  <strong>For:</strong> {form.forWho}
-                </p>
+              <CardContent className="text-sm text-muted-foreground">
+                Must be completed by organizations that are described in section 501(c)(3) and are public charities.
               </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  View Details
+                </Button>
+              </CardFooter>
             </Card>
-          ))}
-        </div>
-        
-        <div className="flex justify-end mt-6">
-          <Button 
-            onClick={handleCreateForm}
-            disabled={!selectedFormType}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Create Form {selectedFormType}
-          </Button>
-        </div>
-      </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Schedule B</CardTitle>
+                <CardDescription>Schedule of Contributors</CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Required for organizations that received contributions of $5,000 or more from any one contributor.
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  View Details
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Schedule C</CardTitle>
+                <CardDescription>Political Campaign and Lobbying Activities</CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                For organizations engaged in political campaign activities or lobbying.
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  View Details
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Schedule D</CardTitle>
+                <CardDescription>Supplemental Financial Statements</CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Required if the organization answered "Yes" to specific questions in Form 990 Part IV.
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  View Details
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
 export default FormTypes;
-export { formTypes };

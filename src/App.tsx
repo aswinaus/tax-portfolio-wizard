@@ -21,6 +21,7 @@ const BlogPost = lazy(() => import("./pages/portfolio/BlogPost"));
 const CreateBlog = lazy(() => import("./pages/portfolio/CreateBlog"));
 const Form990 = lazy(() => import("./pages/business/Form990"));
 const TransferPricing = lazy(() => import("./pages/business/TransferPricing"));
+const DocumentRepositoryPage = lazy(() => import("./pages/documents/DocumentRepositoryPage"));
 
 const queryClient = new QueryClient();
 
@@ -34,7 +35,7 @@ const App = () => (
           <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading...</div>}>
             <Routes>
               <Route path="/" element={<MainLayout />}>
-                <Route index element={<Index />} />
+                <Route index element={<DocumentRepositoryPage />} />
                 
                 {/* Portfolio Routes */}
                 <Route path="portfolio" element={<Portfolio />} />
@@ -45,6 +46,7 @@ const App = () => (
                 {/* Business Routes */}
                 <Route path="business/form990" element={<Form990 />} />
                 <Route path="business/transfer-pricing" element={<TransferPricing />} />
+                <Route path="documents" element={<DocumentRepositoryPage />} />
                 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
