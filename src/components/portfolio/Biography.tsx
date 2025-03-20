@@ -2,7 +2,7 @@
 const Biography = () => {
   return (
     <section className="space-y-4">
-      <h2 className="text-2xl font-display font-semibold">Biography</h2>
+      <h2 className="text-2xl font-display font-semibold">Professional Background</h2>
       <div className="text-muted-foreground space-y-4">
         <p>
           Experienced Cloud Solution Architect, with comprehensive technical strengths essential for designing and implementing robust and scalable solutions. Proven track record in leading large cross-functional teams and mentoring. Skilled in identifying emerging technologies and trends to improve system performance and customer satisfaction, focusing on cost optimization.
