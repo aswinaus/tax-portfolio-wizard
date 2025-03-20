@@ -1,5 +1,4 @@
-
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   User,
@@ -15,8 +14,10 @@ import {
   BadgeCheck,
   Trophy,
   Folder,
+  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // Sidebar item interface
 interface SidebarItemProps {
@@ -33,6 +34,7 @@ interface SidebarItemProps {
 interface SidebarSectionProps {
   title: string;
   children: React.ReactNode;
+  collapsible?: boolean;
 }
 
 const SidebarItem: FC<SidebarItemProps> = ({
@@ -57,20 +59,17 @@ const SidebarItem: FC<SidebarItemProps> = ({
     
     e.preventDefault();
     
-    // Handle hash navigation properly
     if (to.includes('#')) {
       const [path, hash] = to.split('#');
       
-      // First navigate to the path
       navigate(path);
       
-      // Then scroll to the element after a short delay
       setTimeout(() => {
         const element = document.getElementById(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
         }
-      }, 300); // Increased delay to ensure page loads
+      }, 300);
     } else {
       navigate(to);
     }
@@ -121,7 +120,32 @@ const SidebarItem: FC<SidebarItemProps> = ({
   );
 };
 
-const SidebarSection: FC<SidebarSectionProps> = ({ title, children }) => {
+const SidebarSection: FC<SidebarSectionProps> = ({ title, children, collapsible = false }) => {
+  const [isOpen, setIsOpen] = useState(true);
+  
+  if (collapsible) {
+    return (
+      <div className="py-2">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="mb-2 px-3">
+            <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-wider text-foreground/50 hover:text-foreground/70 transition-colors">
+              <h3>{title}</h3>
+              {isOpen ? 
+                <ChevronDown size={14} className="text-foreground/50" /> : 
+                <ChevronRight size={14} className="text-foreground/50" />
+              }
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>
+            <div className="space-y-1">
+              {children}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    );
+  }
+  
   return (
     <div className="py-2">
       <div className="mb-2 px-3">
@@ -143,7 +167,6 @@ export const MainSidebar: FC = () => {
 
   return (
     <div className="flex flex-col h-full p-3">
-      {/* Logo & Header */}
       <div className="flex flex-col items-center justify-center py-6 space-y-2 border-b border-border mb-4">
         <div className="w-12 h-12 rounded-full glass flex items-center justify-center bg-primary/5">
           <User size={24} className="text-primary" />
@@ -154,9 +177,8 @@ export const MainSidebar: FC = () => {
         </div>
       </div>
 
-      {/* Sidebar Content */}
       <div className="overflow-y-auto flex-1">
-        <SidebarSection title="Portfolio">
+        <SidebarSection title="Portfolio" collapsible={true}>
           <SidebarItem 
             icon={User} 
             label="About Me" 
@@ -189,7 +211,7 @@ export const MainSidebar: FC = () => {
           />
         </SidebarSection>
 
-        <SidebarSection title="Business">
+        <SidebarSection title="Business" collapsible={true}>
           <SidebarItem 
             icon={Folder} 
             label="My Documents Repository" 
@@ -211,7 +233,6 @@ export const MainSidebar: FC = () => {
         </SidebarSection>
       </div>
 
-      {/* Footer */}
       <div className="mt-auto pt-4 border-t border-border">
         <div className="text-xs text-foreground/50 px-3 pb-2">
           &copy; {new Date().getFullYear()} Aswin Bhaskaran
