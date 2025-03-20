@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, FileText } from 'lucide-react';
+import { ArrowRight, BookOpen, FileText, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,23 +21,23 @@ const BlogsSection = () => {
       <div className="grid grid-cols-1 gap-4">
         <Card className="overflow-hidden border-border/60 hover:shadow-sm transition-shadow">
           <CardHeader>
-            <Badge variant="secondary" className="w-fit mb-2">Technology</Badge>
+            <Badge variant="secondary" className="w-fit mb-2">Security</Badge>
             <CardTitle className="text-lg font-display">
-              <Link to="/portfolio/blogs/4" className="hover:text-primary transition-colors">
-                LLM Quantization: Making Large Language Models More Efficient
+              <Link to="/portfolio/blogs/5" className="hover:text-primary transition-colors">
+                OWASP Top 10 for Large Language Models: Security Risks and Mitigation
               </Link>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-sm">
-              Explore how quantization techniques can significantly reduce the computational requirements of LLMs 
-              while maintaining performance. Learn about different quantization methods and their real-world applications.
+              A comprehensive guide to the OWASP Top 10 vulnerabilities for Large Language Models with examples and mitigation strategies.
+              Learn how to protect your LLM applications from prompt injection, data poisoning, and other emerging threats.
             </p>
           </CardContent>
           <CardFooter>
-            <Link to="/portfolio/blogs/4">
+            <Link to="/portfolio/blogs/5">
               <Button variant="outline" className="mt-2">
-                <FileText className="mr-2 h-4 w-4" />
+                <Shield className="mr-2 h-4 w-4" />
                 Read Blog Post
               </Button>
             </Link>
