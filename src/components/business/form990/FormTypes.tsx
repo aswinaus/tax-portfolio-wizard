@@ -3,6 +3,13 @@ import { FileText, FilePlus, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dispatch, SetStateAction } from 'react';
+
+interface FormTypesProps {
+  selectedFormType: string | null;
+  setSelectedFormType: Dispatch<SetStateAction<string | null>>;
+  handleCreateForm: () => void;
+}
 
 interface FormTypeProps {
   title: string;
@@ -48,7 +55,7 @@ const formTypes: FormTypeProps[] = [
   }
 ];
 
-const FormTypes = () => {
+const FormTypes = ({ selectedFormType, setSelectedFormType, handleCreateForm }: FormTypesProps) => {
   return (
     <div className="space-y-6">
       {/* Info Banner */}
@@ -77,7 +84,10 @@ const FormTypes = () => {
         <TabsContent value="standard" className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {formTypes.map((form, index) => (
-              <Card key={index}>
+              <Card 
+                key={index} 
+                className={selectedFormType === form.title ? "border-primary" : ""}
+              >
                 <CardHeader>
                   <CardTitle className="text-lg">{form.title}</CardTitle>
                   <CardDescription>{form.description}</CardDescription>
@@ -99,14 +109,27 @@ const FormTypes = () => {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">
+                  <Button 
+                    className="w-full"
+                    onClick={() => setSelectedFormType(form.title)}
+                    variant={selectedFormType === form.title ? "default" : "outline"}
+                  >
                     <FilePlus className="mr-2 h-4 w-4" />
-                    Create {form.title}
+                    {selectedFormType === form.title ? "Selected" : `Select ${form.title}`}
                   </Button>
                 </CardFooter>
               </Card>
             ))}
           </div>
+          
+          {selectedFormType && (
+            <div className="mt-6 text-center">
+              <Button size="lg" onClick={handleCreateForm}>
+                Create {selectedFormType} Form
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </TabsContent>
         
         <TabsContent value="schedules" className="pt-6">
