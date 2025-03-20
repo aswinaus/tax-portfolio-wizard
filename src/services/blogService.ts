@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 
 export interface BlogPost {
@@ -17,18 +16,7 @@ export interface BlogPost {
 
 // In-memory storage for locally created blog posts
 const localBlogCache: Record<string, BlogPost> = {
-  // Add some default blog posts
-  '1': {
-    id: '1',
-    title: 'Getting Started with React',
-    excerpt: 'Learn the basics of React and start building modern web applications.',
-    content: 'React is a popular JavaScript library for building user interfaces. It allows developers to create reusable UI components and manage state efficiently. This post covers the fundamentals of React including components, props, and state.',
-    author: 'Aswin Bhaskaran',
-    date: '2023-05-15T10:00:00Z',
-    readTime: '5 min read',
-    tags: ['React', 'JavaScript', 'Web Development', 'Frontend'],
-    category: 'technology'
-  },
+  // Only keep non-profit tax form blog post
   '2': {
     id: '2',
     title: 'Understanding Non-Profit Tax Forms',
@@ -39,17 +27,6 @@ const localBlogCache: Record<string, BlogPost> = {
     readTime: '8 min read',
     tags: ['Tax', 'Non-Profit', 'Form 990', 'Finance'],
     category: 'tax'
-  },
-  '3': {
-    id: '3',
-    title: 'Advanced TypeScript Patterns',
-    excerpt: 'Explore advanced TypeScript features and design patterns for building robust applications.',
-    content: 'TypeScript offers many advanced features that can help developers write more maintainable code. This post covers topics such as generics, utility types, and conditional types.',
-    author: 'Aswin Bhaskaran',
-    date: '2023-07-10T09:15:00Z',
-    readTime: '10 min read',
-    tags: ['TypeScript', 'Programming', 'Web Development', 'Technology'],
-    category: 'technology'
   }
 };
 
