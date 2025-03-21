@@ -25,6 +25,7 @@ const LyzrAgentChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
+  const [userId, setUserId] = useState<string>('demo@example.com');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,6 +39,11 @@ const LyzrAgentChat = () => {
     if (savedApiKey) {
       setApiKey(savedApiKey);
     }
+    
+    const savedUserId = localStorage.getItem('lyzr_user_id');
+    if (savedUserId) {
+      setUserId(savedUserId);
+    }
   }, []);
 
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
@@ -46,24 +52,23 @@ const LyzrAgentChat = () => {
         throw new Error('API key is required');
       }
       
-      // Replace this URL with your Lyzr agent's API endpoint
-      // https://studio.lyzr.ai/agent-create/67d85a7eb0001308323789d0
-      const apiUrl = 'https://api.lyzr.ai/chat';
-      const agentId = '67d85a7eb0001308323789d0'; // Your agent ID from the URL
+      // Updated endpoint based on curl command
+      const apiUrl = 'https://agent-prod.studio.lyzr.ai/v3/inference/chat/';
+      const agentId = '67d85a7eb0001308323789d0'; // Agent ID from the URL
       
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'x-api-key': apiKey
       };
       
       const payload = {
-        message: userMessage,
-        conversation_id: conversationId,
+        user_id: userId,
         agent_id: agentId,
-        metadata: {
-          source: 'form990_assistant'
-        }
+        session_id: conversationId || agentId,
+        message: userMessage
       };
+      
+      console.log('Sending request to Lyzr API:', payload);
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -75,7 +80,13 @@ const LyzrAgentChat = () => {
         throw new Error(`API error: ${response.status} ${response.statusText}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('Lyzr API response:', data);
+      
+      return {
+        response: data.response || data.text || 'No response from AI',
+        conversation_id: data.session_id || conversationId
+      };
     } catch (error) {
       console.error('Error calling Lyzr API:', error);
       throw error;
@@ -132,6 +143,12 @@ const LyzrAgentChat = () => {
     localStorage.setItem('lyzr_api_key', newApiKey);
   };
   
+  const handleUserIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUserId = e.target.value;
+    setUserId(newUserId);
+    localStorage.setItem('lyzr_user_id', newUserId);
+  };
+  
   return (
     <Card className="h-[500px] flex flex-col">
       <CardHeader className="pb-3 pt-5">
@@ -145,10 +162,17 @@ const LyzrAgentChat = () => {
             placeholder="Enter your Lyzr API key"
             value={apiKey}
             onChange={handleApiKeyChange}
+            className="text-xs mb-2"
+          />
+          <Input
+            type="email"
+            placeholder="Enter your User ID/Email"
+            value={userId}
+            onChange={handleUserIdChange}
             className="text-xs"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Your API key is stored locally and never sent to our servers
+            Your credentials are stored locally and never sent to our servers
           </p>
         </div>
       </CardHeader>
