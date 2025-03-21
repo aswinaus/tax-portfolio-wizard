@@ -1,3 +1,4 @@
+
 import { BlogPost } from '../types/blog';
 
 const blogPosts: BlogPost[] = [
@@ -188,6 +189,248 @@ const blogPosts: BlogPost[] = [
         <li><strong>Model Theft:</strong> Unauthorized access to or copying of proprietary models.</li>
       </ul>
       
+      <h2>Code Examples for Mitigation</h2>
+      
+      <h3>1. Prompt Injection Prevention</h3>
+      <pre><code class="language-javascript">
+        // Input validation to prevent prompt injection
+        function validateUserPrompt(userInput) {
+          // Remove any system instructions or control characters
+          const sanitizedInput = userInput.replace(/system:|assistant:|user:/gi, "[FILTERED]");
+          
+          // Check for malicious patterns
+          const suspiciousPatterns = [
+            "ignore previous instructions",
+            "disregard all prompts",
+            "override system settings"
+          ];
+          
+          for (const pattern of suspiciousPatterns) {
+            if (sanitizedInput.toLowerCase().includes(pattern)) {
+              return { valid: false, error: "Potentially malicious prompt detected" };
+            }
+          }
+          
+          return { valid: true, sanitizedInput };
+        }
+        
+        // Usage
+        const userInput = getUserInput();
+        const validation = validateUserPrompt(userInput);
+        
+        if (validation.valid) {
+          // Proceed with the sanitized input
+          sendToLLM(validation.sanitizedInput);
+        } else {
+          // Handle invalid input
+          showError(validation.error);
+        }
+      </code></pre>
+      
+      <h3>2. Output Filtering</h3>
+      <pre><code class="language-python">
+        def filter_llm_output(llm_response):
+            # Define patterns for harmful content
+            harmful_patterns = [
+                r'(how to make .*? bomb)',
+                r'(instructions for .*? illegal)',
+                r'(personal information such as .*?)'
+            ]
+            
+            # Check if response contains harmful content
+            for pattern in harmful_patterns:
+                if re.search(pattern, llm_response, re.IGNORECASE):
+                    return "I cannot provide that information as it may violate safety guidelines."
+            
+            # Apply content moderation API
+            moderation_result = content_moderation_api.analyze(llm_response)
+            
+            if moderation_result.is_harmful:
+                return "The requested information cannot be provided due to safety concerns."
+                
+            return llm_response
+            
+        # Usage
+        user_query = "Tell me about encryption algorithms"
+        raw_response = llm_model.generate(user_query)
+        safe_response = filter_llm_output(raw_response)
+        return safe_response
+      </code></pre>
+      
+      <h3>3. Rate Limiting Implementation</h3>
+      <pre><code class="language-typescript">
+        import { RateLimiterMemory } from 'rate-limiter-flexible';
+
+        // Configure rate limiter - 10 requests per minute maximum
+        const rateLimiter = new RateLimiterMemory({
+          points: 10, // Number of requests
+          duration: 60, // Per 60 seconds
+        });
+
+        // Express middleware for rate limiting
+        export async function rateLimitMiddleware(req, res, next) {
+          try {
+            // Identify the user based on API key, user ID, or IP address
+            const userKey = req.headers['api-key'] || req.ip;
+            
+            // Consume point
+            await rateLimiter.consume(userKey);
+            next();
+          } catch (error) {
+            // Rate limit exceeded
+            res.status(429).json({
+              error: 'Too many requests. Please try again later.',
+              retryAfter: error.msBeforeNext / 1000
+            });
+          }
+        }
+
+        // Usage in an Express application
+        app.use('/api/llm', rateLimitMiddleware);
+        app.post('/api/llm', async (req, res) => {
+          // Handle LLM request
+          const response = await processLLMRequest(req.body);
+          res.json(response);
+        });
+      </code></pre>
+      
+      <h3>4. Detecting PII in LLM Outputs</h3>
+      <pre><code class="language-python">
+        import re
+        import spacy
+
+        # Load NER model
+        nlp = spacy.load("en_core_web_lg")
+
+        def redact_pii(text):
+            # Use regex patterns for structured PII
+            # Credit Card Numbers
+            text = re.sub(r'\\b(?:\\d{4}[- ]?){3}\\d{4}\\b', '[REDACTED CREDIT CARD]', text)
+            
+            # SSN
+            text = re.sub(r'\\b\\d{3}-\\d{2}-\\d{4}\\b', '[REDACTED SSN]', text)
+            
+            # Email addresses
+            text = re.sub(r'\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b', '[REDACTED EMAIL]', text)
+            
+            # Use NER for unstructured PII
+            doc = nlp(text)
+            entities_to_redact = ['PERSON', 'ORG', 'GPE', 'LOC', 'PHONE']
+            
+            redacted_text = text
+            for ent in reversed(doc.ents):
+                if ent.label_ in entities_to_redact:
+                    redacted_text = redacted_text[:ent.start_char] + f'[REDACTED {ent.label_}]' + redacted_text[ent.end_char:]
+            
+            return redacted_text
+
+        # Usage
+        llm_output = get_llm_response("Tell me about John Doe who lives in New York")
+        safe_output = redact_pii(llm_output)
+        print(safe_output)  # "Tell me about [REDACTED PERSON] who lives in [REDACTED GPE]"
+      </code></pre>
+      
+      <h3>5. Secure LLM Integration Class</h3>
+      <pre><code class="language-typescript">
+        class SecureLLMService {
+          private apiKey: string;
+          private modelName: string;
+          private maxRetries: number = 3;
+          private sensitiveTerms: string[] = [
+            "password", "secret", "api key", "token", "credentials"
+          ];
+          
+          constructor(apiKey: string, modelName: string) {
+            this.apiKey = apiKey;
+            this.modelName = modelName;
+          }
+          
+          private sanitizePrompt(prompt: string): string {
+            // Remove potential instruction hijacking attempts
+            let sanitized = prompt.replace(/system:|assistant:|user:/gi, "[FILTERED]");
+            
+            // Check for sensitive information in the prompt
+            this.sensitiveTerms.forEach(term => {
+              sanitized = sanitized.replace(new RegExp(\`\\\\b\${term}\\\\s*[:=]\\\\s*[^\\\\s]+\`, 'gi'), 
+                \`\${term}: [REDACTED]\`);
+            });
+            
+            return sanitized;
+          }
+          
+          private async logRequest(prompt: string, response: string): Promise<void> {
+            // Log to secure audit system (without sensitive data)
+            const sanitizedPrompt = this.sanitizePrompt(prompt);
+            const sanitizedResponse = response.substring(0, 100) + "..."; // Truncate for logging
+            
+            await auditLogger.log({
+              timestamp: new Date(),
+              modelName: this.modelName,
+              promptPreview: sanitizedPrompt.substring(0, 50) + "...",
+              responsePreview: sanitizedResponse,
+              userId: getCurrentUser().id
+            });
+          }
+          
+          public async generateResponse(prompt: string): Promise<string> {
+            // Sanitize input
+            const sanitizedPrompt = this.sanitizePrompt(prompt);
+            
+            // Apply content safety filter to prompt
+            const safetyResult = await contentSafetyService.checkPrompt(sanitizedPrompt);
+            if (!safetyResult.safe) {
+              throw new Error(\`Prompt rejected: \${safetyResult.reason}\`);
+            }
+            
+            // Make API request with retry logic
+            let attempts = 0;
+            let response = null;
+            
+            while (attempts < this.maxRetries && !response) {
+              try {
+                response = await llmApiClient.complete({
+                  model: this.modelName,
+                  prompt: sanitizedPrompt,
+                  max_tokens: 1000,
+                  temperature: 0.7,
+                  headers: {
+                    Authorization: \`Bearer \${this.apiKey}\`
+                  }
+                });
+              } catch (error) {
+                attempts++;
+                if (attempts >= this.maxRetries) {
+                  throw new Error(\`Failed to get LLM response after \${this.maxRetries} attempts\`);
+                }
+                // Exponential backoff
+                await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempts)));
+              }
+            }
+            
+            // Filter the response for safety
+            const filteredResponse = await contentSafetyService.filterResponse(response.text);
+            
+            // Log the interaction
+            await this.logRequest(prompt, filteredResponse);
+            
+            return filteredResponse;
+          }
+        }
+        
+        // Usage
+        const llmService = new SecureLLMService(process.env.LLM_API_KEY, "gpt-4");
+        
+        app.post('/api/ask', async (req, res) => {
+          try {
+            const userPrompt = req.body.prompt;
+            const response = await llmService.generateResponse(userPrompt);
+            res.json({ response });
+          } catch (error) {
+            res.status(400).json({ error: error.message });
+          }
+        });
+      </code></pre>
+
       <h2>Mitigation Strategies</h2>
       <p>Here are some best practices to mitigate these risks:</p>
       <ul>
@@ -238,6 +481,191 @@ const blogPosts: BlogPost[] = [
         <li><strong>Q-Function (Q(s, a)):</strong> The Q-function estimates the expected cumulative reward the agent will receive starting from state s, taking action a, and following a particular policy.</li>
       </ul>
       
+      <h2>Code Implementation: Q-Learning Algorithm</h2>
+      <pre><code class="language-python">
+        import numpy as np
+        import matplotlib.pyplot as plt
+        import gym
+
+        # Create a simple environment
+        env = gym.make('FrozenLake-v1')
+
+        # Initialize Q-table
+        Q = np.zeros([env.observation_space.n, env.action_space.n])
+
+        # Hyperparameters
+        learning_rate = 0.8
+        discount_factor = 0.95
+        exploration_rate = 1.0
+        max_exploration_rate = 1.0
+        min_exploration_rate = 0.01
+        exploration_decay_rate = 0.001
+
+        # Training parameters
+        num_episodes = 10000
+        max_steps_per_episode = 100
+
+        # List to track rewards
+        rewards_all_episodes = []
+
+        # Q-learning algorithm
+        for episode in range(num_episodes):
+            # Initialize new episode
+            state = env.reset()
+            done = False
+            rewards_current_episode = 0
+            
+            for step in range(max_steps_per_episode):
+                # Exploration-exploitation trade-off
+                exploration_threshold = np.random.uniform(0, 1)
+                
+                if exploration_threshold > exploration_rate:
+                    # Exploit: choose action with highest Q-value
+                    action = np.argmax(Q[state, :])
+                else:
+                    # Explore: choose random action
+                    action = env.action_space.sample()
+                
+                # Take action and observe new state and reward
+                new_state, reward, done, _ = env.step(action)
+                
+                # Update Q-table using Bellman equation
+                Q[state, action] = Q[state, action] * (1 - learning_rate) + \
+                    learning_rate * (reward + discount_factor * np.max(Q[new_state, :]))
+                
+                # Update state and add reward
+                state = new_state
+                rewards_current_episode += reward
+                
+                # End episode if done
+                if done:
+                    break
+            
+            # Update exploration rate
+            exploration_rate = min_exploration_rate + \
+                (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate * episode)
+            
+            # Add current episode reward to total rewards list
+            rewards_all_episodes.append(rewards_current_episode)
+            
+            # Print average reward every 1000 episodes
+            if episode % 1000 == 0:
+                average_reward = np.mean(rewards_all_episodes[-1000:])
+                print(f"Episode: {episode}, Average Reward: {average_reward}, Exploration Rate: {exploration_rate}")
+
+        print("Training completed!")
+
+        # Calculate and print average reward per thousand episodes
+        rewards_per_thousand_episodes = np.split(np.array(rewards_all_episodes), num_episodes/1000)
+        count = 1000
+        
+        print("Average reward per thousand episodes:")
+        for r in rewards_per_thousand_episodes:
+            print(count, ": ", str(sum(r/1000)))
+            count += 1000
+            
+        # Print trained Q-table
+        print("\\nQ-table:")
+        print(Q)
+
+        # Visualize results
+        plt.figure(figsize=(12, 5))
+        plt.plot(rewards_all_episodes)
+        plt.xlabel('Episode')
+        plt.ylabel('Reward')
+        plt.title('Rewards per Episode')
+        plt.show()
+      </code></pre>
+      
+      <h2>Deep Q-Networks (DQN)</h2>
+      <p>For more complex environments, we can use neural networks to approximate the Q-function:</p>
+      
+      <pre><code class="language-python">
+        import tensorflow as tf
+        from tensorflow import keras
+        from collections import deque
+        import numpy as np
+        import random
+        import gym
+
+        class DQNAgent:
+            def __init__(self, state_size, action_size):
+                self.state_size = state_size
+                self.action_size = action_size
+                self.memory = deque(maxlen=2000)
+                self.gamma = 0.95    # discount factor
+                self.epsilon = 1.0   # exploration rate
+                self.epsilon_min = 0.01
+                self.epsilon_decay = 0.995
+                self.learning_rate = 0.001
+                self.model = self._build_model()
+                
+            def _build_model(self):
+                # Neural network for deep Q learning
+                model = keras.Sequential()
+                model.add(keras.layers.Dense(24, input_dim=self.state_size, activation='relu'))
+                model.add(keras.layers.Dense(24, activation='relu'))
+                model.add(keras.layers.Dense(self.action_size, activation='linear'))
+                model.compile(loss='mse', optimizer=keras.optimizers.Adam(lr=self.learning_rate))
+                return model
+                
+            def remember(self, state, action, reward, next_state, done):
+                self.memory.append((state, action, reward, next_state, done))
+                
+            def act(self, state):
+                if np.random.rand() <= self.epsilon:
+                    return random.randrange(self.action_size)
+                act_values = self.model.predict(state)
+                return np.argmax(act_values[0])
+                
+            def replay(self, batch_size):
+                minibatch = random.sample(self.memory, batch_size)
+                for state, action, reward, next_state, done in minibatch:
+                    target = reward
+                    if not done:
+                        target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
+                    target_f = self.model.predict(state)
+                    target_f[0][action] = target
+                    self.model.fit(state, target_f, epochs=1, verbose=0)
+                if self.epsilon > self.epsilon_min:
+                    self.epsilon *= self.epsilon_decay
+
+        # Main training loop
+        def train_dqn(env_name):
+            env = gym.make(env_name)
+            state_size = env.observation_space.shape[0]
+            action_size = env.action_space.n
+            agent = DQNAgent(state_size, action_size)
+            batch_size = 32
+            EPISODES = 1000
+            
+            for e in range(EPISODES):
+                state = env.reset()
+                state = np.reshape(state, [1, state_size])
+                total_reward = 0
+                
+                for time in range(500):
+                    # env.render()  # Uncomment to visualize
+                    action = agent.act(state)
+                    next_state, reward, done, _ = env.step(action)
+                    next_state = np.reshape(next_state, [1, state_size])
+                    agent.remember(state, action, reward, next_state, done)
+                    state = next_state
+                    total_reward += reward
+                    
+                    if done:
+                        print(f"Episode: {e}/{EPISODES}, Score: {total_reward}, Epsilon: {agent.epsilon:.2}")
+                        break
+                        
+                    if len(agent.memory) > batch_size:
+                        agent.replay(batch_size)
+            
+            return agent
+
+        # Train the agent
+        trained_agent = train_dqn('CartPole-v1')
+      </code></pre>
+      
       <h2>Learning in Reinforcement Learning</h2>
       <p>The goal of RL is to find an optimal policy that maximizes the expected cumulative reward. Agents learn through trial and error, interacting with the environment and updating their policy based on the rewards they receive.</p>
       
@@ -247,6 +675,9 @@ const blogPosts: BlogPost[] = [
         <li><strong>SARSA:</strong> An on-policy algorithm that learns the Q-function by updating the Q-values based on the current policy.</li>
         <li><strong>Deep Q-Networks (DQN):</strong> A deep learning-based algorithm that uses neural networks to approximate the Q-function.</li>
       </ul>
+      
+      <h2>Conclusion</h2>
+      <p>Reinforcement learning through Markov Decision Processes provides a powerful framework for solving sequential decision-making problems. By understanding these foundational concepts and implementing algorithms like Q-learning and DQN, you can develop agents that learn to make optimal decisions in complex environments.</p>
     `,
     author: 'Aswin Bhaskaran',
     date: '2023-06-20T10:00:00Z',
