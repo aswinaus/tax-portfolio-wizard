@@ -207,7 +207,7 @@ const blogPosts: BlogPost[] = [
     readTime: '9 min read',
     tags: ['owasp', 'llm', 'security', 'vulnerabilities'],
     category: 'security',
-    image: 'https://images.unsplash.com/photo-1555952517-2e8e729e0b44?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2670&q=80'
+    image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2670&q=80'
   },
   {
     id: '6',
@@ -304,3 +304,4 @@ export const searchBlogs = (term: string) => {
     )
   );
 };
+
