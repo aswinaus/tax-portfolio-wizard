@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Folder, 
@@ -13,7 +12,12 @@ import {
   Square,
   Search,
   Filter,
-  FolderOpen
+  FolderOpen,
+  Copy,
+  Flag,
+  List,
+  Box,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,8 +66,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useToast } from "@/hooks/use-toast";
 
-// Document interface
 interface Document {
   id: string;
   name: string;
@@ -73,9 +77,15 @@ interface Document {
   uploadDate: string;
   isArchived: boolean;
   category: 'form990' | 'financial' | 'tax' | 'other';
+  jurisdiction: string;
+  serviceLine: string;
+  recordType: string;
+  entity: string;
+  clientApproved: boolean;
+  clientContact: string;
+  client: string;
 }
 
-// Permission interface
 interface Permission {
   id: string;
   name: string;
@@ -84,7 +94,6 @@ interface Permission {
   dateAdded: string;
 }
 
-// Sample document data
 const sampleDocuments: Document[] = [
   {
     id: 'doc-1',
@@ -94,7 +103,14 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-12-10T10:30:00Z',
     isArchived: false,
-    category: 'form990'
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: true,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
   },
   {
     id: 'doc-2',
@@ -104,7 +120,14 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-12-15T14:45:00Z',
     isArchived: false,
-    category: 'financial'
+    category: 'financial',
+    jurisdiction: 'United States',
+    serviceLine: 'Assurance',
+    recordType: 'Financial reporting',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Michael Chen',
+    client: 'Boeing'
   },
   {
     id: 'doc-3',
@@ -114,7 +137,14 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2022-12-05T09:15:00Z',
     isArchived: true,
-    category: 'form990'
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: false,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
   },
   {
     id: 'doc-4',
@@ -124,7 +154,14 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-11-28T16:30:00Z',
     isArchived: false,
-    category: 'tax'
+    category: 'tax',
+    jurisdiction: 'India',
+    serviceLine: 'Tax',
+    recordType: 'Tax permanent documentation',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Raj Patel',
+    client: 'Air Canada'
   },
   {
     id: 'doc-5',
@@ -134,11 +171,357 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-12-20T11:30:00Z',
     isArchived: false,
-    category: 'financial'
+    category: 'financial',
+    jurisdiction: 'Canada',
+    serviceLine: 'Advisory',
+    recordType: 'Budget planning',
+    entity: 'Government',
+    clientApproved: false,
+    clientContact: 'Emma Thompson',
+    client: 'Air Canada'
+  },
+  {
+    id: 'doc-6',
+    name: 'Healthcare Compliance Report.docx',
+    type: 'Word',
+    size: '1.8 MB',
+    uploadedBy: 'Kelly Lewis',
+    uploadDate: '2023-11-12T08:45:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'United States',
+    serviceLine: 'Advisory',
+    recordType: 'Compliance documentation',
+    entity: 'Healthcare',
+    clientApproved: true,
+    clientContact: 'David Miller',
+    client: 'Mayo Clinic'
+  },
+  {
+    id: 'doc-7',
+    name: 'Quarterly Financial Review Q3 2023.pdf',
+    type: 'PDF',
+    size: '3.5 MB',
+    uploadedBy: 'Mark Wilson',
+    uploadDate: '2023-10-15T13:20:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'United Kingdom',
+    serviceLine: 'Assurance',
+    recordType: 'Financial reporting',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'James Barnes',
+    client: 'Barclays'
+  },
+  {
+    id: 'doc-8',
+    name: 'Tax Planning Strategy 2024.pptx',
+    type: 'PowerPoint',
+    size: '4.2 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-12-28T09:10:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'Global',
+    serviceLine: 'Tax',
+    recordType: 'Tax planning',
+    entity: 'Multinational',
+    clientApproved: true,
+    clientContact: 'Robert Zhang',
+    client: 'Samsung'
+  },
+  {
+    id: 'doc-9',
+    name: 'Form 990 - 2021.pdf',
+    type: 'PDF',
+    size: '2.1 MB',
+    uploadedBy: 'Jennifer Lopez',
+    uploadDate: '2021-12-10T14:30:00Z',
+    isArchived: true,
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: true,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
+  },
+  {
+    id: 'doc-10',
+    name: 'Merger Due Diligence Report.pdf',
+    type: 'PDF',
+    size: '5.7 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-09-20T15:45:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'United States',
+    serviceLine: 'Advisory',
+    recordType: 'M&A documentation',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Victoria Adams',
+    client: 'Meta'
+  },
+  {
+    id: 'doc-11',
+    name: 'GST Compliance Checklist.xlsx',
+    type: 'Excel',
+    size: '0.9 MB',
+    uploadedBy: 'Rahul Sharma',
+    uploadDate: '2023-11-05T10:20:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'India',
+    serviceLine: 'Tax',
+    recordType: 'Tax compliance',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Amit Patel',
+    client: 'Reliance'
+  },
+  {
+    id: 'doc-12',
+    name: 'Environmental Impact Assessment.pdf',
+    type: 'PDF',
+    size: '6.3 MB',
+    uploadedBy: 'Emma Green',
+    uploadDate: '2023-08-15T09:30:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'Australia',
+    serviceLine: 'Advisory',
+    recordType: 'Environmental compliance',
+    entity: 'Mining',
+    clientApproved: false,
+    clientContact: 'Steve Hughes',
+    client: 'BHP'
+  },
+  {
+    id: 'doc-13',
+    name: 'IT Security Audit Report.pdf',
+    type: 'PDF',
+    size: '2.8 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-10-10T11:15:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'European Union',
+    serviceLine: 'Advisory',
+    recordType: 'IT audit',
+    entity: 'Technology',
+    clientApproved: true,
+    clientContact: 'Sophie Martin',
+    client: 'Spotify'
+  },
+  {
+    id: 'doc-14',
+    name: 'Form 990 - 2020.pdf',
+    type: 'PDF',
+    size: '2.0 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2020-12-12T13:45:00Z',
+    isArchived: true,
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: true,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
+  },
+  {
+    id: 'doc-15',
+    name: 'Corporate Governance Framework.docx',
+    type: 'Word',
+    size: '1.4 MB',
+    uploadedBy: 'Lisa Johnson',
+    uploadDate: '2023-07-25T14:30:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'United Kingdom',
+    serviceLine: 'Advisory',
+    recordType: 'Governance',
+    entity: 'Financial Services',
+    clientApproved: true,
+    clientContact: 'William Taylor',
+    client: 'HSBC'
+  },
+  {
+    id: 'doc-16',
+    name: 'Annual Financial Statements 2023.pdf',
+    type: 'PDF',
+    size: '4.5 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2024-01-20T10:15:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'Japan',
+    serviceLine: 'Assurance',
+    recordType: 'Financial reporting',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Takashi Yamamoto',
+    client: 'Toyota'
+  },
+  {
+    id: 'doc-17',
+    name: 'Transfer Pricing Documentation.pdf',
+    type: 'PDF',
+    size: '3.2 MB',
+    uploadedBy: 'Carlos Rodriguez',
+    uploadDate: '2023-11-18T09:45:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'Global',
+    serviceLine: 'Tax',
+    recordType: 'Transfer pricing',
+    entity: 'Multinational',
+    clientApproved: true,
+    clientContact: 'Maria Garcia',
+    client: 'Nestlé'
+  },
+  {
+    id: 'doc-18',
+    name: 'GDPR Compliance Report.pdf',
+    type: 'PDF',
+    size: '2.1 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-09-05T15:30:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'European Union',
+    serviceLine: 'Advisory',
+    recordType: 'Data privacy',
+    entity: 'Technology',
+    clientApproved: false,
+    clientContact: 'Hans Müller',
+    client: 'Siemens'
+  },
+  {
+    id: 'doc-19',
+    name: 'Pension Fund Valuation 2023.xlsx',
+    type: 'Excel',
+    size: '2.3 MB',
+    uploadedBy: 'Sarah Thompson',
+    uploadDate: '2023-12-01T11:20:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'Canada',
+    serviceLine: 'Assurance',
+    recordType: 'Actuarial valuation',
+    entity: 'Pension Fund',
+    clientApproved: true,
+    clientContact: 'John Williams',
+    client: 'Ontario Teachers'
+  },
+  {
+    id: 'doc-20',
+    name: 'Tax Audit Defense Strategy.docx',
+    type: 'Word',
+    size: '1.6 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-10-22T14:15:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax controversy',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Elizabeth Clark',
+    client: 'Amazon'
+  },
+  {
+    id: 'doc-21',
+    name: 'Form 990 - 2019.pdf',
+    type: 'PDF',
+    size: '1.9 MB',
+    uploadedBy: 'Michael Brown',
+    uploadDate: '2019-12-15T10:30:00Z',
+    isArchived: true,
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: true,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
+  },
+  {
+    id: 'doc-22',
+    name: 'Sustainability Report 2023.pdf',
+    type: 'PDF',
+    size: '4.8 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-08-10T13:40:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'Global',
+    serviceLine: 'Advisory',
+    recordType: 'ESG reporting',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Daniel Lee',
+    client: 'Unilever'
+  },
+  {
+    id: 'doc-23',
+    name: 'R&D Tax Credit Analysis.xlsx',
+    type: 'Excel',
+    size: '1.7 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-11-30T09:20:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'United Kingdom',
+    serviceLine: 'Tax',
+    recordType: 'Tax incentives',
+    entity: 'Technology',
+    clientApproved: false,
+    clientContact: 'Andrew Wilson',
+    client: 'Dyson'
+  },
+  {
+    id: 'doc-24',
+    name: 'Quarterly Business Review Q1 2024.pptx',
+    type: 'PowerPoint',
+    size: '3.9 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2024-04-05T14:30:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'United States',
+    serviceLine: 'Advisory',
+    recordType: 'Business performance',
+    entity: 'Retail',
+    clientApproved: true,
+    clientContact: 'Jessica Martinez',
+    client: 'Walmart'
+  },
+  {
+    id: 'doc-25',
+    name: 'Customs and International Trade Report.pdf',
+    type: 'PDF',
+    size: '2.6 MB',
+    uploadedBy: 'Wei Chen',
+    uploadDate: '2023-09-18T11:05:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'China',
+    serviceLine: 'Tax',
+    recordType: 'International trade',
+    entity: 'Manufacturing',
+    clientApproved: true,
+    clientContact: 'Li Wei',
+    client: 'Lenovo'
   }
 ];
 
-// Sample permission data
 const samplePermissions: Permission[] = [
   {
     id: 'perm-1',
@@ -169,14 +552,13 @@ const DocumentRepository = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+  const { toast } = useToast();
   
-  // Format date string
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
   
-  // Toggle document selection
   const toggleDocumentSelection = (docId: string) => {
     if (selectedDocuments.includes(docId)) {
       setSelectedDocuments(selectedDocuments.filter(id => id !== docId));
@@ -185,7 +567,6 @@ const DocumentRepository = () => {
     }
   };
   
-  // Select all documents
   const selectAllDocuments = () => {
     if (selectedDocuments.length === getFilteredDocuments().length) {
       setSelectedDocuments([]);
@@ -194,11 +575,9 @@ const DocumentRepository = () => {
     }
   };
   
-  // Filter documents based on search and active tab
   const getFilteredDocuments = () => {
     let filteredDocs = sampleDocuments;
     
-    // Filter by tab
     if (activeTab === 'archived') {
       filteredDocs = filteredDocs.filter(doc => doc.isArchived);
     } else if (activeTab === 'active') {
@@ -207,7 +586,6 @@ const DocumentRepository = () => {
       filteredDocs = filteredDocs.filter(doc => doc.category === activeTab);
     }
     
-    // Filter by search term
     if (searchTerm) {
       filteredDocs = filteredDocs.filter(doc => 
         doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -219,24 +597,36 @@ const DocumentRepository = () => {
     return filteredDocs;
   };
   
-  // Download selected documents
   const downloadSelectedDocuments = () => {
     console.log('Downloading documents:', selectedDocuments);
-    // In a real app, this would trigger actual file downloads
     alert(`Downloading ${selectedDocuments.length} document(s)`);
   };
   
-  // Archive selected documents
   const archiveSelectedDocuments = () => {
     console.log('Archiving documents:', selectedDocuments);
-    // In a real app, this would update the document status in the database
     alert(`Archived ${selectedDocuments.length} document(s)`);
     setSelectedDocuments([]);
   };
 
+  const copySelectedDocuments = () => {
+    if (selectedDocuments.length === 0) {
+      toast({
+        title: "No documents selected",
+        description: "Please select documents to copy",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log('Copying documents:', selectedDocuments);
+    toast({
+      title: "Documents copied",
+      description: `${selectedDocuments.length} document(s) copied successfully`,
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header Section */}
       <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -252,7 +642,6 @@ const DocumentRepository = () => {
         </div>
       </div>
       
-      {/* Action Bar */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex flex-1 max-w-sm relative">
           <Input
@@ -305,6 +694,14 @@ const DocumentRepository = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          
+          <Button 
+            variant="outline" 
+            onClick={copySelectedDocuments}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copy Documents
+          </Button>
           
           {selectedDocuments.length > 0 && (
             <>
@@ -366,7 +763,6 @@ const DocumentRepository = () => {
         </div>
       </div>
       
-      {/* Document Tabs and List */}
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
         <TabsList className="w-full max-w-md grid grid-cols-5">
           <TabsTrigger value="all">All</TabsTrigger>
@@ -379,79 +775,125 @@ const DocumentRepository = () => {
         <TabsContent value={activeTab} className="mt-6">
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40px]">
-                      <div className="flex items-center justify-center" onClick={selectAllDocuments}>
-                        {selectedDocuments.length === getFilteredDocuments().length && getFilteredDocuments().length > 0 ? (
-                          <CheckSquare className="h-4 w-4 cursor-pointer" />
-                        ) : (
-                          <Square className="h-4 w-4 cursor-pointer" />
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Uploaded By</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {getFilteredDocuments().length > 0 ? (
-                    getFilteredDocuments().map((doc) => (
-                      <TableRow key={doc.id} className={doc.isArchived ? "opacity-70" : ""}>
-                        <TableCell>
-                          <div 
-                            className="flex items-center justify-center" 
-                            onClick={() => toggleDocumentSelection(doc.id)}
-                          >
-                            {selectedDocuments.includes(doc.id) ? (
-                              <CheckSquare className="h-4 w-4 cursor-pointer" />
-                            ) : (
-                              <Square className="h-4 w-4 cursor-pointer" />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {doc.type === 'PDF' ? (
-                              <FileText className="h-4 w-4 text-red-500" />
-                            ) : doc.type === 'Excel' ? (
-                              <FileText className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <File className="h-4 w-4" />
-                            )}
-                            <span>{doc.name}</span>
-                            {doc.isArchived && (
-                              <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full ml-1">
-                                Archived
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{doc.type}</TableCell>
-                        <TableCell>{doc.size}</TableCell>
-                        <TableCell>{doc.uploadedBy}</TableCell>
-                        <TableCell>{formatDate(doc.uploadDate)}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No documents found.
-                      </TableCell>
+                      <TableHead className="w-[40px]">
+                        <div className="flex items-center justify-center" onClick={selectAllDocuments}>
+                          {selectedDocuments.length === getFilteredDocuments().length && getFilteredDocuments().length > 0 ? (
+                            <CheckSquare className="h-4 w-4 cursor-pointer" />
+                          ) : (
+                            <Square className="h-4 w-4 cursor-pointer" />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <Flag className="h-3 w-3" />
+                          <span>Jurisdiction</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <List className="h-3 w-3" />
+                          <span>Service Line</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" />
+                          <span>Record Type</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <Box className="h-3 w-3" />
+                          <span>Entity</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>Client Approved</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          <span>Client Contact</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Uploaded By</TableHead>
+                      <TableHead>Date</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {getFilteredDocuments().length > 0 ? (
+                      getFilteredDocuments().map((doc) => (
+                        <TableRow key={doc.id} className={doc.isArchived ? "opacity-70" : ""}>
+                          <TableCell>
+                            <div 
+                              className="flex items-center justify-center" 
+                              onClick={() => toggleDocumentSelection(doc.id)}
+                            >
+                              {selectedDocuments.includes(doc.id) ? (
+                                <CheckSquare className="h-4 w-4 cursor-pointer" />
+                              ) : (
+                                <Square className="h-4 w-4 cursor-pointer" />
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {doc.type === 'PDF' ? (
+                                <FileText className="h-4 w-4 text-red-500" />
+                              ) : doc.type === 'Excel' ? (
+                                <FileText className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <File className="h-4 w-4" />
+                              )}
+                              <span>{doc.name}</span>
+                              {doc.isArchived && (
+                                <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full ml-1">
+                                  Archived
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{doc.type}</TableCell>
+                          <TableCell>{doc.size}</TableCell>
+                          <TableCell>{doc.jurisdiction}</TableCell>
+                          <TableCell>{doc.serviceLine}</TableCell>
+                          <TableCell>{doc.recordType}</TableCell>
+                          <TableCell>{doc.entity}</TableCell>
+                          <TableCell>
+                            {doc.clientApproved ? (
+                              <CheckSquare className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Square className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </TableCell>
+                          <TableCell>{doc.clientContact}</TableCell>
+                          <TableCell>{doc.client}</TableCell>
+                          <TableCell>{doc.uploadedBy}</TableCell>
+                          <TableCell>{formatDate(doc.uploadDate)}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                          No documents found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
       
-      {/* Archival Section */}
       <Collapsible className="border rounded-md">
         <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
           <div className="flex items-center gap-2">
@@ -524,7 +966,6 @@ const DocumentRepository = () => {
         </CollapsibleContent>
       </Collapsible>
       
-      {/* Permissions Section */}
       <Collapsible className="border rounded-md">
         <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
           <div className="flex items-center gap-2">

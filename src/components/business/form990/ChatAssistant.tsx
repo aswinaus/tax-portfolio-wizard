@@ -14,7 +14,7 @@ const ChatAssistant = () => {
             <h3 className="font-medium text-base mb-1">Form 990 Filing Assistant</h3>
             <p className="text-muted-foreground text-sm">
               Our AI assistant can answer your questions about Form 990 filing requirements, deadlines, 
-              extensions, and more. Just ask a question to get started.
+              extensions, exemptions, and help you understand specific sections of the form. Just ask a question to get started.
             </p>
           </div>
         </div>
