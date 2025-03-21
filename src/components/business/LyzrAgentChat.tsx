@@ -24,6 +24,7 @@ const LyzrAgentChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,8 +32,20 @@ const LyzrAgentChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Try to load API key from localStorage if available
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('lyzr_api_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
+  }, []);
+
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
+      if (!apiKey) {
+        throw new Error('API key is required');
+      }
+      
       // Replace this URL with your Lyzr agent's API endpoint
       // https://studio.lyzr.ai/agent-create/67d85a7eb0001308323789d0
       const apiUrl = 'https://api.lyzr.ai/chat';
@@ -40,7 +53,7 @@ const LyzrAgentChat = () => {
       
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.LYZR_API_KEY || 'your-lyzr-api-key'}`
+        'Authorization': `Bearer ${apiKey}`
       };
       
       const payload = {
@@ -73,6 +86,11 @@ const LyzrAgentChat = () => {
     if (e) e.preventDefault();
     
     if (!input.trim()) return;
+
+    if (!apiKey) {
+      toast.error('Please enter your Lyzr API key first');
+      return;
+    }
     
     const userMessage: Message = {
       content: input,
@@ -107,6 +125,12 @@ const LyzrAgentChat = () => {
       setIsLoading(false);
     }
   };
+
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newApiKey = e.target.value;
+    setApiKey(newApiKey);
+    localStorage.setItem('lyzr_api_key', newApiKey);
+  };
   
   return (
     <Card className="h-[500px] flex flex-col">
@@ -115,6 +139,18 @@ const LyzrAgentChat = () => {
           <Bot className="h-5 w-5 text-primary" />
           Form 990 Filing Assistant
         </CardTitle>
+        <div className="mt-2">
+          <Input
+            type="password"
+            placeholder="Enter your Lyzr API key"
+            value={apiKey}
+            onChange={handleApiKeyChange}
+            className="text-xs"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Your API key is stored locally and never sent to our servers
+          </p>
+        </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-y-auto pb-0">
         <div className="space-y-4">
@@ -185,7 +221,7 @@ const LyzrAgentChat = () => {
           <Button 
             type="submit" 
             size="icon" 
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !input.trim() || !apiKey}
           >
             <Send className="h-4 w-4" />
           </Button>
