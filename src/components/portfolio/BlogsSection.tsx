@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, FileText, Shield, BookMarked } from 'lucide-react';
+import { ArrowRight, Cpu, Shield, Brain, TestTube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,7 @@ const BlogsSection = () => {
           <CardFooter>
             <Link to="/portfolio/blogs/6">
               <Button variant="outline" className="mt-2">
-                <BookMarked className="mr-2 h-4 w-4" />
+                <Brain className="mr-2 h-4 w-4" />
                 Read Blog Post
               </Button>
             </Link>
@@ -69,14 +69,14 @@ const BlogsSection = () => {
         </Card>
         
         <div className="bg-secondary/50 rounded-lg p-8 text-center">
-          <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">Share Your Thoughts</h3>
+          <TestTube className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">LLM Evals & Quantization</h3>
           <p className="text-muted-foreground mb-4">
-            View blogs or showcase your expertise and share knowledge.
+            Explore blog posts on LLM Evals, LLM Quantization, OWASP Security, and Reinforcement Learning.
           </p>
           <Link to="/portfolio/blogs">
             <Button>
-              <FileText className="mr-2 h-4 w-4" />
+              <Cpu className="mr-2 h-4 w-4" />
               View More Blogs
             </Button>
           </Link>

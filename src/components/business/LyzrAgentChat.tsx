@@ -24,9 +24,8 @@ const LyzrAgentChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string>(() => {
-    return localStorage.getItem('lyzr_api_key') || '';
-  });
+  const [apiKey, setApiKey] = useState<string>('');
+  const [userId, setUserId] = useState<string>('demo@example.com');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,37 +33,42 @@ const LyzrAgentChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Save API key to localStorage when it changes
+  // Try to load API key from localStorage if available
   useEffect(() => {
-    if (apiKey) {
-      localStorage.setItem('lyzr_api_key', apiKey);
+    const savedApiKey = localStorage.getItem('lyzr_api_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
     }
-  }, [apiKey]);
+    
+    const savedUserId = localStorage.getItem('lyzr_user_id');
+    if (savedUserId) {
+      setUserId(savedUserId);
+    }
+  }, []);
 
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
       if (!apiKey) {
-        throw new Error('Please enter your Lyzr API key first');
+        throw new Error('API key is required');
       }
-
-      // Replace this URL with your Lyzr agent's API endpoint
-      // https://studio.lyzr.ai/agent-create/67d85a7eb0001308323789d0
-      const apiUrl = 'https://api.lyzr.ai/chat';
-      const agentId = '67d85a7eb0001308323789d0'; // Your agent ID from the URL
+      
+      // Updated endpoint based on curl command
+      const apiUrl = 'https://agent-prod.studio.lyzr.ai/v3/inference/chat/';
+      const agentId = '67d85a7eb0001308323789d0'; // Agent ID from the URL
       
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'x-api-key': apiKey
       };
       
       const payload = {
-        message: userMessage,
-        conversation_id: conversationId,
+        user_id: userId,
         agent_id: agentId,
-        metadata: {
-          source: 'form990_assistant'
-        }
+        session_id: conversationId || agentId,
+        message: userMessage
       };
+      
+      console.log('Sending request to Lyzr API:', payload);
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -76,7 +80,13 @@ const LyzrAgentChat = () => {
         throw new Error(`API error: ${response.status} ${response.statusText}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('Lyzr API response:', data);
+      
+      return {
+        response: data.response || data.text || 'No response from AI',
+        conversation_id: data.session_id || conversationId
+      };
     } catch (error) {
       console.error('Error calling Lyzr API:', error);
       throw error;
@@ -87,7 +97,7 @@ const LyzrAgentChat = () => {
     if (e) e.preventDefault();
     
     if (!input.trim()) return;
-    
+
     if (!apiKey) {
       toast.error('Please enter your Lyzr API key first');
       return;
@@ -126,6 +136,18 @@ const LyzrAgentChat = () => {
       setIsLoading(false);
     }
   };
+
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newApiKey = e.target.value;
+    setApiKey(newApiKey);
+    localStorage.setItem('lyzr_api_key', newApiKey);
+  };
+  
+  const handleUserIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUserId = e.target.value;
+    setUserId(newUserId);
+    localStorage.setItem('lyzr_user_id', newUserId);
+  };
   
   return (
     <Card className="h-[500px] flex flex-col">
@@ -134,117 +156,101 @@ const LyzrAgentChat = () => {
           <Bot className="h-5 w-5 text-primary" />
           Form 990 Filing Assistant
         </CardTitle>
+        <div className="mt-2">
+          <Input
+            type="password"
+            placeholder="Enter your Lyzr API key"
+            value={apiKey}
+            onChange={handleApiKeyChange}
+            className="text-xs mb-2"
+          />
+          <Input
+            type="email"
+            placeholder="Enter your User ID/Email"
+            value={userId}
+            onChange={handleUserIdChange}
+            className="text-xs"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Your credentials are stored locally and never sent to our servers
+          </p>
+        </div>
       </CardHeader>
-      {!apiKey ? (
-        <CardContent className="flex-grow flex flex-col items-center justify-center">
-          <div className="w-full max-w-md space-y-4">
-            <div className="text-center mb-4">
+      <CardContent className="flex-grow overflow-y-auto pb-0">
+        <div className="space-y-4">
+          {messages.length === 0 ? (
+            <div className="text-center py-8">
               <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">API Key Required</h3>
-              <p className="text-muted-foreground text-sm mb-4">
-                Please enter your Lyzr API key to use the Form 990 Filing Assistant.
+              <p className="text-muted-foreground">
+                Ask me anything about Form 990 filing requirements, deadlines, or procedures.
               </p>
             </div>
-            <Input
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Lyzr API key"
-              type="password"
-              className="w-full"
-            />
-            <Button 
-              onClick={() => {
-                if (apiKey) {
-                  toast.success('API key saved successfully');
-                } else {
-                  toast.error('Please enter a valid API key');
-                }
-              }}
-              className="w-full"
-            >
-              Save API Key
-            </Button>
-          </div>
-        </CardContent>
-      ) : (
-        <>
-          <CardContent className="flex-grow overflow-y-auto pb-0">
-            <div className="space-y-4">
-              {messages.length === 0 ? (
-                <div className="text-center py-8">
-                  <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <p className="text-muted-foreground">
-                    Ask me anything about Form 990 filing requirements, deadlines, or procedures.
-                  </p>
-                </div>
-              ) : (
-                messages.map((msg, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div 
-                      className={`flex gap-3 max-w-[80%] ${
-                        msg.role === 'user' 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted'
-                      } p-3 rounded-lg`}
-                    >
-                      {msg.role === 'assistant' && (
-                        <Bot className="h-5 w-5 mt-1 flex-shrink-0" />
-                      )}
-                      <div>
-                        <p className="text-sm">{msg.content}</p>
-                        <span className="text-xs opacity-70 block mt-1">
-                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      {msg.role === 'user' && (
-                        <UserCircle2 className="h-5 w-5 mt-1 flex-shrink-0" />
-                      )}
-                    </div>
-                  </motion.div>
-                ))
-              )}
-              {isLoading && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex justify-start"
-                >
-                  <div className="bg-muted p-3 rounded-lg flex items-center">
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    <span className="text-sm">Thinking...</span>
-                  </div>
-                </motion.div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </CardContent>
-          <CardFooter className="pt-3">
-            <form onSubmit={handleSendMessage} className="w-full flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about Form 990 requirements, deadlines, etc."
-                disabled={isLoading}
-                className="flex-grow"
-              />
-              <Button 
-                type="submit" 
-                size="icon" 
-                disabled={isLoading || !input.trim()}
+          ) : (
+            messages.map((msg, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
-          </CardFooter>
-        </>
-      )}
+                <div 
+                  className={`flex gap-3 max-w-[80%] ${
+                    msg.role === 'user' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted'
+                  } p-3 rounded-lg`}
+                >
+                  {msg.role === 'assistant' && (
+                    <Bot className="h-5 w-5 mt-1 flex-shrink-0" />
+                  )}
+                  <div>
+                    <p className="text-sm">{msg.content}</p>
+                    <span className="text-xs opacity-70 block mt-1">
+                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  {msg.role === 'user' && (
+                    <UserCircle2 className="h-5 w-5 mt-1 flex-shrink-0" />
+                  )}
+                </div>
+              </motion.div>
+            ))
+          )}
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex justify-start"
+            >
+              <div className="bg-muted p-3 rounded-lg flex items-center">
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                <span className="text-sm">Thinking...</span>
+              </div>
+            </motion.div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </CardContent>
+      <CardFooter className="pt-3">
+        <form onSubmit={handleSendMessage} className="w-full flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask about Form 990 requirements, deadlines, etc."
+            disabled={isLoading}
+            className="flex-grow"
+          />
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={isLoading || !input.trim() || !apiKey}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      </CardFooter>
     </Card>
   );
 };
