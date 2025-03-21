@@ -33,20 +33,23 @@ const LyzrAgentChat = () => {
 
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
-      // Using the Lyzr agent API endpoint
-      const apiUrl = 'https://agent-prod.studio.lyzr.ai/v3/inference/chat/';
-      const agentId = '67d85a7eb0001308323789d0'; // Agent ID from the provided curl command
+      // Replace this URL with your Lyzr agent's API endpoint
+      // https://studio.lyzr.ai/agent-create/67d85a7eb0001308323789d0
+      const apiUrl = 'https://api.lyzr.ai/chat';
+      const agentId = '67d85a7eb0001308323789d0'; // Your agent ID from the URL
       
       const headers = {
         'Content-Type': 'application/json',
-        'x-api-key': 'sk-default-cou8kaWkBA01M8SIiVepiEYaiKE4DZMp' // API key from the provided curl command
+        'Authorization': `Bearer ${process.env.LYZR_API_KEY || 'your-lyzr-api-key'}`
       };
       
       const payload = {
-        user_id: "user@example.com", // Replace with actual user ID if available
+        message: userMessage,
+        conversation_id: conversationId,
         agent_id: agentId,
-        session_id: conversationId || agentId, // Use existing conversation ID or agent ID as default
-        message: userMessage
+        metadata: {
+          source: 'form990_assistant'
+        }
       };
       
       const response = await fetch(apiUrl, {
@@ -59,13 +62,7 @@ const LyzrAgentChat = () => {
         throw new Error(`API error: ${response.status} ${response.statusText}`);
       }
       
-      const data = await response.json();
-      
-      // Extract the relevant parts from the response
-      return {
-        response: data.response || data.message || "Sorry, I couldn't process your request.",
-        conversation_id: data.session_id || data.conversation_id
-      };
+      return await response.json();
     } catch (error) {
       console.error('Error calling Lyzr API:', error);
       throw error;

@@ -11,8 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { createBlogPost } from '@/services/blogService';
-import { BlogPost } from '@/types/blog';
+import { BlogPost, createBlogPost } from '@/services/blogService';
 import { useQueryClient } from '@tanstack/react-query';
 
 const BlogHeader = () => {
@@ -89,42 +88,6 @@ const BlogHeader = () => {
   <li>Source-output alignment scoring</li>
   <li>Citation precision</li>
 </ul>
-
-<h3>Context Precision</h3>
-<p>Measures how precisely the model uses the provided context when generating responses. High context precision indicates that the model is effectively using the most relevant parts of the available information. Key aspects include:</p>
-<ul>
-  <li>Ability to identify and extract relevant information from the context</li>
-  <li>Avoidance of using irrelevant context that might lead to misleading answers</li>
-  <li>Proper weighting of information based on its relevance to the query</li>
-</ul>
-<p>Low context precision might indicate that the model is using too much irrelevant information, which can dilute the quality of responses.</p>
-
-<h3>Context Recall</h3>
-<p>Evaluates how comprehensively the model captures and utilizes all relevant information from the provided context. High context recall demonstrates that the model isn't missing crucial information when formulating its response. This involves measuring:</p>
-<ul>
-  <li>Completeness of information used from available context</li>
-  <li>Ability to identify and incorporate all relevant details</li>
-  <li>Coverage of multiple relevant aspects in the response</li>
-</ul>
-<p>Poor context recall might result in incomplete answers that miss important details present in the context.</p>
-
-<h3>Faithfulness</h3>
-<p>Assesses how accurately the model's response aligns with the facts presented in the provided context, without introducing unsubstantiated information. Faithful responses stick strictly to what can be inferred from the given context. Evaluation approaches include:</p>
-<ul>
-  <li>Identifying statements in the response that cannot be verified by the context</li>
-  <li>Measuring the rate of hallucinated or fabricated details</li>
-  <li>Analyzing semantic consistency between the response and context</li>
-</ul>
-<p>Faithfulness is particularly crucial for applications like summarization, question answering, and information retrieval where trustworthiness is essential.</p>
-
-<h3>Answer Relevancy</h3>
-<p>Determines how well the model's response addresses the specific question or task posed by the user. Highly relevant answers directly respond to the user's query without tangential information. Key considerations include:</p>
-<ul>
-  <li>Alignment between the query intent and response content</li>
-  <li>Directness of the answer to the specific question asked</li>
-  <li>Appropriate level of detail based on the query complexity</li>
-</ul>
-<p>Low answer relevancy might indicate that the model is generating responses that, while possibly accurate, don't actually address what the user was asking about.</p>
 
 <h3>Toxicity</h3>
 <p>Evaluates the model's tendency to generate harmful, offensive, or inappropriate content. Toxicity checks are crucial for ensuring safe deployment. Common approaches include:</p>

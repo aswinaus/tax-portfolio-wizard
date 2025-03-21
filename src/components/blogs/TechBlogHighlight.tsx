@@ -1,5 +1,5 @@
 
-import { BlogPost } from '@/types/blog';
+import { BlogPost } from '@/services/blogService';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
