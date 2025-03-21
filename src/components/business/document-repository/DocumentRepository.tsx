@@ -17,7 +17,8 @@ import {
   Flag,
   List,
   Box,
-  User
+  User,
+  Move
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -212,6 +213,7 @@ const DocumentRepository = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const { toast } = useToast();
   
   const formatDate = (dateString: string) => {
@@ -283,6 +285,28 @@ const DocumentRepository = () => {
       title: "Documents copied",
       description: `${selectedDocuments.length} document(s) copied successfully`,
     });
+  };
+
+  const moveSelectedDocuments = () => {
+    if (selectedDocuments.length === 0) {
+      toast({
+        title: "No documents selected",
+        description: "Please select documents to move",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsMoveDialogOpen(true);
+  };
+
+  const handleMoveDocuments = (destination: string) => {
+    console.log('Moving documents:', selectedDocuments, 'to destination:', destination);
+    toast({
+      title: "Documents moved",
+      description: `${selectedDocuments.length} document(s) moved to ${destination}`,
+    });
+    setIsMoveDialogOpen(false);
   };
 
   return (
@@ -363,6 +387,14 @@ const DocumentRepository = () => {
             Copy Documents
           </Button>
           
+          <Button 
+            variant="outline" 
+            onClick={moveSelectedDocuments}
+          >
+            <Move className="h-4 w-4 mr-2" />
+            Move Documents
+          </Button>
+          
           {selectedDocuments.length > 0 && (
             <>
               <Button 
@@ -422,6 +454,42 @@ const DocumentRepository = () => {
           </Popover>
         </div>
       </div>
+      
+      <Dialog open={isMoveDialogOpen} onOpenChange={setIsMoveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move Documents</DialogTitle>
+            <DialogDescription>
+              Select a destination folder to move the selected documents.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Destination Folder</div>
+              <select 
+                className="w-full border rounded-md p-2"
+                defaultValue=""
+                onChange={(e) => e.target.value && handleMoveDocuments(e.target.value)}
+              >
+                <option value="" disabled>Select a folder</option>
+                <option value="Form 990">Form 990</option>
+                <option value="Financial Data">Financial Data</option>
+                <option value="Tax Documents">Tax Documents</option>
+                <option value="Client Documentation">Client Documentation</option>
+                <option value="Archived">Archived</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsMoveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={() => handleMoveDocuments('Selected Folder')}>
+              Move Files
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
         <TabsList className="w-full max-w-md grid grid-cols-5">
