@@ -70,9 +70,9 @@ const BlogsSection = () => {
         
         <div className="bg-secondary/50 rounded-lg p-8 text-center">
           <TestTube className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">More AI & ML Topics</h3>
+          <h3 className="text-lg font-medium mb-2">LLM Evals & Quantization</h3>
           <p className="text-muted-foreground mb-4">
-            Explore blog posts on LLM Quantization, OWASP Security, Reinforcement Learning, and LLM Evaluation techniques.
+            Explore blog posts on LLM Evals, LLM Quantization, OWASP Security, and Reinforcement Learning.
           </p>
           <Link to="/portfolio/blogs">
             <Button>
