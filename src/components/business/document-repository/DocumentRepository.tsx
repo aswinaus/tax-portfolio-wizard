@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Folder, 
@@ -13,7 +12,12 @@ import {
   Square,
   Search,
   Filter,
-  FolderOpen
+  FolderOpen,
+  Copy,
+  Flag,
+  List,
+  Box,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,8 +66,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useToast } from "@/hooks/use-toast";
 
-// Document interface
 interface Document {
   id: string;
   name: string;
@@ -73,9 +77,15 @@ interface Document {
   uploadDate: string;
   isArchived: boolean;
   category: 'form990' | 'financial' | 'tax' | 'other';
+  jurisdiction: string;
+  serviceLine: string;
+  recordType: string;
+  entity: string;
+  clientApproved: boolean;
+  clientContact: string;
+  client: string;
 }
 
-// Permission interface
 interface Permission {
   id: string;
   name: string;
@@ -84,7 +94,6 @@ interface Permission {
   dateAdded: string;
 }
 
-// Sample document data
 const sampleDocuments: Document[] = [
   {
     id: 'doc-1',
@@ -94,7 +103,14 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-12-10T10:30:00Z',
     isArchived: false,
-    category: 'form990'
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: true,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
   },
   {
     id: 'doc-2',
@@ -104,7 +120,14 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-12-15T14:45:00Z',
     isArchived: false,
-    category: 'financial'
+    category: 'financial',
+    jurisdiction: 'United States',
+    serviceLine: 'Assurance',
+    recordType: 'Financial reporting',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Michael Chen',
+    client: 'Boeing'
   },
   {
     id: 'doc-3',
@@ -114,7 +137,14 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2022-12-05T09:15:00Z',
     isArchived: true,
-    category: 'form990'
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: false,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
   },
   {
     id: 'doc-4',
@@ -124,7 +154,14 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-11-28T16:30:00Z',
     isArchived: false,
-    category: 'tax'
+    category: 'tax',
+    jurisdiction: 'India',
+    serviceLine: 'Tax',
+    recordType: 'Tax permanent documentation',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Raj Patel',
+    client: 'Air Canada'
   },
   {
     id: 'doc-5',
@@ -134,11 +171,17 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-12-20T11:30:00Z',
     isArchived: false,
-    category: 'financial'
+    category: 'financial',
+    jurisdiction: 'Canada',
+    serviceLine: 'Advisory',
+    recordType: 'Budget planning',
+    entity: 'Government',
+    clientApproved: false,
+    clientContact: 'Emma Thompson',
+    client: 'Air Canada'
   }
 ];
 
-// Sample permission data
 const samplePermissions: Permission[] = [
   {
     id: 'perm-1',
@@ -169,14 +212,13 @@ const DocumentRepository = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+  const { toast } = useToast();
   
-  // Format date string
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
   
-  // Toggle document selection
   const toggleDocumentSelection = (docId: string) => {
     if (selectedDocuments.includes(docId)) {
       setSelectedDocuments(selectedDocuments.filter(id => id !== docId));
@@ -185,7 +227,6 @@ const DocumentRepository = () => {
     }
   };
   
-  // Select all documents
   const selectAllDocuments = () => {
     if (selectedDocuments.length === getFilteredDocuments().length) {
       setSelectedDocuments([]);
@@ -194,11 +235,9 @@ const DocumentRepository = () => {
     }
   };
   
-  // Filter documents based on search and active tab
   const getFilteredDocuments = () => {
     let filteredDocs = sampleDocuments;
     
-    // Filter by tab
     if (activeTab === 'archived') {
       filteredDocs = filteredDocs.filter(doc => doc.isArchived);
     } else if (activeTab === 'active') {
@@ -207,7 +246,6 @@ const DocumentRepository = () => {
       filteredDocs = filteredDocs.filter(doc => doc.category === activeTab);
     }
     
-    // Filter by search term
     if (searchTerm) {
       filteredDocs = filteredDocs.filter(doc => 
         doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -219,24 +257,36 @@ const DocumentRepository = () => {
     return filteredDocs;
   };
   
-  // Download selected documents
   const downloadSelectedDocuments = () => {
     console.log('Downloading documents:', selectedDocuments);
-    // In a real app, this would trigger actual file downloads
     alert(`Downloading ${selectedDocuments.length} document(s)`);
   };
   
-  // Archive selected documents
   const archiveSelectedDocuments = () => {
     console.log('Archiving documents:', selectedDocuments);
-    // In a real app, this would update the document status in the database
     alert(`Archived ${selectedDocuments.length} document(s)`);
     setSelectedDocuments([]);
   };
 
+  const copySelectedDocuments = () => {
+    if (selectedDocuments.length === 0) {
+      toast({
+        title: "No documents selected",
+        description: "Please select documents to copy",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log('Copying documents:', selectedDocuments);
+    toast({
+      title: "Documents copied",
+      description: `${selectedDocuments.length} document(s) copied successfully`,
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header Section */}
       <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -252,7 +302,6 @@ const DocumentRepository = () => {
         </div>
       </div>
       
-      {/* Action Bar */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex flex-1 max-w-sm relative">
           <Input
@@ -305,6 +354,14 @@ const DocumentRepository = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          
+          <Button 
+            variant="outline" 
+            onClick={copySelectedDocuments}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copy Documents
+          </Button>
           
           {selectedDocuments.length > 0 && (
             <>
@@ -366,7 +423,6 @@ const DocumentRepository = () => {
         </div>
       </div>
       
-      {/* Document Tabs and List */}
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
         <TabsList className="w-full max-w-md grid grid-cols-5">
           <TabsTrigger value="all">All</TabsTrigger>
@@ -379,79 +435,125 @@ const DocumentRepository = () => {
         <TabsContent value={activeTab} className="mt-6">
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40px]">
-                      <div className="flex items-center justify-center" onClick={selectAllDocuments}>
-                        {selectedDocuments.length === getFilteredDocuments().length && getFilteredDocuments().length > 0 ? (
-                          <CheckSquare className="h-4 w-4 cursor-pointer" />
-                        ) : (
-                          <Square className="h-4 w-4 cursor-pointer" />
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Uploaded By</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {getFilteredDocuments().length > 0 ? (
-                    getFilteredDocuments().map((doc) => (
-                      <TableRow key={doc.id} className={doc.isArchived ? "opacity-70" : ""}>
-                        <TableCell>
-                          <div 
-                            className="flex items-center justify-center" 
-                            onClick={() => toggleDocumentSelection(doc.id)}
-                          >
-                            {selectedDocuments.includes(doc.id) ? (
-                              <CheckSquare className="h-4 w-4 cursor-pointer" />
-                            ) : (
-                              <Square className="h-4 w-4 cursor-pointer" />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {doc.type === 'PDF' ? (
-                              <FileText className="h-4 w-4 text-red-500" />
-                            ) : doc.type === 'Excel' ? (
-                              <FileText className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <File className="h-4 w-4" />
-                            )}
-                            <span>{doc.name}</span>
-                            {doc.isArchived && (
-                              <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full ml-1">
-                                Archived
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{doc.type}</TableCell>
-                        <TableCell>{doc.size}</TableCell>
-                        <TableCell>{doc.uploadedBy}</TableCell>
-                        <TableCell>{formatDate(doc.uploadDate)}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No documents found.
-                      </TableCell>
+                      <TableHead className="w-[40px]">
+                        <div className="flex items-center justify-center" onClick={selectAllDocuments}>
+                          {selectedDocuments.length === getFilteredDocuments().length && getFilteredDocuments().length > 0 ? (
+                            <CheckSquare className="h-4 w-4 cursor-pointer" />
+                          ) : (
+                            <Square className="h-4 w-4 cursor-pointer" />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <Flag className="h-3 w-3" />
+                          <span>Jurisdiction</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <List className="h-3 w-3" />
+                          <span>Service Line</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" />
+                          <span>Record Type</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <Box className="h-3 w-3" />
+                          <span>Entity</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>Client Approved</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          <span>Client Contact</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Uploaded By</TableHead>
+                      <TableHead>Date</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {getFilteredDocuments().length > 0 ? (
+                      getFilteredDocuments().map((doc) => (
+                        <TableRow key={doc.id} className={doc.isArchived ? "opacity-70" : ""}>
+                          <TableCell>
+                            <div 
+                              className="flex items-center justify-center" 
+                              onClick={() => toggleDocumentSelection(doc.id)}
+                            >
+                              {selectedDocuments.includes(doc.id) ? (
+                                <CheckSquare className="h-4 w-4 cursor-pointer" />
+                              ) : (
+                                <Square className="h-4 w-4 cursor-pointer" />
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {doc.type === 'PDF' ? (
+                                <FileText className="h-4 w-4 text-red-500" />
+                              ) : doc.type === 'Excel' ? (
+                                <FileText className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <File className="h-4 w-4" />
+                              )}
+                              <span>{doc.name}</span>
+                              {doc.isArchived && (
+                                <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full ml-1">
+                                  Archived
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{doc.type}</TableCell>
+                          <TableCell>{doc.size}</TableCell>
+                          <TableCell>{doc.jurisdiction}</TableCell>
+                          <TableCell>{doc.serviceLine}</TableCell>
+                          <TableCell>{doc.recordType}</TableCell>
+                          <TableCell>{doc.entity}</TableCell>
+                          <TableCell>
+                            {doc.clientApproved ? (
+                              <CheckSquare className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Square className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </TableCell>
+                          <TableCell>{doc.clientContact}</TableCell>
+                          <TableCell>{doc.client}</TableCell>
+                          <TableCell>{doc.uploadedBy}</TableCell>
+                          <TableCell>{formatDate(doc.uploadDate)}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                          No documents found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
       
-      {/* Archival Section */}
       <Collapsible className="border rounded-md">
         <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
           <div className="flex items-center gap-2">
@@ -524,7 +626,6 @@ const DocumentRepository = () => {
         </CollapsibleContent>
       </Collapsible>
       
-      {/* Permissions Section */}
       <Collapsible className="border rounded-md">
         <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
           <div className="flex items-center gap-2">
@@ -629,3 +730,4 @@ const DocumentRepository = () => {
 };
 
 export default DocumentRepository;
+

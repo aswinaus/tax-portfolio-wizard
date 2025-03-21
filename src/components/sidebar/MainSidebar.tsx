@@ -68,10 +68,6 @@ const SidebarItem: FC<SidebarItemProps> = ({
         const element = document.getElementById(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          if (hash === 'achievements') {
-            window.location.hash = hash;
-          }
         }
       }, 300);
     } else {

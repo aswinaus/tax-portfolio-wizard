@@ -24,8 +24,6 @@ const LyzrAgentChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string>('');
-  const [userId, setUserId] = useState<string>('demo@example.com');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,42 +31,26 @@ const LyzrAgentChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Try to load API key from localStorage if available
-  useEffect(() => {
-    const savedApiKey = localStorage.getItem('lyzr_api_key');
-    if (savedApiKey) {
-      setApiKey(savedApiKey);
-    }
-    
-    const savedUserId = localStorage.getItem('lyzr_user_id');
-    if (savedUserId) {
-      setUserId(savedUserId);
-    }
-  }, []);
-
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
-      if (!apiKey) {
-        throw new Error('API key is required');
-      }
-      
-      // Updated endpoint based on curl command
-      const apiUrl = 'https://agent-prod.studio.lyzr.ai/v3/inference/chat/';
-      const agentId = '67d85a7eb0001308323789d0'; // Agent ID from the URL
+      // Replace this URL with your Lyzr agent's API endpoint
+      // https://studio.lyzr.ai/agent-create/67d85a7eb0001308323789d0
+      const apiUrl = 'https://api.lyzr.ai/chat';
+      const agentId = '67d85a7eb0001308323789d0'; // Your agent ID from the URL
       
       const headers = {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey
+        'Authorization': `Bearer ${process.env.LYZR_API_KEY || 'your-lyzr-api-key'}`
       };
       
       const payload = {
-        user_id: userId,
+        message: userMessage,
+        conversation_id: conversationId,
         agent_id: agentId,
-        session_id: conversationId || agentId,
-        message: userMessage
+        metadata: {
+          source: 'form990_assistant'
+        }
       };
-      
-      console.log('Sending request to Lyzr API:', payload);
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -80,13 +62,7 @@ const LyzrAgentChat = () => {
         throw new Error(`API error: ${response.status} ${response.statusText}`);
       }
       
-      const data = await response.json();
-      console.log('Lyzr API response:', data);
-      
-      return {
-        response: data.response || data.text || 'No response from AI',
-        conversation_id: data.session_id || conversationId
-      };
+      return await response.json();
     } catch (error) {
       console.error('Error calling Lyzr API:', error);
       throw error;
@@ -97,11 +73,6 @@ const LyzrAgentChat = () => {
     if (e) e.preventDefault();
     
     if (!input.trim()) return;
-
-    if (!apiKey) {
-      toast.error('Please enter your Lyzr API key first');
-      return;
-    }
     
     const userMessage: Message = {
       content: input,
@@ -136,18 +107,6 @@ const LyzrAgentChat = () => {
       setIsLoading(false);
     }
   };
-
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newApiKey = e.target.value;
-    setApiKey(newApiKey);
-    localStorage.setItem('lyzr_api_key', newApiKey);
-  };
-  
-  const handleUserIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUserId = e.target.value;
-    setUserId(newUserId);
-    localStorage.setItem('lyzr_user_id', newUserId);
-  };
   
   return (
     <Card className="h-[500px] flex flex-col">
@@ -156,25 +115,6 @@ const LyzrAgentChat = () => {
           <Bot className="h-5 w-5 text-primary" />
           Form 990 Filing Assistant
         </CardTitle>
-        <div className="mt-2">
-          <Input
-            type="password"
-            placeholder="Enter your Lyzr API key"
-            value={apiKey}
-            onChange={handleApiKeyChange}
-            className="text-xs mb-2"
-          />
-          <Input
-            type="email"
-            placeholder="Enter your User ID/Email"
-            value={userId}
-            onChange={handleUserIdChange}
-            className="text-xs"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Your credentials are stored locally and never sent to our servers
-          </p>
-        </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-y-auto pb-0">
         <div className="space-y-4">
@@ -245,7 +185,7 @@ const LyzrAgentChat = () => {
           <Button 
             type="submit" 
             size="icon" 
-            disabled={isLoading || !input.trim() || !apiKey}
+            disabled={isLoading || !input.trim()}
           >
             <Send className="h-4 w-4" />
           </Button>

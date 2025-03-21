@@ -17,7 +17,19 @@ export interface BlogPost {
 
 // In-memory storage for locally created blog posts
 const localBlogCache: Record<string, BlogPost> = {
-  // LLM Quantization blog
+  // Only keep non-profit tax form blog post
+  '2': {
+    id: '2',
+    title: 'Understanding Non-Profit Tax Forms',
+    excerpt: 'A comprehensive guide to Form 990 and other tax considerations for non-profit organizations.',
+    content: 'Form 990 is a tax document that non-profit organizations must file with the IRS annually. This post explains the different sections of Form 990 and provides guidance on how to complete it correctly.',
+    author: 'Aswin Bhaskaran',
+    date: '2023-06-20T14:30:00Z',
+    readTime: '8 min read',
+    tags: ['Tax', 'Non-Profit', 'Form 990', 'Finance'],
+    category: 'tax'
+  },
+  // Add new LLM Quantization blog post
   '4': {
     id: '4',
     title: 'LLM Quantization: Making Large Language Models More Efficient',
@@ -134,7 +146,7 @@ const localBlogCache: Record<string, BlogPost> = {
     image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80',
     category: 'technology'
   },
-  // OWASP Top 10 for LLMs blog
+  // Add new OWASP Top 10 for LLMs blog post
   '5': {
     id: '5',
     title: 'OWASP Top 10 for Large Language Models: Security Risks and Mitigation',
@@ -800,7 +812,7 @@ def serve_model_api_securely():
     image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80',
     category: 'technology'
   },
-  // Reinforcement Learning blog
+  // Add new Reinforcement Learning blog post
   '6': {
     id: '6',
     title: 'Understanding Reinforcement Learning through Markov Decision Processes',
@@ -1058,316 +1070,6 @@ def serve_model_api_securely():
     readTime: '20 min read',
     tags: ['AI', 'Machine Learning', 'Reinforcement Learning', 'MDP', 'Decision Making'],
     image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80',
-    category: 'technology'
-  },
-  // New LLM Evals blog
-  '7': {
-    id: '7',
-    title: 'LLM Evaluation: A Comprehensive Guide to Benchmarking Language Models',
-    excerpt: 'Learn about the methods, metrics, and best practices for evaluating large language models to ensure they meet your requirements.',
-    content: `
-<h2>Introduction to LLM Evaluation</h2>
-<p>As Large Language Models (LLMs) become increasingly integrated into products and services, properly evaluating their performance becomes critical. This guide explores the multifaceted approaches to LLM evaluation, helping you understand how to benchmark these powerful AI systems effectively.</p>
-
-<h2>Why Evaluate LLMs?</h2>
-<p>Evaluation serves several key purposes:</p>
-<ul>
-  <li><strong>Quality Assurance:</strong> Ensuring the model meets performance standards</li>
-  <li><strong>Comparison:</strong> Determining which model best fits your specific use case</li>
-  <li><strong>Safety:</strong> Identifying potential risks and harmful behaviors</li>
-  <li><strong>Resource Planning:</strong> Understanding the tradeoffs between performance and costs</li>
-  <li><strong>Improvement:</strong> Guiding fine-tuning and development efforts</li>
-</ul>
-
-<h2>Types of LLM Evaluations</h2>
-
-<h3>1. Intrinsic Evaluation</h3>
-<p>Intrinsic evaluations focus on the model's internal capabilities and properties without considering specific applications.</p>
-
-<h4>Perplexity</h4>
-<p>Perplexity measures how "surprised" a model is by new text. Lower perplexity indicates the model is more confident in its predictions and better represents the distribution of natural language.</p>
-
-<pre><code>
-# Python example of calculating perplexity
-import torch
-import torch.nn.functional as F
-
-def calculate_perplexity(model, tokenizer, text):
-    inputs = tokenizer(text, return_tensors="pt")
-    with torch.no_grad():
-        outputs = model(**inputs, labels=inputs["input_ids"])
-    
-    # Cross entropy loss is already the average negative log likelihood
-    neg_log_likelihood = outputs.loss
-    
-    # Perplexity is the exponentiated average negative log-likelihood
-    perplexity = torch.exp(neg_log_likelihood)
-    
-    return perplexity.item()
-</code></pre>
-
-<h4>Linguistic Capabilities</h4>
-<p>These evaluations assess the model's grasp of language fundamentals:</p>
-<ul>
-  <li><strong>Syntax:</strong> Grammar, sentence structure, and linguistic rules</li>
-  <li><strong>Semantics:</strong> Understanding of meaning and relationships between concepts</li>
-  <li><strong>Pragmatics:</strong> Contextual understanding and implicit meaning</li>
-</ul>
-
-<h3>2. Extrinsic Evaluation</h3>
-<p>Extrinsic evaluations measure how well the model performs on specific tasks or applications.</p>
-
-<h4>Benchmarks</h4>
-<p>Standard benchmarks allow for consistent comparison across models:</p>
-<ul>
-  <li><strong>MMLU (Massive Multitask Language Understanding):</strong> Tests knowledge across 57 subjects</li>
-  <li><strong>HELM (Holistic Evaluation of Language Models):</strong> Comprehensive evaluation across many dimensions</li>
-  <li><strong>BIG-bench:</strong> Over 200 tasks testing various capabilities</li>
-  <li><strong>GLUE/SuperGLUE:</strong> Natural language understanding benchmarks</li>
-</ul>
-
-<h4>Task-Specific Performance</h4>
-<p>Evaluations targeted at specific capabilities:</p>
-<ul>
-  <li><strong>Reasoning:</strong> GSM8K (math), LogiQA (logical reasoning)</li>
-  <li><strong>Coding:</strong> HumanEval, MBPP (code generation)</li>
-  <li><strong>Summarization:</strong> ROUGE, BERTScore</li>
-  <li><strong>Translation:</strong> BLEU, chrF, COMET</li>
-</ul>
-
-<h3>3. Human Evaluation</h3>
-<p>Despite advances in automated metrics, human evaluation remains the gold standard for assessing LLM outputs.</p>
-
-<h4>Approaches to Human Evaluation</h4>
-<ul>
-  <li><strong>Direct Assessment:</strong> Humans rate outputs on quality scales</li>
-  <li><strong>Comparative Evaluation:</strong> Humans compare outputs from different models</li>
-  <li><strong>Adversarial Testing:</strong> Humans attempt to find inputs that cause model failure</li>
-  <li><strong>Turing Test Variants:</strong> Evaluating if outputs are indistinguishable from human-generated content</li>
-</ul>
-
-<h4>RLHF (Reinforcement Learning from Human Feedback)</h4>
-<p>RLHF uses human preferences to train reward models that guide LLM behavior:</p>
-<ol>
-  <li>Generate multiple responses to the same prompt</li>
-  <li>Have humans rank these responses</li>
-  <li>Train a reward model on these preferences</li>
-  <li>Use reinforcement learning to optimize the LLM against this reward model</li>
-</ol>
-
-<h2>Key Evaluation Metrics</h2>
-
-<h3>Accuracy Metrics</h3>
-<ul>
-  <li><strong>Exact Match:</strong> Percentage of exact answers correct</li>
-  <li><strong>F1 Score:</strong> Harmonic mean of precision and recall</li>
-  <li><strong>BLEU/ROUGE:</strong> N-gram overlap metrics for generated text</li>
-  <li><strong>Semantic Similarity:</strong> Embedding-based similarities (e.g., cosine similarity)</li>
-</ul>
-
-<h3>Safety Metrics</h3>
-<ul>
-  <li><strong>Toxicity:</strong> Measures of harmful content</li>
-  <li><strong>Bias:</strong> Measuring unfair associations or stereotypes</li>
-  <li><strong>Refusal Rate:</strong> How often the model appropriately declines harmful requests</li>
-  <li><strong>Hallucination Rate:</strong> Frequency of generating false or unsupported information</li>
-</ul>
-
-<h3>Efficiency Metrics</h3>
-<ul>
-  <li><strong>Inference Time:</strong> Time taken to generate responses</li>
-  <li><strong>Tokens Per Second:</strong> Processing speed</li>
-  <li><strong>Memory Usage:</strong> RAM required for model operation</li>
-  <li><strong>Cost Per 1000 Tokens:</strong> Economic efficiency</li>
-</ul>
-
-<h2>Implementing an Evaluation Pipeline</h2>
-
-<h3>Step 1: Define Evaluation Objectives</h3>
-<p>Clearly articulate what aspects of the model you need to evaluate based on your use case requirements.</p>
-
-<h3>Step 2: Select Representative Test Sets</h3>
-<p>Create or select datasets that reflect real-world usage, including:</p>
-<ul>
-  <li>Common user queries</li>
-  <li>Edge cases and difficult inputs</li>
-  <li>Adversarial examples</li>
-  <li>Diverse representation across demographics</li>
-</ul>
-
-<h3>Step 3: Choose Appropriate Metrics</h3>
-<p>Select metrics that align with your evaluation objectives:</p>
-<pre><code>
-from evaluate import load
-import numpy as np
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
-# Load evaluation metrics
-rouge = load("rouge")
-bertscore = load("bertscore")
-
-# Example function for multiple metric evaluation
-def evaluate_generation(model, tokenizer, prompts, references):
-    results = {
-        "rouge1": [],
-        "rouge2": [],
-        "rougeL": [],
-        "bertscore_f1": []
-    }
-    
-    for prompt, reference in zip(prompts, references):
-        inputs = tokenizer(prompt, return_tensors="pt")
-        output = model.generate(**inputs)
-        generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-        
-        # Calculate ROUGE scores
-        rouge_output = rouge.compute(predictions=[generated_text], 
-                                    references=[reference])
-        results["rouge1"].append(rouge_output["rouge1"])
-        results["rouge2"].append(rouge_output["rouge2"])
-        results["rougeL"].append(rouge_output["rougeL"])
-        
-        # Calculate BERTScore
-        bertscore_output = bertscore.compute(predictions=[generated_text],
-                                           references=[reference],
-                                           lang="en")
-        results["bertscore_f1"].append(bertscore_output["f1"][0])
-    
-    # Average results
-    for key in results:
-        results[key] = np.mean(results[key])
-        
-    return results
-</code></pre>
-
-<h3>Step 4: Implement Human Evaluation</h3>
-<p>Design a human evaluation protocol:</p>
-<ul>
-  <li>Create clear evaluation guidelines</li>
-  <li>Train evaluators for consistency</li>
-  <li>Implement quality control (e.g., agreement metrics)</li>
-  <li>Collect both quantitative ratings and qualitative feedback</li>
-</ul>
-
-<h3>Step 5: Analyze Results</h3>
-<p>Synthesize findings to understand strengths and weaknesses:</p>
-<ul>
-  <li>Identify patterns in model performance</li>
-  <li>Pinpoint specific failure cases</li>
-  <li>Compare against baselines and other models</li>
-  <li>Weigh tradeoffs between different metrics</li>
-</ul>
-
-<h2>Advanced Evaluation Techniques</h2>
-
-<h3>LLM-as-a-Judge</h3>
-<p>Using stronger LLMs to evaluate weaker ones:</p>
-<pre><code>
-async def llm_evaluate_response(judge_model, prompt, response, criteria):
-    """
-    Use an LLM to evaluate another LLM's response
-    
-    Args:
-        judge_model: The evaluating LLM
-        prompt: Original user prompt
-        response: Model response to evaluate
-        criteria: Evaluation criteria (e.g., relevance, accuracy)
-        
-    Returns:
-        Evaluation scores and explanation
-    """
-    eval_prompt = f"""
-    You are an expert evaluator assessing AI-generated text.
-    
-    Original prompt: {prompt}
-    
-    AI response to evaluate: {response}
-    
-    Please evaluate the response on the following criteria:
-    {criteria}
-    
-    For each criterion, assign a score from 1-10 where:
-    1 = Completely fails to meet the criterion
-    10 = Perfectly satisfies the criterion
-    
-    Provide your scores and a brief explanation for each criterion.
-    Finally, provide an overall score and summary.
-    """
-    
-    evaluation = await judge_model.generate(eval_prompt)
-    return evaluation
-</code></pre>
-
-<h3>Chain-of-Thought Evaluation</h3>
-<p>Evaluating the model's reasoning process rather than just the final answer:</p>
-<ul>
-  <li>Request step-by-step explanations</li>
-  <li>Evaluate each reasoning step</li>
-  <li>Identify where reasoning breaks down</li>
-</ul>
-
-<h3>Adversarial Evaluation</h3>
-<p>Stress-testing models with inputs designed to cause failures:</p>
-<ul>
-  <li>Jailbreaking attempts</li>
-  <li>Inputs with misleading information</li>
-  <li>Ambiguous or contradictory instructions</li>
-  <li>Red-teaming exercises</li>
-</ul>
-
-<h2>Continuous Evaluation</h2>
-<p>Best practices for ongoing evaluation:</p>
-<ul>
-  <li>Monitor performance in production environments</li>
-  <li>Collect user feedback for real-world performance data</li>
-  <li>Regularly update test sets to prevent overfitting</li>
-  <li>Track performance changes across model versions</li>
-  <li>Establish clear thresholds for model updates or rollbacks</li>
-</ul>
-
-<h2>Case Study: Evaluating an AI Assistant</h2>
-<p>Consider a company evaluating LLMs for a customer service AI assistant:</p>
-
-<h3>Evaluation Framework:</h3>
-<ol>
-  <li><strong>Task-specific benchmarks:</strong>
-    <ul>
-      <li>Response accuracy on FAQ dataset</li>
-      <li>Policy compliance on sensitive queries</li>
-      <li>Escalation appropriateness for complex issues</li>
-    </ul>
-  </li>
-  <li><strong>Human evaluation:</strong>
-    <ul>
-      <li>Side-by-side comparisons with human agents</li>
-      <li>Helpfulness ratings from customer service experts</li>
-    </ul>
-  </li>
-  <li><strong>Safety evaluation:</strong>
-    <ul>
-      <li>Response to frustration and abuse</li>
-      <li>Handling of personal data requests</li>
-    </ul>
-  </li>
-  <li><strong>Production metrics:</strong>
-    <ul>
-      <li>Customer satisfaction scores</li>
-      <li>Resolution rates without human escalation</li>
-      <li>Response time metrics</li>
-    </ul>
-  </li>
-</ol>
-
-<h2>Conclusion</h2>
-<p>Effective LLM evaluation requires a multifaceted approach that combines automated metrics, human judgment, and continuous monitoring. By implementing a comprehensive evaluation strategy, organizations can select the best models for their needs, identify improvement opportunities, and ensure their AI systems meet quality and safety standards.</p>
-
-<p>The field of LLM evaluation continues to evolve rapidly, with new metrics and methodologies emerging to address the unique challenges of these powerful systems. Staying informed about evaluation best practices is essential for anyone working with large language models.</p>
-`,
-    author: 'Aswin Bhaskaran',
-    date: new Date().toISOString(),
-    readTime: '18 min read',
-    tags: ['AI', 'Machine Learning', 'LLM', 'Evaluation', 'Benchmarking'],
-    image: 'https://images.unsplash.com/photo-1543286386-713bdd548da4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80',
     category: 'technology'
   }
 };

@@ -32,16 +32,6 @@ const Blogs = () => {
   // Determine which blogs to display based on active tab
   const blogs = activeTab === 'technology' ? techBlogs : allBlogs;
   
-  // Define specific topic filters
-  const topicFilters = [
-    { id: 'all', label: 'All Blogs' },
-    { id: 'technology', label: 'Technology' },
-    { id: 'quantization', label: 'LLM Quantization' },
-    { id: 'security', label: 'OWASP Security' },
-    { id: 'reinforcement', label: 'Reinforcement Learning' },
-    { id: 'evaluation', label: 'LLM Evaluation' }
-  ];
-  
   // Filter blogs based on search term and active tab
   const filteredBlogs = blogs.filter(blog => {
     const matchesSearch = 
@@ -51,12 +41,7 @@ const Blogs = () => {
     
     if (activeTab === 'all') return matchesSearch;
     if (activeTab === 'technology') return matchesSearch && blog.category === 'technology';
-    if (activeTab === 'quantization') return matchesSearch && blog.tags.some(tag => tag.toLowerCase().includes('quantization'));
-    if (activeTab === 'security') return matchesSearch && blog.tags.some(tag => tag.toLowerCase().includes('security') || tag.toLowerCase().includes('owasp'));
-    if (activeTab === 'reinforcement') return matchesSearch && blog.tags.some(tag => tag.toLowerCase().includes('reinforcement'));
-    if (activeTab === 'evaluation') return matchesSearch && blog.tags.some(tag => tag.toLowerCase().includes('evaluation'));
-    
-    return matchesSearch;
+    return matchesSearch && blog.tags.some(tag => tag.toLowerCase().includes(activeTab.toLowerCase()));
   });
 
   return (
@@ -69,8 +54,7 @@ const Blogs = () => {
         searchTerm={searchTerm} 
         setSearchTerm={setSearchTerm} 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab}
-        topicFilters={topicFilters}
+        setActiveTab={setActiveTab} 
       />
       
       {/* Loading State */}
