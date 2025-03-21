@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { BlogPost, createBlogPost } from '@/services/blogService';
+import { createBlogPost } from '@/services/blogService';
+import { BlogPost } from '@/types/blog';
 import { useQueryClient } from '@tanstack/react-query';
 
 const BlogHeader = () => {

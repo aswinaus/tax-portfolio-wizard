@@ -1,10 +1,9 @@
-
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowUpRight, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BlogPost } from '@/services/blogService';
+import { BlogPost } from '@/types/blog';
 
 interface BlogCardProps {
   blog: BlogPost;
