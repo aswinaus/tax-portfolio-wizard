@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Folder, 
@@ -13,7 +12,8 @@ import {
   Square,
   Search,
   Filter,
-  FolderOpen
+  FolderOpen,
+  Copy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,8 +62,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useToast } from "@/hooks/use-toast";
 
-// Document interface
 interface Document {
   id: string;
   name: string;
@@ -75,7 +75,6 @@ interface Document {
   category: 'form990' | 'financial' | 'tax' | 'other';
 }
 
-// Permission interface
 interface Permission {
   id: string;
   name: string;
@@ -84,7 +83,6 @@ interface Permission {
   dateAdded: string;
 }
 
-// Sample document data
 const sampleDocuments: Document[] = [
   {
     id: 'doc-1',
@@ -138,7 +136,6 @@ const sampleDocuments: Document[] = [
   }
 ];
 
-// Sample permission data
 const samplePermissions: Permission[] = [
   {
     id: 'perm-1',
@@ -169,14 +166,13 @@ const DocumentRepository = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+  const { toast } = useToast();
   
-  // Format date string
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
   
-  // Toggle document selection
   const toggleDocumentSelection = (docId: string) => {
     if (selectedDocuments.includes(docId)) {
       setSelectedDocuments(selectedDocuments.filter(id => id !== docId));
@@ -185,7 +181,6 @@ const DocumentRepository = () => {
     }
   };
   
-  // Select all documents
   const selectAllDocuments = () => {
     if (selectedDocuments.length === getFilteredDocuments().length) {
       setSelectedDocuments([]);
@@ -194,11 +189,9 @@ const DocumentRepository = () => {
     }
   };
   
-  // Filter documents based on search and active tab
   const getFilteredDocuments = () => {
     let filteredDocs = sampleDocuments;
     
-    // Filter by tab
     if (activeTab === 'archived') {
       filteredDocs = filteredDocs.filter(doc => doc.isArchived);
     } else if (activeTab === 'active') {
@@ -207,7 +200,6 @@ const DocumentRepository = () => {
       filteredDocs = filteredDocs.filter(doc => doc.category === activeTab);
     }
     
-    // Filter by search term
     if (searchTerm) {
       filteredDocs = filteredDocs.filter(doc => 
         doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -219,24 +211,36 @@ const DocumentRepository = () => {
     return filteredDocs;
   };
   
-  // Download selected documents
   const downloadSelectedDocuments = () => {
     console.log('Downloading documents:', selectedDocuments);
-    // In a real app, this would trigger actual file downloads
     alert(`Downloading ${selectedDocuments.length} document(s)`);
   };
   
-  // Archive selected documents
   const archiveSelectedDocuments = () => {
     console.log('Archiving documents:', selectedDocuments);
-    // In a real app, this would update the document status in the database
     alert(`Archived ${selectedDocuments.length} document(s)`);
     setSelectedDocuments([]);
   };
 
+  const copySelectedDocuments = () => {
+    if (selectedDocuments.length === 0) {
+      toast({
+        title: "No documents selected",
+        description: "Please select documents to copy",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log('Copying documents:', selectedDocuments);
+    toast({
+      title: "Documents copied",
+      description: `${selectedDocuments.length} document(s) copied successfully`,
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header Section */}
       <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -252,7 +256,6 @@ const DocumentRepository = () => {
         </div>
       </div>
       
-      {/* Action Bar */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex flex-1 max-w-sm relative">
           <Input
@@ -305,6 +308,14 @@ const DocumentRepository = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          
+          <Button 
+            variant="outline" 
+            onClick={copySelectedDocuments}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copy Documents
+          </Button>
           
           {selectedDocuments.length > 0 && (
             <>
@@ -366,7 +377,6 @@ const DocumentRepository = () => {
         </div>
       </div>
       
-      {/* Document Tabs and List */}
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
         <TabsList className="w-full max-w-md grid grid-cols-5">
           <TabsTrigger value="all">All</TabsTrigger>
@@ -451,7 +461,6 @@ const DocumentRepository = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Archival Section */}
       <Collapsible className="border rounded-md">
         <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
           <div className="flex items-center gap-2">
@@ -524,7 +533,6 @@ const DocumentRepository = () => {
         </CollapsibleContent>
       </Collapsible>
       
-      {/* Permissions Section */}
       <Collapsible className="border rounded-md">
         <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
           <div className="flex items-center gap-2">
@@ -629,3 +637,4 @@ const DocumentRepository = () => {
 };
 
 export default DocumentRepository;
+
