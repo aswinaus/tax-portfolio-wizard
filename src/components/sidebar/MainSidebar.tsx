@@ -1,3 +1,4 @@
+
 import { FC, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -64,10 +65,21 @@ const SidebarItem: FC<SidebarItemProps> = ({
       
       navigate(path);
       
+      // Adding a small delay to ensure that the navigation to the path completes before scrolling
       setTimeout(() => {
         const element = document.getElementById(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Change the URL to include the hash
+        window.history.pushState(null, '', `${path}#${hash}`);
+        
+        // For achievements tab, we need to set the correct tab
+        if (hash === 'achievements') {
+          // Update URL with achievements tab active
+          const event = new CustomEvent('set-achievements-tab');
+          window.dispatchEvent(event);
         }
       }, 300);
     } else {

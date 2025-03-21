@@ -17,16 +17,44 @@ const Portfolio = () => {
   const location = useLocation();
   const githubRef = useRef<HTMLDivElement>(null);
   const certificationsRef = useRef<HTMLDivElement>(null);
+  const achievementsRef = useRef<HTMLDivElement>(null);
   
   // Determine active tab based on URL hash
-  const activeTab = location.hash === '#achievements' ? 'achievements' : 'about';
+  const [activeTab, setActiveTab] = useState(location.hash === '#achievements' ? 'achievements' : 'about');
 
+  // Set up an effect to handle hash changes and custom events
   useEffect(() => {
+    // Update active tab based on hash
+    if (location.hash === '#achievements') {
+      setActiveTab('achievements');
+    } else if (!location.hash) {
+      setActiveTab('about');
+    }
+
+    // Handle direct scrolling to sections within the about tab
     if (location.hash === '#github' && githubRef.current) {
       githubRef.current.scrollIntoView({ behavior: 'smooth' });
     } else if (location.hash === '#certifications' && certificationsRef.current) {
       certificationsRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+
+    // Listen for custom event from sidebar
+    const handleSetAchievementsTab = () => {
+      setActiveTab('achievements');
+      
+      // If there's an achievements ref, scroll to it
+      if (achievementsRef.current) {
+        setTimeout(() => {
+          achievementsRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
+
+    window.addEventListener('set-achievements-tab', handleSetAchievementsTab);
+
+    return () => {
+      window.removeEventListener('set-achievements-tab', handleSetAchievementsTab);
+    };
   }, [location.hash]);
 
   return (
@@ -51,7 +79,7 @@ const Portfolio = () => {
       </motion.div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue={activeTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-8 w-full md:w-auto">
           <TabsTrigger value="about" className="text-sm">About Me</TabsTrigger>
           <TabsTrigger value="achievements" className="text-sm">Achievements</TabsTrigger>
@@ -81,7 +109,9 @@ const Portfolio = () => {
         
         {/* Achievements Tab */}
         <TabsContent value="achievements" className="space-y-8">
-          <Achievements />
+          <div ref={achievementsRef} id="achievements">
+            <Achievements />
+          </div>
         </TabsContent>
       </Tabs>
     </motion.div>
