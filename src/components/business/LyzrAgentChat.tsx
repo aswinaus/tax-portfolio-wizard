@@ -24,6 +24,9 @@ const LyzrAgentChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string>(() => {
+    return localStorage.getItem('lyzr_api_key') || '';
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,8 +34,19 @@ const LyzrAgentChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Save API key to localStorage when it changes
+  useEffect(() => {
+    if (apiKey) {
+      localStorage.setItem('lyzr_api_key', apiKey);
+    }
+  }, [apiKey]);
+
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
+      if (!apiKey) {
+        throw new Error('Please enter your Lyzr API key first');
+      }
+
       // Replace this URL with your Lyzr agent's API endpoint
       // https://studio.lyzr.ai/agent-create/67d85a7eb0001308323789d0
       const apiUrl = 'https://api.lyzr.ai/chat';
@@ -40,7 +54,7 @@ const LyzrAgentChat = () => {
       
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.LYZR_API_KEY || 'your-lyzr-api-key'}`
+        'Authorization': `Bearer ${apiKey}`
       };
       
       const payload = {
@@ -73,6 +87,11 @@ const LyzrAgentChat = () => {
     if (e) e.preventDefault();
     
     if (!input.trim()) return;
+    
+    if (!apiKey) {
+      toast.error('Please enter your Lyzr API key first');
+      return;
+    }
     
     const userMessage: Message = {
       content: input,
@@ -116,81 +135,116 @@ const LyzrAgentChat = () => {
           Form 990 Filing Assistant
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow overflow-y-auto pb-0">
-        <div className="space-y-4">
-          {messages.length === 0 ? (
-            <div className="text-center py-8">
+      {!apiKey ? (
+        <CardContent className="flex-grow flex flex-col items-center justify-center">
+          <div className="w-full max-w-md space-y-4">
+            <div className="text-center mb-4">
               <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-muted-foreground">
-                Ask me anything about Form 990 filing requirements, deadlines, or procedures.
+              <h3 className="text-lg font-medium mb-2">API Key Required</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Please enter your Lyzr API key to use the Form 990 Filing Assistant.
               </p>
             </div>
-          ) : (
-            messages.map((msg, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div 
-                  className={`flex gap-3 max-w-[80%] ${
-                    msg.role === 'user' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted'
-                  } p-3 rounded-lg`}
-                >
-                  {msg.role === 'assistant' && (
-                    <Bot className="h-5 w-5 mt-1 flex-shrink-0" />
-                  )}
-                  <div>
-                    <p className="text-sm">{msg.content}</p>
-                    <span className="text-xs opacity-70 block mt-1">
-                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  {msg.role === 'user' && (
-                    <UserCircle2 className="h-5 w-5 mt-1 flex-shrink-0" />
-                  )}
-                </div>
-              </motion.div>
-            ))
-          )}
-          {isLoading && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="flex justify-start"
+            <Input
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Enter your Lyzr API key"
+              type="password"
+              className="w-full"
+            />
+            <Button 
+              onClick={() => {
+                if (apiKey) {
+                  toast.success('API key saved successfully');
+                } else {
+                  toast.error('Please enter a valid API key');
+                }
+              }}
+              className="w-full"
             >
-              <div className="bg-muted p-3 rounded-lg flex items-center">
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                <span className="text-sm">Thinking...</span>
-              </div>
-            </motion.div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </CardContent>
-      <CardFooter className="pt-3">
-        <form onSubmit={handleSendMessage} className="w-full flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about Form 990 requirements, deadlines, etc."
-            disabled={isLoading}
-            className="flex-grow"
-          />
-          <Button 
-            type="submit" 
-            size="icon" 
-            disabled={isLoading || !input.trim()}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
-      </CardFooter>
+              Save API Key
+            </Button>
+          </div>
+        </CardContent>
+      ) : (
+        <>
+          <CardContent className="flex-grow overflow-y-auto pb-0">
+            <div className="space-y-4">
+              {messages.length === 0 ? (
+                <div className="text-center py-8">
+                  <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <p className="text-muted-foreground">
+                    Ask me anything about Form 990 filing requirements, deadlines, or procedures.
+                  </p>
+                </div>
+              ) : (
+                messages.map((msg, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div 
+                      className={`flex gap-3 max-w-[80%] ${
+                        msg.role === 'user' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      } p-3 rounded-lg`}
+                    >
+                      {msg.role === 'assistant' && (
+                        <Bot className="h-5 w-5 mt-1 flex-shrink-0" />
+                      )}
+                      <div>
+                        <p className="text-sm">{msg.content}</p>
+                        <span className="text-xs opacity-70 block mt-1">
+                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      {msg.role === 'user' && (
+                        <UserCircle2 className="h-5 w-5 mt-1 flex-shrink-0" />
+                      )}
+                    </div>
+                  </motion.div>
+                ))
+              )}
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-muted p-3 rounded-lg flex items-center">
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    <span className="text-sm">Thinking...</span>
+                  </div>
+                </motion.div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </CardContent>
+          <CardFooter className="pt-3">
+            <form onSubmit={handleSendMessage} className="w-full flex gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about Form 990 requirements, deadlines, etc."
+                disabled={isLoading}
+                className="flex-grow"
+              />
+              <Button 
+                type="submit" 
+                size="icon" 
+                disabled={isLoading || !input.trim()}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+          </CardFooter>
+        </>
+      )}
     </Card>
   );
 };
