@@ -13,11 +13,7 @@ import {
   Search,
   Filter,
   FolderOpen,
-  Copy,
-  Flag,
-  List,
-  Box,
-  User
+  Copy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,13 +73,6 @@ interface Document {
   uploadDate: string;
   isArchived: boolean;
   category: 'form990' | 'financial' | 'tax' | 'other';
-  jurisdiction: string;
-  serviceLine: string;
-  recordType: string;
-  entity: string;
-  clientApproved: boolean;
-  clientContact: string;
-  client: string;
 }
 
 interface Permission {
@@ -103,14 +92,7 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-12-10T10:30:00Z',
     isArchived: false,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: true,
-    clientContact: 'Sarah Johnson',
-    client: 'Coke'
+    category: 'form990'
   },
   {
     id: 'doc-2',
@@ -120,14 +102,7 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-12-15T14:45:00Z',
     isArchived: false,
-    category: 'financial',
-    jurisdiction: 'United States',
-    serviceLine: 'Assurance',
-    recordType: 'Financial reporting',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Michael Chen',
-    client: 'Boeing'
+    category: 'financial'
   },
   {
     id: 'doc-3',
@@ -137,14 +112,7 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2022-12-05T09:15:00Z',
     isArchived: true,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: false,
-    clientContact: 'Sarah Johnson',
-    client: 'Coke'
+    category: 'form990'
   },
   {
     id: 'doc-4',
@@ -154,14 +122,7 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-11-28T16:30:00Z',
     isArchived: false,
-    category: 'tax',
-    jurisdiction: 'India',
-    serviceLine: 'Tax',
-    recordType: 'Tax permanent documentation',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Raj Patel',
-    client: 'Air Canada'
+    category: 'tax'
   },
   {
     id: 'doc-5',
@@ -171,14 +132,7 @@ const sampleDocuments: Document[] = [
     uploadedBy: 'Aswin Bhaskaran',
     uploadDate: '2023-12-20T11:30:00Z',
     isArchived: false,
-    category: 'financial',
-    jurisdiction: 'Canada',
-    serviceLine: 'Advisory',
-    recordType: 'Budget planning',
-    entity: 'Government',
-    clientApproved: false,
-    clientContact: 'Emma Thompson',
-    client: 'Air Canada'
+    category: 'financial'
   }
 ];
 
@@ -435,120 +389,73 @@ const DocumentRepository = () => {
         <TabsContent value={activeTab} className="mt-6">
           <Card>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[40px]">
-                        <div className="flex items-center justify-center" onClick={selectAllDocuments}>
-                          {selectedDocuments.length === getFilteredDocuments().length && getFilteredDocuments().length > 0 ? (
-                            <CheckSquare className="h-4 w-4 cursor-pointer" />
-                          ) : (
-                            <Square className="h-4 w-4 cursor-pointer" />
-                          )}
-                        </div>
-                      </TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-1">
-                          <Flag className="h-3 w-3" />
-                          <span>Jurisdiction</span>
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-1">
-                          <List className="h-3 w-3" />
-                          <span>Service Line</span>
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          <span>Record Type</span>
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-1">
-                          <Box className="h-3 w-3" />
-                          <span>Entity</span>
-                        </div>
-                      </TableHead>
-                      <TableHead>Client Approved</TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          <span>Client Contact</span>
-                        </div>
-                      </TableHead>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Uploaded By</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getFilteredDocuments().length > 0 ? (
-                      getFilteredDocuments().map((doc) => (
-                        <TableRow key={doc.id} className={doc.isArchived ? "opacity-70" : ""}>
-                          <TableCell>
-                            <div 
-                              className="flex items-center justify-center" 
-                              onClick={() => toggleDocumentSelection(doc.id)}
-                            >
-                              {selectedDocuments.includes(doc.id) ? (
-                                <CheckSquare className="h-4 w-4 cursor-pointer" />
-                              ) : (
-                                <Square className="h-4 w-4 cursor-pointer" />
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              {doc.type === 'PDF' ? (
-                                <FileText className="h-4 w-4 text-red-500" />
-                              ) : doc.type === 'Excel' ? (
-                                <FileText className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <File className="h-4 w-4" />
-                              )}
-                              <span>{doc.name}</span>
-                              {doc.isArchived && (
-                                <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full ml-1">
-                                  Archived
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{doc.type}</TableCell>
-                          <TableCell>{doc.size}</TableCell>
-                          <TableCell>{doc.jurisdiction}</TableCell>
-                          <TableCell>{doc.serviceLine}</TableCell>
-                          <TableCell>{doc.recordType}</TableCell>
-                          <TableCell>{doc.entity}</TableCell>
-                          <TableCell>
-                            {doc.clientApproved ? (
-                              <CheckSquare className="h-4 w-4 text-green-500" />
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40px]">
+                      <div className="flex items-center justify-center" onClick={selectAllDocuments}>
+                        {selectedDocuments.length === getFilteredDocuments().length && getFilteredDocuments().length > 0 ? (
+                          <CheckSquare className="h-4 w-4 cursor-pointer" />
+                        ) : (
+                          <Square className="h-4 w-4 cursor-pointer" />
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Uploaded By</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {getFilteredDocuments().length > 0 ? (
+                    getFilteredDocuments().map((doc) => (
+                      <TableRow key={doc.id} className={doc.isArchived ? "opacity-70" : ""}>
+                        <TableCell>
+                          <div 
+                            className="flex items-center justify-center" 
+                            onClick={() => toggleDocumentSelection(doc.id)}
+                          >
+                            {selectedDocuments.includes(doc.id) ? (
+                              <CheckSquare className="h-4 w-4 cursor-pointer" />
                             ) : (
-                              <Square className="h-4 w-4 text-muted-foreground" />
+                              <Square className="h-4 w-4 cursor-pointer" />
                             )}
-                          </TableCell>
-                          <TableCell>{doc.clientContact}</TableCell>
-                          <TableCell>{doc.client}</TableCell>
-                          <TableCell>{doc.uploadedBy}</TableCell>
-                          <TableCell>{formatDate(doc.uploadDate)}</TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
-                          No documents found.
+                          </div>
                         </TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {doc.type === 'PDF' ? (
+                              <FileText className="h-4 w-4 text-red-500" />
+                            ) : doc.type === 'Excel' ? (
+                              <FileText className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <File className="h-4 w-4" />
+                            )}
+                            <span>{doc.name}</span>
+                            {doc.isArchived && (
+                              <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full ml-1">
+                                Archived
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{doc.type}</TableCell>
+                        <TableCell>{doc.size}</TableCell>
+                        <TableCell>{doc.uploadedBy}</TableCell>
+                        <TableCell>{formatDate(doc.uploadDate)}</TableCell>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No documents found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

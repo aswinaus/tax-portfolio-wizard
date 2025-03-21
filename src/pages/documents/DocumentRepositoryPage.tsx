@@ -4,7 +4,7 @@ import DocumentRepository from '@/components/business/document-repository/Docume
 
 const DocumentRepositoryPage = () => {
   return (
-    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 py-8">
+    <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
