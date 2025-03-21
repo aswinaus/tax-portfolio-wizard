@@ -811,6 +811,266 @@ def serve_model_api_securely():
     tags: ['AI', 'Security', 'LLM', 'OWASP', 'Cybersecurity', 'Python'],
     image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80',
     category: 'technology'
+  },
+  // Add new Reinforcement Learning blog post
+  '6': {
+    id: '6',
+    title: 'Understanding Reinforcement Learning through Markov Decision Processes',
+    excerpt: 'Explore the foundational concepts of Reinforcement Learning, including Markov Decision Processes, policies, value functions, and how agents learn to maximize rewards through sequential decision making.',
+    content: `
+<h2>Introduction to Reinforcement Learning</h2>
+<p>Reinforcement Learning is a branch of machine learning where an agent learns to make decisions by taking actions in an environment to maximize cumulative rewards. The foundation of reinforcement learning is built upon Markov Decision Processes (MDPs), which provide a formal framework for modeling sequential decision-making problems.</p>
+
+<h2>Components of a Markov Decision Process</h2>
+<p>Markov decision processes give us a way to formalize sequential decision making. This formalization is the basis for structuring problems that are solved with reinforcement learning.</p>
+
+<p>In an MDP, we have a decision maker, called an <strong>agent</strong>, that interacts with the <strong>environment</strong> it's placed in. These interactions occur sequentially over time. At each time step, the agent will get some representation of the environment's <strong>state</strong>. Given this representation, the agent selects an <strong>action</strong> to take. The environment is then transitioned into a new state, and the agent is given a <strong>reward</strong> as a consequence of the previous action.</p>
+
+<p>The five key components of an MDP are:</p>
+<ul>
+  <li><strong>Agent</strong>: The decision maker that interacts with the environment</li>
+  <li><strong>Environment</strong>: The context in which the agent operates</li>
+  <li><strong>State</strong>: The representation of the environment that the agent receives</li>
+  <li><strong>Action</strong>: What the agent selects to do based on the current state</li>
+  <li><strong>Reward</strong>: The feedback given to the agent as a consequence of its action</li>
+</ul>
+
+<div class="my-6">
+  <img src="public/lovable-uploads/37ebf875-a6c0-43b4-a7ba-2e04d935d576.png" alt="Components of an MDP" class="rounded-lg w-full" />
+</div>
+
+<h2>MDP Notation</h2>
+<p>We're now going to formalize what we've discussed in a more mathematical way:</p>
+
+<p>In an MDP, we have a set of states <strong>S</strong>, a set of actions <strong>A</strong>, and a set of rewards <strong>R</strong>. We'll assume that each of these sets has a finite number of elements.</p>
+
+<p>At each time step t = 0, 1, 2, ⋯, the agent receives some representation of the environment's state S<sub>t</sub> ∈ S. Based on this state, the agent selects an action A<sub>t</sub> ∈ A. This gives us the state-action pair (S<sub>t</sub>, A<sub>t</sub>).</p>
+
+<p>Time is then incremented to the next time step t + 1, and the environment is transitioned to a new state S<sub>t+1</sub> ∈ S. At this time, the agent receives a numerical reward R<sub>t+1</sub> ∈ R for the action A<sub>t</sub> taken from state S<sub>t</sub>.</p>
+
+<p>We can think of the process of receiving a reward as an arbitrary function f that maps state-action pairs to rewards. At each time t, we have:</p>
+
+<div class="my-4 text-center">
+  <p>f(S<sub>t</sub>, A<sub>t</sub>) = R<sub>t+1</sub></p>
+</div>
+
+<h2>Agent-Environment Interaction</h2>
+<p>The interaction between the agent and environment can be visualized in the following diagram:</p>
+
+<div class="my-6">
+  <img src="public/lovable-uploads/fb0f9e7f-8df4-4059-97cc-d002b3112c41.png" alt="Agent-Environment Interaction" class="rounded-lg w-full" />
+</div>
+
+<p>Let's break down this diagram into steps:</p>
+<ol>
+  <li>At time t, the environment is in state S<sub>t</sub>.</li>
+  <li>The agent observes the current state and selects action A<sub>t</sub>.</li>
+  <li>The environment transitions to state S<sub>t+1</sub> and grants the agent reward R<sub>t+1</sub>.</li>
+  <li>This process then starts over for the next time step, t + 1.</li>
+</ol>
+
+<p>This process of selecting an action from a given state, transitioning to a new state, and receiving a reward happens sequentially over and over again, which creates something called a <strong>trajectory</strong> that shows the sequence of states, actions, and rewards:</p>
+
+<div class="my-4 text-center">
+  <p>S<sub>0</sub>, A<sub>0</sub>, R<sub>1</sub>, S<sub>1</sub>, A<sub>1</sub>, R<sub>2</sub>, S<sub>2</sub>, A<sub>2</sub>, R<sub>3</sub>, ⋯</p>
+</div>
+
+<h2>Transition Probabilities</h2>
+<p>Since the sets S and R are finite, the random variables R<sub>t</sub> and S<sub>t</sub> have well defined probability distributions. In other words, all the possible values that can be assigned to R<sub>t</sub> and S<sub>t</sub> have some associated probability. These distributions depend on the preceding state and action that occurred in the previous time step t - 1.</p>
+
+<p>For example, suppose s' ∈ S and r ∈ R. Then there is some probability that S<sub>t</sub> = s' and R<sub>t</sub> = r. This probability is determined by the particular values of the preceding state s ∈ S and action a ∈ A(s). Note that A(s) is the set of actions that can be taken from state s.</p>
+
+<p>We define this probability as:</p>
+
+<div class="my-4 text-center">
+  <p>p(s', r | s, a) = Pr{S<sub>t</sub> = s', R<sub>t</sub> = r | S<sub>t-1</sub> = s, A<sub>t-1</sub> = a}</p>
+</div>
+
+<h2>The Agent's Goal: Maximizing Rewards</h2>
+<p>Throughout this process, it is the agent's goal to maximize the total amount of rewards that it receives from taking actions in given states. This means that the agent wants to maximize not just the immediate reward, but the <strong>cumulative rewards</strong> it receives over time.</p>
+
+<div class="my-6 p-4 bg-secondary/30 rounded-lg text-center">
+  <p>It is the agent's goal to maximize the cumulative rewards.</p>
+</div>
+
+<h2>Expected Return</h2>
+<p>Recall that the goal of an agent in an MDP is to maximize its cumulative rewards. We need a way to aggregate and formalize these cumulative rewards. For this, we introduce the concept of the <strong>expected return</strong> of the rewards at a given time step.</p>
+
+<p>For now, we can think of the return simply as the sum of future rewards. Mathematically, we define the return G<sub>t</sub> at time t as:</p>
+
+<div class="my-4 text-center">
+  <p>G<sub>t</sub> = R<sub>t+1</sub> + R<sub>t+2</sub> + R<sub>t+3</sub> + ⋯ + R<sub>T</sub></p>
+</div>
+
+<p>where T is the final time step.</p>
+
+<div class="my-6 p-4 bg-secondary/30 rounded-lg text-center">
+  <p>It is the agent's goal to maximize the expected return of rewards.</p>
+</div>
+
+<p>This concept of the expected return is super important because it's the agent's objective to maximize the expected return. The expected return is what's driving the agent to make the decisions it makes.</p>
+
+<h2>Episodic vs. Continuing Tasks</h2>
+<p>In our definition of the expected return, we introduced T, the final time step. When the notion of having a final time step makes sense, the agent-environment interaction naturally breaks up into subsequences, called <strong>episodes</strong>. For example, think about playing a game of pong. Each new round of the game can be thought of as an episode, and the final time step of an episode occurs when a player scores a point.</p>
+
+<div class="my-6">
+  <img src="public/lovable-uploads/7eb7e9d5-a209-49ba-96ba-484303e8fe99.png" alt="Pong Game" class="rounded-lg w-full" />
+</div>
+
+<p>Each episode ends in a terminal state at time T, which is followed by resetting the environment to some standard starting state or to a random sample from a distribution of possible starting states. The next episode then begins independently from how the previous episode ended.</p>
+
+<p>Formally, tasks with episodes are called <strong>episodic tasks</strong>.</p>
+
+<p>There exist other types of tasks though where the agent-environment interactions don't break up naturally into episodes, but instead continue without limit. These types of tasks are called <strong>continuing tasks</strong>.</p>
+
+<p>Continuing tasks make our definition of the return at each time t problematic because our final time step would be T = ∞, and therefore the return itself could be infinite since we have:</p>
+
+<div class="my-4 text-center">
+  <p>G<sub>t</sub> = R<sub>t+1</sub> + R<sub>t+2</sub> + R<sub>t+3</sub> + ⋯ + R<sub>T</sub></p>
+</div>
+
+<p>Because of this, we need to refine they way we're working with the return.</p>
+
+<h2>Discounted Return</h2>
+<p>Our revision of the way we think about return will make use of <strong>discounting</strong>. Rather than the agent's goal being to maximize the expected return of rewards, it will instead be to maximize the expected <strong>discounted</strong> return of rewards. Specifically, the agent will be choosing action A<sub>t</sub> at each time t to maximize the expected discounted return.</p>
+
+<div class="my-6 p-4 bg-secondary/30 rounded-lg text-center">
+  <p>It is the agent's goal to maximize the expected <strong>discounted</strong> return of rewards.</p>
+</div>
+
+<p>To define the discounted return, we first define the discount rate, γ, to be a number between 0 and 1. The discount rate will be the rate for which we discount future rewards and will determine the present value of future rewards. With this, we define the discounted return as:</p>
+
+<div class="my-4 text-center">
+  <p>G<sub>t</sub> = R<sub>t+1</sub> + γR<sub>t+2</sub> + γ<sup>2</sup>R<sub>t+3</sub> + ⋯ = Σ<sub>k=0</sub><sup>∞</sup> γ<sup>k</sup>R<sub>t+k+1</sub></p>
+</div>
+
+<p>This definition of the discounted return makes it so that our agent will care more about the immediate reward over future rewards since future rewards will be more heavily discounted. So, while the agent does consider the rewards it expects to receive in the future, the more immediate rewards have more influence when it comes to the agent making a decision about taking a particular action.</p>
+
+<p>Now, check out this relationship below showing how returns at successive time steps are related to each other. We'll make use of this relationship later:</p>
+
+<div class="my-4 text-center">
+  <p>G<sub>t</sub> = R<sub>t+1</sub> + γR<sub>t+2</sub> + γ<sup>2</sup>R<sub>t+3</sub> + γ<sup>3</sup>R<sub>t+4</sub> + ⋯</p>
+  <p>= R<sub>t+1</sub> + γ(R<sub>t+2</sub> + γR<sub>t+3</sub> + γ<sup>2</sup>R<sub>t+4</sub> + ⋯)</p>
+  <p>= R<sub>t+1</sub> + γG<sub>t+1</sub></p>
+</div>
+
+<p>Also, even though the return at time t is a sum of an infinite number of terms, the return is actually finite as long as the reward is nonzero and constant, and γ < 1.</p>
+
+<p>For example, if the reward at each time step is a constant 1 and γ < 1, then the return is:</p>
+
+<div class="my-4 text-center">
+  <p>G<sub>t</sub> = Σ<sub>k=0</sub><sup>∞</sup> γ<sup>k</sup> = 1/(1-γ)</p>
+</div>
+
+<p>This infinite sum yields a finite result.</p>
+
+<h2>Policies and Value Functions</h2>
+<p>In reinforcement learning, we're often interested in understanding two things:</p>
+<ol>
+  <li>How probable is it for an agent to select any action from a given state?</li>
+  <li>How good is any given action or any given state for an agent?</li>
+</ol>
+
+<p>The first question is addressed by <strong>policies</strong>, while the second is addressed by <strong>value functions</strong>.</p>
+
+<h3>Policies</h3>
+<p>A policy is a function that maps a given state to probabilities of selecting each possible action from that state. We will use the symbol π to denote a policy.</p>
+
+<p>When speaking about policies, formally we say that an agent "follows a policy." For example, if an agent follows policy π at time t, then π(a|s) is the probability that A<sub>t</sub> = a if S<sub>t</sub> = s. This means that, at time t, under policy π, the probability of taking action a in state s is π(a|s).</p>
+
+<p>Note that, for each state s ∈ S, π is a probability distribution over a ∈ A(s).</p>
+
+<div class="my-6">
+  <img src="public/lovable-uploads/9da997f1-3f2b-4aa3-8d93-4d35e5a4d904.png" alt="Policy Example" class="rounded-lg w-full" />
+</div>
+
+<h3>Value Functions</h3>
+<p>Value functions are functions of states, or of state-action pairs, that estimate how good it is for an agent to be in a given state, or how good it is for the agent to perform a given action in a given state.</p>
+
+<p>This notion of how good a state or state-action pair is given in terms of expected return. Remember, the rewards an agent expects to receive are dependent on what actions the agent takes in given states. So, value functions are defined with respect to specific ways of acting. Since the way an agent acts is influenced by the policy it's following, then we can see that value functions are defined with respect to policies.</p>
+
+<h4>State-Value Function</h4>
+<p>The state-value function for policy π, denoted as v<sub>π</sub>, tells us how good any given state is for an agent following policy π. In other words, it gives us the value of a state under π.</p>
+
+<p>Formally, the value of state s under policy π is the expected return from starting from state s at time t and following policy π thereafter. Mathematically we define v<sub>π</sub>(s) as:</p>
+
+<div class="my-4 text-center">
+  <p>v<sub>π</sub>(s) = E<sub>π</sub>[G<sub>t</sub> | S<sub>t</sub> = s]</p>
+  <p>= E<sub>π</sub>[Σ<sub>k=0</sub><sup>∞</sup> γ<sup>k</sup>R<sub>t+k+1</sub> | S<sub>t</sub> = s]</p>
+</div>
+
+<h4>Action-Value Function</h4>
+<p>Similarly, the action-value function for policy π, denoted as q<sub>π</sub>, tells us how good it is for the agent to take any given action from a given state while following policy π. In other words, it gives us the value of an action under π.</p>
+
+<p>Formally, the value of action a in state s under policy π is the expected return from starting from state s at time t, taking action a, and following policy π thereafter. Mathematically, we define q<sub>π</sub>(s,a) as:</p>
+
+<div class="my-4 text-center">
+  <p>q<sub>π</sub>(s,a) = E<sub>π</sub>[G<sub>t</sub> | S<sub>t</sub> = s, A<sub>t</sub> = a]</p>
+  <p>= E<sub>π</sub>[Σ<sub>k=0</sub><sup>∞</sup> γ<sup>k</sup>R<sub>t+k+1</sub> | S<sub>t</sub> = s, A<sub>t</sub> = a]</p>
+</div>
+
+<p>Conventionally, the action-value function q<sub>π</sub> is referred to as the Q-function, and the output from the function for any given state-action pair is called a Q-value. The letter "Q" is used to represent the quality of taking a given action in a given state. We'll be working with Q-value functions a lot going forward.</p>
+
+<h2>Optimality in Reinforcement Learning</h2>
+<p>It is the goal of reinforcement learning algorithms to find a policy that will yield a lot of rewards for the agent if the agent indeed follows that policy. Specifically, reinforcement learning algorithms seek to find a policy that will yield more return to the agent than all other policies.</p>
+
+<h3>Optimal Policy</h3>
+<p>In terms of return, a policy π is considered to be better than or the same as policy π' if the expected return of π is greater than or equal to the expected return of π' for all states. In other words,</p>
+
+<div class="my-4 text-center">
+  <p>π ≥ π' if and only if v<sub>π</sub>(s) ≥ v<sub>π'</sub>(s) for all s ∈ S.</p>
+</div>
+
+<p>Remember, v<sub>π</sub>(s) gives the expected return for starting in state s and following π thereafter. A policy that is better than or at least the same as all other policies is called the <strong>optimal policy</strong>.</p>
+
+<h3>Optimal State-Value Function</h3>
+<p>The optimal policy has an associated optimal state-value function. We denote the optimal state-value function as v<sub>*</sub> and define as:</p>
+
+<div class="my-4 text-center">
+  <p>v<sub>*</sub>(s) = max<sub>π</sub> v<sub>π</sub>(s)</p>
+</div>
+
+<p>for all s ∈ S. In other words, v<sub>*</sub> gives the largest expected return achievable by any policy π for each state.</p>
+
+<h3>Optimal Action-Value Function</h3>
+<p>Similarly, the optimal policy has an optimal action-value function, or optimal Q-function, which we denote as q<sub>*</sub> and define as:</p>
+
+<div class="my-4 text-center">
+  <p>q<sub>*</sub>(s,a) = max<sub>π</sub> q<sub>π</sub>(s,a)</p>
+</div>
+
+<p>for all s ∈ S and a ∈ A(s). In other words, q<sub>*</sub> gives the largest expected return achievable by any policy π for each possible state-action pair.</p>
+
+<h3>Bellman Optimality Equation</h3>
+<p>One fundamental property of q<sub>*</sub> is that it must satisfy the following equation:</p>
+
+<div class="my-4 text-center">
+  <p>q<sub>*</sub>(s,a) = E[R<sub>t+1</sub> + γ max<sub>a'</sub> q<sub>*</sub>(s',a')]</p>
+</div>
+
+<p>This is called the Bellman optimality equation. It states that, for any state-action pair (s,a) at time t, the expected return from starting in state s, selecting action a and following the optimal policy thereafter (i.e., the Q-value of this pair) is going to be the expected reward we get from taking action a in state s, which is R<sub>t+1</sub>, plus the maximum expected discounted return that can be achieved from any possible next state-action pair (s',a').</p>
+
+<p>Since the agent is following an optimal policy, the following state s' will be the state from which the best possible next action a' can be taken at time t + 1.</p>
+
+<p>We're going to use the Bellman equation to find q<sub>*</sub>. Once we have q<sub>*</sub>, we can determine the optimal policy because, with q<sub>*</sub>, for any state s, a reinforcement learning algorithm can find the action a that maximizes q<sub>*</sub>(s,a).</p>
+
+<h2>Conclusion</h2>
+<p>Markov Decision Processes (MDPs) provide a formal way to model sequential decision-making problems. They are the bedrock for reinforcement learning, so understanding the relationship between the agent and the environment and how they interact is crucial.</p>
+
+<p>At this point, we now have an idea of the structure of MDPs, all the key components, and how, within an MDP, we can measure how good different states or different state-action pairs are for an agent through the use of value functions.</p>
+
+<p>Reinforcement learning algorithms estimate value functions as a way to determine best routes for the agent to take. Next, we'll continue our discussion by covering optimal value functions and optimal policies in more detail.</p>
+
+<div class="my-6">
+  <img src="public/lovable-uploads/57e405ed-721f-462f-8b2d-dbe1fcea7693.png" alt="Sequential Agent Decision Making" class="rounded-lg w-full" />
+</div>
+`,
+    author: 'Aswin Bhaskaran',
+    date: new Date().toISOString(),
+    readTime: '20 min read',
+    tags: ['AI', 'Machine Learning', 'Reinforcement Learning', 'MDP', 'Decision Making'],
+    image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80',
+    category: 'technology'
   }
 };
 
