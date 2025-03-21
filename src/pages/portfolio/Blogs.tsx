@@ -32,14 +32,14 @@ const Blogs = () => {
   // Determine which blogs to display based on active tab
   const blogs = activeTab === 'technology' ? techBlogs : allBlogs;
   
-  // Define specific topic filters
+  // Define specific topic filters - fixed to match the expected type with value property
   const topicFilters = [
-    { id: 'all', label: 'All Blogs' },
-    { id: 'technology', label: 'Technology' },
-    { id: 'quantization', label: 'LLM Quantization' },
-    { id: 'security', label: 'OWASP Security' },
-    { id: 'reinforcement', label: 'Reinforcement Learning' },
-    { id: 'evaluation', label: 'LLM Evaluation' }
+    { value: 'all', label: 'All Blogs' },
+    { value: 'technology', label: 'Technology' },
+    { value: 'quantization', label: 'LLM Quantization' },
+    { value: 'security', label: 'OWASP Security' },
+    { value: 'reinforcement', label: 'Reinforcement Learning' },
+    { value: 'evaluation', label: 'LLM Evaluation' }
   ];
   
   // Filter blogs based on search term and active tab
