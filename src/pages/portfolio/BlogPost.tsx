@@ -1,9 +1,8 @@
-
 import { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Calendar, Clock, User, ArrowLeft, Edit, Trash2, ExternalLink, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Calendar, Clock, User, ArrowLeft, Edit, Trash2, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -21,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { fetchBlogById } from '@/services/blogService';
+import { formatDate } from '@/utils/dateUtils';
 
 const BlogPost = () => {
   const { id } = useParams<{ id: string }>();
