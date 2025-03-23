@@ -18,11 +18,11 @@ const BlogList = ({ blogs, formatDate }: BlogListProps) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="space-y-8"
+      className="space-y-8 w-full"
     >
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent -z-10 rounded-3xl blur-3xl" />
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 gap-8 w-full">
           {blogs.map((blog, index) => (
             <motion.div
               key={blog.id || index}
@@ -33,6 +33,7 @@ const BlogList = ({ blogs, formatDate }: BlogListProps) => {
                 delay: index * 0.1,
                 ease: [0.22, 1, 0.36, 1]
               }}
+              className="w-full"
             >
               <BlogCard 
                 blog={blog}

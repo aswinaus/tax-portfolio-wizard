@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -696,7 +697,7 @@ def serve_model_api_securely():
 `;
     }
     
-    // Special case for LLM Evals blog post (id: 6) - updated content here
+    // Special case for LLM Evals blog post (id: 6)
     else if (id === '6') {
       return `
 <h2>What is LLM Evals?</h2>
@@ -843,4 +844,176 @@ def serve_model_api_securely():
     return blog?.content || '';
   };
   
+  // Render the full blog post UI
   return (
+    <div className="container max-w-3xl mx-auto px-4 py-8">
+      {isLoading ? (
+        // Loading skeleton
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-6 w-36" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      ) : isError ? (
+        // Error state
+        <div className="text-center py-12">
+          <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-3">Failed to load blog post</h2>
+          <p className="text-muted-foreground mb-6">
+            There was an error loading this blog post. Please try again.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button onClick={() => navigate(-1)}>
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Go Back
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      ) : (
+        // Blog post content
+        <>
+          <div className="mb-6">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/portfolio/blogs')}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to blogs
+            </Button>
+          </div>
+          
+          <header className="mb-8">
+            <div className="flex flex-wrap gap-2 mb-4">
+              {blog?.tags?.map((tag, index) => (
+                <Badge key={index} variant="secondary" className="font-normal">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl font-display font-bold mb-4">
+              {blog?.title}
+            </h1>
+            
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-1" />
+                <time dateTime={blog?.date}>
+                  {blog?.date ? formatDate(blog?.date) : 'Date unavailable'}
+                </time>
+              </div>
+              
+              {blog?.readingTime && (
+                <div className="flex items-center">
+                  <Clock className="h-4 w-4 mr-1" />
+                  <span>{blog.readingTime} min read</span>
+                </div>
+              )}
+              
+              {blog?.author && (
+                <div className="flex items-center">
+                  <User className="h-4 w-4 mr-1" />
+                  <span>{blog.author}</span>
+                </div>
+              )}
+            </div>
+          </header>
+          
+          <Separator className="my-6" />
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* If it's a special blog post with predefined content, use that instead */}
+            {(id === '5' || id === '6') ? (
+              <div 
+                className="blog-content prose dark:prose-invert prose-blue prose-img:rounded-xl prose-headings:font-display max-w-none"
+                dangerouslySetInnerHTML={{ 
+                  __html: getOWASPTop10LLM() 
+                }} 
+              />
+            ) : (
+              <div 
+                className="blog-content prose dark:prose-invert prose-blue prose-img:rounded-xl prose-headings:font-display max-w-none"
+                dangerouslySetInnerHTML={{ 
+                  __html: blog?.content || 'No content available.'
+                }} 
+              />
+            )}
+          </motion.div>
+          
+          <Separator className="my-8" />
+          
+          <div className="flex flex-wrap justify-between gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/portfolio/blogs')}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to all blogs
+            </Button>
+            
+            <div className="flex gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete blog post?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete this blog post.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => {
+                        toast.success('Blog post deleted');
+                        navigate('/portfolio/blogs');
+                      }}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
+              <Button size="sm">
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+              
+              <Button size="sm" variant="outline">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Share
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default BlogPost;
