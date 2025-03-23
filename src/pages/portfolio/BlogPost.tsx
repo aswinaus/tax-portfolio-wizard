@@ -37,7 +37,7 @@ const BlogPost = () => {
   });
 
   // Special case for blogs with pre-defined content
-  const getSpecialBlogContent = () => {
+  const getOWASPTop10LLM = () => {
     // OWASP Top 10 for LLMs blog post (id: 5)
     if (id === '5') {
       return `
@@ -842,5 +842,3 @@ def serve_model_api_securely():
     
     return blog?.content || '';
   };
-  
-  // Format date to
