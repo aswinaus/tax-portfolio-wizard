@@ -38,7 +38,7 @@ const App = () => (
           <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading...</div>}>
             <Routes>
               <Route path="/" element={<MainLayout />}>
-                <Route index element={<DocumentRepositoryPage />} />
+                <Route index element={<Portfolio />} />
                 
                 {/* Portfolio Routes */}
                 <Route path="portfolio" element={<Portfolio />} />
