@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Calendar, Clock, User, ArrowLeft, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { ChevronLeft, Calendar, Clock, User, ArrowLeft, Edit, Trash2, ExternalLink, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
