@@ -14,7 +14,7 @@ const BlogErrorState = () => {
   };
 
   return (
-    <Alert variant="destructive" className="my-6 w-full">
+    <Alert variant="destructive" className="my-6 w-full max-w-full">
       <div className="flex items-start">
         <AlertCircle className="h-5 w-5 mt-0.5" />
         <div className="ml-3 w-full">

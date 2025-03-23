@@ -916,10 +916,10 @@ def serve_model_api_securely():
                 </time>
               </div>
               
-              {blog?.readingTime && (
+              {blog?.readTime && (
                 <div className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>{blog.readingTime} min read</span>
+                  <span>{blog.readTime} min read</span>
                 </div>
               )}
               
