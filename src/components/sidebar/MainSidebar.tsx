@@ -220,7 +220,7 @@ export const MainSidebar: FC = () => {
             icon={Folder} 
             label="My Documents Repository" 
             to="/" 
-            isActive={pathname === "/"} 
+            isActive={pathname === "/" || pathname === "/documents"} 
           />
           <SidebarItem 
             icon={FileText} 

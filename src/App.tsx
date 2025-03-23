@@ -11,7 +11,6 @@ import { lazy, Suspense } from "react";
 import MainLayout from "./layouts/MainLayout";
 
 // Pages
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 // Lazy loaded pages for better performance
@@ -39,7 +38,7 @@ const App = () => (
           <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading...</div>}>
             <Routes>
               <Route path="/" element={<MainLayout />}>
-                <Route index element={<Portfolio />} />
+                <Route index element={<DocumentRepositoryPage />} />
                 
                 {/* Portfolio Routes */}
                 <Route path="portfolio" element={<Portfolio />} />
