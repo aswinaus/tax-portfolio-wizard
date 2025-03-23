@@ -1,3 +1,4 @@
+
 import { FC, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -15,6 +16,9 @@ import {
   Trophy,
   Folder,
   ChevronRight,
+  Brain,
+  Bot,
+  Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -229,6 +233,22 @@ export const MainSidebar: FC = () => {
             label="Transfer Pricing" 
             to="/business/transfer-pricing" 
             isActive={pathname === "/business/transfer-pricing"} 
+          />
+        </SidebarSection>
+        
+        {/* New AI Section */}
+        <SidebarSection title="AI" collapsible={true}>
+          <SidebarItem 
+            icon={Bot} 
+            label="Agent as a Service" 
+            to="/ai/agent" 
+            isActive={pathname === "/ai/agent"} 
+          />
+          <SidebarItem 
+            icon={Wrench} 
+            label="Tools as a Service" 
+            to="/ai/tools" 
+            isActive={pathname === "/ai/tools"} 
           />
         </SidebarSection>
       </div>

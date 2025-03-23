@@ -23,6 +23,10 @@ const Form990 = lazy(() => import("./pages/business/Form990"));
 const TransferPricing = lazy(() => import("./pages/business/TransferPricing"));
 const DocumentRepositoryPage = lazy(() => import("./pages/documents/DocumentRepositoryPage"));
 
+// New AI Pages
+const AgentServicePage = lazy(() => import("./pages/ai/AgentServicePage"));
+const ToolsServicePage = lazy(() => import("./pages/ai/ToolsServicePage"));
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -47,6 +51,10 @@ const App = () => (
                 <Route path="business/form990" element={<Form990 />} />
                 <Route path="business/transfer-pricing" element={<TransferPricing />} />
                 <Route path="documents" element={<DocumentRepositoryPage />} />
+                
+                {/* AI Routes */}
+                <Route path="ai/agent" element={<AgentServicePage />} />
+                <Route path="ai/tools" element={<ToolsServicePage />} />
                 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
