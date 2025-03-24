@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@/components/ui/**/*.tsx'], // Fix: Add glob pattern for UI components
+          ui: ['@/components/ui/**/*.tsx'], 
           motion: ['framer-motion'],
           utils: ['@/lib/utils'],
           charts: ['recharts']
