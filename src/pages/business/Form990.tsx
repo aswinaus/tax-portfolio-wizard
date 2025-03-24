@@ -54,7 +54,7 @@ const Form990 = () => {
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertTitle className="text-amber-800">Attention Required</AlertTitle>
           <AlertDescription>
-            You have {pendingSubmissionsCount} form{pendingSubmissionsCount !== 1 ? 's' : ''} pending submission to the IRS. 
+            You have {pendingSubmissionsCount} form{pendingSubmissionsCount === 1 ? '' : 's'} pending submission to the IRS. 
             Please review and submit them before their due dates.
           </AlertDescription>
         </Alert>
