@@ -14,15 +14,13 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    // Disable minification for debugging if needed
-    // minify: mode === 'production' ? 'esbuild' : false,
     sourcemap: mode === 'development',
     // Generate smaller chunks and handle large dependencies better
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@/components/ui'],
+          ui: ['@/components/ui/**/*.tsx'], // Fix: Add glob pattern for UI components
           motion: ['framer-motion'],
           utils: ['@/lib/utils'],
           charts: ['recharts']
@@ -43,6 +41,8 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    // Add explicit extensions to resolve
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
   },
   // Increase memory limit for build process
   optimizeDeps: {
@@ -51,4 +51,3 @@ export default defineConfig(({ mode }) => ({
     },
   },
 }));
-
