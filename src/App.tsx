@@ -22,7 +22,7 @@ const Form990 = lazy(() => import("./pages/business/Form990"));
 const TransferPricing = lazy(() => import("./pages/business/TransferPricing"));
 const DocumentRepositoryPage = lazy(() => import("./pages/documents/DocumentRepositoryPage"));
 
-// New AI Pages
+// AI Pages
 const AgentServicePage = lazy(() => import("./pages/ai/AgentServicePage"));
 const ToolsServicePage = lazy(() => import("./pages/ai/ToolsServicePage"));
 
