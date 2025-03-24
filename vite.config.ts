@@ -14,13 +14,23 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    // Generate clean URLs for improved SEO and user experience
+    // Disable minification for debugging if needed
+    // minify: mode === 'production' ? 'esbuild' : false,
+    sourcemap: mode === 'development',
+    // Generate smaller chunks and handle large dependencies better
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@/components/ui']
+          ui: ['@/components/ui'],
+          motion: ['framer-motion'],
+          utils: ['@/lib/utils'],
+          charts: ['recharts']
         },
+        // Ensure assets have consistent naming patterns
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
       },
     },
   },
@@ -34,4 +44,11 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Increase memory limit for build process
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2020',
+    },
+  },
 }));
+
