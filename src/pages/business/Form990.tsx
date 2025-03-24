@@ -21,7 +21,8 @@ const Form990 = () => {
   const [showForm, setShowForm] = useState(false);
   
   // Count of pending submissions (in a real app, this would come from an API)
-  const pendingSubmissionsCount = 2;
+  // Changed from a literal 2 to a number type
+  const pendingSubmissionsCount: number = 2;
   
   const handleCreateForm = () => {
     if (!selectedFormType) {
