@@ -28,7 +28,7 @@ const BlogHeader = () => {
   const createTemplatePost = (template: string) => {
     if (template === 'llm-evals') {
       // Create the LLM Evals blog post directly
-      const llmEvalsContent = `
+      let llmEvalsContent = `
 <h2>What is LLM Evals?</h2>
 <p>LLM Evals (Language Model Evaluations) refers to the systematic process and methodologies used to assess the performance, capabilities, and limitations of Large Language Models. These evaluations help us understand how well a model performs across various tasks, from simple text completion to complex reasoning, ensuring the model meets specific quality standards before deployment.</p>
 <p>Evaluation frameworks provide structured approaches to measure different aspects of language models, including:</p>
