@@ -50,7 +50,7 @@ const Form990 = () => {
       </div>
       
       {pendingSubmissionsCount > 0 && (
-        <Alert variant="warning" className="mb-6 border-amber-200 bg-amber-50 text-amber-800">
+        <Alert className="mb-6 border-amber-200 bg-amber-50 text-amber-800">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertTitle className="text-amber-800">Attention Required</AlertTitle>
           <AlertDescription>
