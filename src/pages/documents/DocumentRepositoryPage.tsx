@@ -17,6 +17,11 @@ const DocumentRepositoryPage = () => {
           <p className="text-muted-foreground">
             Securely store, organize, and share documents with GitHub integration
           </p>
+          <div className="mt-4 text-sm text-muted-foreground">
+            <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+              New Feature
+            </span> <span className="ml-1">Enhanced document sorting and filtering now available</span>
+          </div>
         </div>
         
         <DocumentRepository />

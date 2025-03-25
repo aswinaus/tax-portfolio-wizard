@@ -20,7 +20,10 @@ import {
   User,
   Move,
   Settings,
-  RefreshCw
+  RefreshCw,
+  ArrowUp,
+  ArrowDown,
+  SlidersHorizontal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +63,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import DocumentUpload from './DocumentUpload';
 import LyzrDocumentAgentChat from './LyzrDocumentAgentChat';
@@ -91,6 +95,18 @@ interface Permission {
   email: string;
   role: 'viewer' | 'editor' | 'admin';
   dateAdded: string;
+}
+
+type SortField = 'name' | 'type' | 'size' | 'uploadDate' | 'jurisdiction' | 'serviceLine' | 'recordType' | 'entity' | 'client' | 'uploadedBy';
+type SortDirection = 'asc' | 'desc';
+
+interface FilterState {
+  fileTypes: string[];
+  clientApproved: boolean | null;
+  jurisdictions: string[];
+  serviceLines: string[];
+  recordTypes: string[];
+  entities: string[];
 }
 
 const samplePermissions: Permission[] = [
@@ -130,6 +146,34 @@ const DocumentRepository = () => {
   const [githubToken, setGithubToken] = useState('');
   const { toast } = useToast();
   
+  const [sortConfig, setSortConfig] = useState<{field: SortField, direction: SortDirection}>({
+    field: 'uploadDate',
+    direction: 'desc'
+  });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    fileTypes: [],
+    clientApproved: null,
+    jurisdictions: [],
+    serviceLines: [],
+    recordTypes: [],
+    entities: []
+  });
+  
+  const [filterOptions, setFilterOptions] = useState<{
+    fileTypes: string[];
+    jurisdictions: string[];
+    serviceLines: string[];
+    recordTypes: string[];
+    entities: string[];
+  }>({
+    fileTypes: [],
+    jurisdictions: [],
+    serviceLines: [],
+    recordTypes: [],
+    entities: []
+  });
+  
   useEffect(() => {
     fetchDocuments();
     
@@ -138,6 +182,18 @@ const DocumentRepository = () => {
       setGithubToken(token);
     }
   }, []);
+  
+  useEffect(() => {
+    if (documents.length > 0) {
+      setFilterOptions({
+        fileTypes: [...new Set(documents.map(doc => doc.type))],
+        jurisdictions: [...new Set(documents.map(doc => doc.jurisdiction))],
+        serviceLines: [...new Set(documents.map(doc => doc.serviceLine))],
+        recordTypes: [...new Set(documents.map(doc => doc.recordType))],
+        entities: [...new Set(documents.map(doc => doc.entity))]
+      });
+    }
+  }, [documents]);
   
   const fetchDocuments = async () => {
     setIsLoadingDocuments(true);
@@ -198,6 +254,110 @@ const DocumentRepository = () => {
     }
   };
   
+  const handleSort = (field: SortField) => {
+    setSortConfig(prevConfig => ({
+      field,
+      direction: prevConfig.field === field && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+  
+  const sortDocuments = (docs: Document[]) => {
+    return [...docs].sort((a, b) => {
+      if (sortConfig.field === 'uploadDate') {
+        const dateA = new Date(a[sortConfig.field]).getTime();
+        const dateB = new Date(b[sortConfig.field]).getTime();
+        return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      
+      if (sortConfig.field === 'size') {
+        const sizeA = parseFileSize(a.size);
+        const sizeB = parseFileSize(b.size);
+        return sortConfig.direction === 'asc' ? sizeA - sizeB : sizeB - sizeA;
+      }
+      
+      const valueA = a[sortConfig.field]?.toString().toLowerCase() || '';
+      const valueB = b[sortConfig.field]?.toString().toLowerCase() || '';
+      
+      if (valueA < valueB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valueA > valueB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+  
+  const parseFileSize = (sizeStr: string): number => {
+    const match = sizeStr.match(/^(\d+(?:\.\d+)?)\s*(KB|MB)$/i);
+    if (!match) return 0;
+    
+    const [, size, unit] = match;
+    const numSize = parseFloat(size);
+    
+    return unit.toUpperCase() === 'MB' ? numSize * 1024 * 1024 : numSize * 1024;
+  };
+  
+  const applyFilters = (docs: Document[]) => {
+    return docs.filter(doc => {
+      if (filters.fileTypes.length > 0 && !filters.fileTypes.includes(doc.type)) {
+        return false;
+      }
+      
+      if (filters.clientApproved !== null && doc.clientApproved !== filters.clientApproved) {
+        return false;
+      }
+      
+      if (filters.jurisdictions.length > 0 && !filters.jurisdictions.includes(doc.jurisdiction)) {
+        return false;
+      }
+      
+      if (filters.serviceLines.length > 0 && !filters.serviceLines.includes(doc.serviceLine)) {
+        return false;
+      }
+      
+      if (filters.recordTypes.length > 0 && !filters.recordTypes.includes(doc.recordType)) {
+        return false;
+      }
+      
+      if (filters.entities.length > 0 && !filters.entities.includes(doc.entity)) {
+        return false;
+      }
+      
+      return true;
+    });
+  };
+  
+  const resetFilters = () => {
+    setFilters({
+      fileTypes: [],
+      clientApproved: null,
+      jurisdictions: [],
+      serviceLines: [],
+      recordTypes: [],
+      entities: []
+    });
+    
+    toast({
+      title: "Filters reset",
+      description: "All document filters have been cleared",
+    });
+    
+    setIsFilterOpen(false);
+  };
+  
+  const toggleFilter = (filterType: keyof FilterState, value: any) => {
+    setFilters(prev => {
+      if (filterType === 'clientApproved') {
+        return { ...prev, [filterType]: prev[filterType] === value ? null : value };
+      }
+      
+      const currentValues = prev[filterType] as string[];
+      return {
+        ...prev,
+        [filterType]: currentValues.includes(value)
+          ? currentValues.filter(v => v !== value)
+          : [...currentValues, value]
+      };
+    });
+  };
+  
   const getFilteredDocuments = () => {
     let filteredDocs = documents;
     
@@ -218,6 +378,10 @@ const DocumentRepository = () => {
         doc.entity?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+    
+    filteredDocs = applyFilters(filteredDocs);
+    
+    filteredDocs = sortDocuments(filteredDocs);
     
     return filteredDocs;
   };
@@ -358,6 +522,27 @@ const DocumentRepository = () => {
     setSelectedDocuments([]);
   };
 
+  const getSortIcon = (field: SortField) => {
+    if (sortConfig.field !== field) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' ? 
+      <ArrowUp className="h-3 w-3 inline ml-1" /> : 
+      <ArrowDown className="h-3 w-3 inline ml-1" />;
+  };
+
+  const getActiveFilterCount = () => {
+    return (
+      filters.fileTypes.length +
+      filters.jurisdictions.length +
+      filters.serviceLines.length +
+      filters.recordTypes.length +
+      filters.entities.length +
+      (filters.clientApproved !== null ? 1 : 0)
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
@@ -469,32 +654,168 @@ const DocumentRepository = () => {
             </>
           )}
           
-          <Popover>
+          <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
+              <Button 
+                variant={getActiveFilterCount() > 0 ? "default" : "outline"} 
+                className={getActiveFilterCount() > 0 ? "bg-primary" : ""}
+              >
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                Filters {getActiveFilterCount() > 0 ? `(${getActiveFilterCount()})` : ''}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-56">
-              <div className="space-y-2">
+            <PopoverContent className="w-80 p-0" align="end">
+              <div className="p-4 border-b">
                 <h3 className="font-medium text-sm">Filter Documents</h3>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="filter-pdf" />
-                    <label htmlFor="filter-pdf" className="text-sm">PDF Files</label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="filter-excel" />
-                    <label htmlFor="filter-excel" className="text-sm">Excel Files</label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="filter-word" />
-                    <label htmlFor="filter-word" className="text-sm">Word Files</label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use multiple filters to narrow down results
+                </p>
+              </div>
+              <div className="p-4 max-h-96 overflow-y-auto space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">File Type</h4>
+                  <div className="space-y-2">
+                    {filterOptions.fileTypes.map(type => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`filter-type-${type}`} 
+                          checked={filters.fileTypes.includes(type)}
+                          onCheckedChange={() => toggleFilter('fileTypes', type)}
+                        />
+                        <label 
+                          htmlFor={`filter-type-${type}`} 
+                          className="text-sm cursor-pointer"
+                        >
+                          {type}
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="pt-2">
-                  <Button size="sm" className="w-full">Apply Filters</Button>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Client Approved</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="filter-approved-yes" 
+                        checked={filters.clientApproved === true}
+                        onCheckedChange={() => toggleFilter('clientApproved', true)}
+                      />
+                      <label 
+                        htmlFor="filter-approved-yes" 
+                        className="text-sm cursor-pointer"
+                      >
+                        Approved
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="filter-approved-no" 
+                        checked={filters.clientApproved === false}
+                        onCheckedChange={() => toggleFilter('clientApproved', false)}
+                      />
+                      <label 
+                        htmlFor="filter-approved-no" 
+                        className="text-sm cursor-pointer"
+                      >
+                        Not Approved
+                      </label>
+                    </div>
+                  </div>
                 </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Jurisdiction</h4>
+                  <div className="space-y-2">
+                    {filterOptions.jurisdictions.map(jurisdiction => (
+                      <div key={jurisdiction} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`filter-jurisdiction-${jurisdiction}`} 
+                          checked={filters.jurisdictions.includes(jurisdiction)}
+                          onCheckedChange={() => toggleFilter('jurisdictions', jurisdiction)}
+                        />
+                        <label 
+                          htmlFor={`filter-jurisdiction-${jurisdiction}`} 
+                          className="text-sm cursor-pointer"
+                        >
+                          {jurisdiction}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Service Line</h4>
+                  <div className="space-y-2">
+                    {filterOptions.serviceLines.map(serviceLine => (
+                      <div key={serviceLine} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`filter-service-${serviceLine}`} 
+                          checked={filters.serviceLines.includes(serviceLine)}
+                          onCheckedChange={() => toggleFilter('serviceLines', serviceLine)}
+                        />
+                        <label 
+                          htmlFor={`filter-service-${serviceLine}`} 
+                          className="text-sm cursor-pointer"
+                        >
+                          {serviceLine}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Record Type</h4>
+                  <div className="space-y-2">
+                    {filterOptions.recordTypes.map(recordType => (
+                      <div key={recordType} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`filter-record-${recordType}`} 
+                          checked={filters.recordTypes.includes(recordType)}
+                          onCheckedChange={() => toggleFilter('recordTypes', recordType)}
+                        />
+                        <label 
+                          htmlFor={`filter-record-${recordType}`} 
+                          className="text-sm cursor-pointer"
+                        >
+                          {recordType}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Entity</h4>
+                  <div className="space-y-2">
+                    {filterOptions.entities.map(entity => (
+                      <div key={entity} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`filter-entity-${entity}`} 
+                          checked={filters.entities.includes(entity)}
+                          onCheckedChange={() => toggleFilter('entities', entity)}
+                        />
+                        <label 
+                          htmlFor={`filter-entity-${entity}`} 
+                          className="text-sm cursor-pointer"
+                        >
+                          {entity}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="border-t p-4 flex justify-between">
+                <Button variant="outline" size="sm" onClick={resetFilters}>
+                  Reset Filters
+                </Button>
+                <Button size="sm" onClick={() => setIsFilterOpen(false)}>
+                  Apply Filters
+                </Button>
               </div>
             </PopoverContent>
           </Popover>
@@ -603,43 +924,73 @@ const DocumentRepository = () => {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
+                        <div className="flex items-center">
+                          Name {getSortIcon('name')}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('type')}>
+                        <div className="flex items-center">
+                          Type {getSortIcon('type')}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('size')}>
+                        <div className="flex items-center">
+                          Size {getSortIcon('size')}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('jurisdiction')}>
                         <div className="flex items-center gap-1">
                           <Flag className="h-3 w-3" />
                           <span>Jurisdiction</span>
+                          {getSortIcon('jurisdiction')}
                         </div>
                       </TableHead>
-                      <TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('serviceLine')}>
                         <div className="flex items-center gap-1">
                           <List className="h-3 w-3" />
                           <span>Service Line</span>
+                          {getSortIcon('serviceLine')}
                         </div>
                       </TableHead>
-                      <TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('recordType')}>
                         <div className="flex items-center gap-1">
                           <FileText className="h-3 w-3" />
                           <span>Record Type</span>
+                          {getSortIcon('recordType')}
                         </div>
                       </TableHead>
-                      <TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('entity')}>
                         <div className="flex items-center gap-1">
                           <Box className="h-3 w-3" />
                           <span>Entity</span>
+                          {getSortIcon('entity')}
                         </div>
                       </TableHead>
-                      <TableHead>Client Approved</TableHead>
+                      <TableHead>
+                        Client Approved
+                      </TableHead>
                       <TableHead>
                         <div className="flex items-center gap-1">
                           <User className="h-3 w-3" />
                           <span>Client Contact</span>
                         </div>
                       </TableHead>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Uploaded By</TableHead>
-                      <TableHead>Date</TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('client')}>
+                        <div className="flex items-center">
+                          Client {getSortIcon('client')}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('uploadedBy')}>
+                        <div className="flex items-center">
+                          Uploaded By {getSortIcon('uploadedBy')}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('uploadDate')}>
+                        <div className="flex items-center">
+                          Date {getSortIcon('uploadDate')}
+                        </div>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
