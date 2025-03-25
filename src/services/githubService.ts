@@ -50,6 +50,7 @@ export interface GitHubDocument {
   clientApproved: boolean;
   clientContact: string;
   client: string;
+  clientNumber?: string;
   url: string;
   downloadUrl: string;
   metadata?: Record<string, any>;
@@ -181,23 +182,24 @@ export const fetchDocumentsFromGitHub = async (
         const sizeInMB = Math.round(file.size / (1024 * 1024) * 10) / 10;
         const sizeStr = sizeInMB >= 1 ? `${sizeInMB} MB` : `${sizeInKB} KB`;
         
-        // Create document object
+        // Create document object - ensure unique ID for each document
         const document: GitHubDocument = {
-          id: file.sha,
+          id: file.sha, // This should be unique for each file in GitHub
           name: metadata.originalName || file.name,
           type: fileType,
           size: sizeStr,
-          uploadedBy: 'Aswin Bhaskaran', // Default, can be updated from metadata if available
+          uploadedBy: metadata.uploadedBy || 'Aswin Bhaskaran',
           uploadDate: metadata.uploadDate || uploadDate || new Date().toISOString(),
-          isArchived: false,
+          isArchived: metadata.isArchived || false,
           category: metadata.category || category,
           jurisdiction: metadata.jurisdiction || 'United States',
           serviceLine: metadata.serviceLine || 'Tax',
           recordType: metadata.recordType || 'Document',
           entity: metadata.entity || 'Corporate',
-          clientApproved: metadata.clientApproved === 'yes' || false,
-          clientContact: 'Aswin Bhaskaran',
+          clientApproved: metadata.clientApproved === true || false,
+          clientContact: metadata.clientContact || 'Aswin Bhaskaran',
           client: metadata.client || 'Client',
+          clientNumber: metadata.clientNumber || '',
           url: file.html_url,
           downloadUrl: file.download_url,
           metadata
@@ -214,6 +216,9 @@ export const fetchDocumentsFromGitHub = async (
     documents.sort((a, b) => {
       return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
     });
+    
+    // Log the number of documents for debugging
+    console.log(`Fetched ${documents.length} documents from GitHub`);
     
     return documents;
   } catch (error) {

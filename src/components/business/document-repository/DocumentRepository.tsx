@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Folder, 
@@ -130,11 +129,9 @@ const DocumentRepository = () => {
   const [githubToken, setGithubToken] = useState('');
   const { toast } = useToast();
   
-  // Fetch documents from GitHub on component mount
   useEffect(() => {
     fetchDocuments();
     
-    // Initialize GitHub token from localStorage
     const token = localStorage.getItem('github_token');
     if (token) {
       setGithubToken(token);
@@ -145,8 +142,8 @@ const DocumentRepository = () => {
     setIsLoadingDocuments(true);
     try {
       const githubDocs = await fetchDocumentsFromGitHub();
+      console.log(`Total documents loaded: ${githubDocs.length}`);
       setDocuments(githubDocs);
-      // Only show success message if documents are loaded
       if (githubDocs.length > 0) {
         toast({
           title: "Documents loaded",
@@ -176,7 +173,6 @@ const DocumentRepository = () => {
       description: "Your GitHub token has been saved.",
     });
     setIsSettingsDialogOpen(false);
-    // Refresh documents after updating token
     fetchDocuments();
   };
   
@@ -235,7 +231,6 @@ const DocumentRepository = () => {
       return;
     }
 
-    // For documents with downloadUrl, open it in a new tab
     const docsToDownload = documents.filter(doc => 
       selectedDocuments.includes(doc.id) && doc.downloadUrl
     );
@@ -270,7 +265,6 @@ const DocumentRepository = () => {
       return;
     }
 
-    // Set isArchived to true for selected documents
     const updatedDocs = documents.map(doc => {
       if (selectedDocuments.includes(doc.id)) {
         return { ...doc, isArchived: true };
@@ -298,8 +292,6 @@ const DocumentRepository = () => {
       return;
     }
     
-    // This would typically interact with the GitHub API to copy files
-    // For now, just show a success toast
     toast({
       title: "Documents copied",
       description: `${selectedDocuments.length} document(s) copied successfully`,
@@ -320,8 +312,6 @@ const DocumentRepository = () => {
   };
 
   const handleMoveDocuments = (destination: string) => {
-    // This would typically interact with the GitHub API to move files
-    // For now, just show a success toast
     toast({
       title: "Documents moved",
       description: `${selectedDocuments.length} document(s) moved to ${destination}`,
@@ -338,7 +328,6 @@ const DocumentRepository = () => {
     uploadDate: string;
     url?: string;
   }) => {
-    // Refresh the documents list from GitHub
     fetchDocuments();
     
     toast({
@@ -357,7 +346,6 @@ const DocumentRepository = () => {
       return;
     }
     
-    // Remove selected documents from state
     const updatedDocs = documents.filter(doc => !selectedDocuments.includes(doc.id));
     setDocuments(updatedDocs);
     
