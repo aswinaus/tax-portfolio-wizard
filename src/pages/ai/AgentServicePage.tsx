@@ -1,8 +1,7 @@
 
 import { motion } from 'framer-motion';
-import { Bot, Workflow, Zap, MessagesSquare, Sparkles, ArrowRight } from 'lucide-react';
+import { Bot, Workflow, Zap, MessagesSquare, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
@@ -157,13 +156,9 @@ const AgentServicePage = () => {
           <div>
             <h3 className="text-xl font-semibold mb-2">Ready to get started?</h3>
             <p className="text-muted-foreground">
-              Contact us to discuss how our AI agents can transform your business processes.
+              Explore how our AI agents can transform your business processes.
             </p>
           </div>
-          <Button size="lg" className="whitespace-nowrap">
-            Contact Sales
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
         </div>
       </motion.div>
     </div>
