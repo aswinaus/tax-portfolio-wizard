@@ -1,12 +1,14 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, AlertTriangle } from 'lucide-react';
+import { ChevronRight, AlertTriangle, ExternalLink } from 'lucide-react';
 import { FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 // Import refactored components
 import FormTypes from '@/components/business/form990/FormTypes';
@@ -42,12 +44,21 @@ const Form990 = () => {
       transition={{ duration: 0.4 }}
       className="max-w-5xl mx-auto"
     >
-      <div className="mb-4">
-        <Badge variant="outline" className="mb-2">Business</Badge>
-        <h1 className="text-3xl font-display font-semibold">Tax Form 990 Filing</h1>
-        <p className="text-muted-foreground mt-1">
-          Complete and submit your Form 990 tax forms to the IRS
-        </p>
+      <div className="mb-4 flex justify-between items-start">
+        <div>
+          <Badge variant="outline" className="mb-2">Business</Badge>
+          <h1 className="text-3xl font-display font-semibold">Tax Form 990 Filing</h1>
+          <p className="text-muted-foreground mt-1">
+            Complete and submit your Form 990 tax forms to the IRS
+          </p>
+        </div>
+        <Link to="/documents">
+          <Button variant="outline" size="sm" className="flex items-center gap-1">
+            <FileText className="h-4 w-4" />
+            Document Repository
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </Button>
+        </Link>
       </div>
       
       {pendingSubmissionsCount > 0 && (

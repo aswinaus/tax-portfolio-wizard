@@ -49,15 +49,6 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -68,6 +59,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
+import DocumentUpload from './DocumentUpload';
 
 interface Document {
   id: string;
@@ -554,6 +546,7 @@ const DocumentRepository = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const [documents, setDocuments] = useState(sampleDocuments);
   const { toast } = useToast();
   
   const formatDate = (dateString: string) => {
@@ -578,7 +571,7 @@ const DocumentRepository = () => {
   };
   
   const getFilteredDocuments = () => {
-    let filteredDocs = sampleDocuments;
+    let filteredDocs = documents;
     
     if (activeTab === 'archived') {
       filteredDocs = filteredDocs.filter(doc => doc.isArchived);
@@ -649,6 +642,34 @@ const DocumentRepository = () => {
     setIsMoveDialogOpen(false);
   };
 
+  const handleUploadComplete = (fileDetails: {
+    name: string;
+    type: string;
+    size: string;
+    uploadedBy: string;
+    uploadDate: string;
+  }) => {
+    const newDocument: Document = {
+      id: `doc-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      name: fileDetails.name,
+      type: fileDetails.type,
+      size: fileDetails.size,
+      uploadedBy: fileDetails.uploadedBy,
+      uploadDate: fileDetails.uploadDate,
+      isArchived: false,
+      category: 'form990',
+      jurisdiction: 'United States',
+      serviceLine: 'Tax',
+      recordType: 'Tax returns',
+      entity: 'Non-profit Organization',
+      clientApproved: false,
+      clientContact: 'Aswin Bhaskaran',
+      client: 'Client Name'
+    };
+    
+    setDocuments([newDocument, ...documents]);
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
@@ -692,30 +713,10 @@ const DocumentRepository = () => {
                   Add files to your document repository. Supported formats: PDF, DOCX, XLSX, JPG, PNG.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="border-2 border-dashed border-primary/20 rounded-lg p-8 text-center cursor-pointer hover:bg-secondary/50 transition-colors">
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-primary/60" />
-                  <p className="text-sm font-medium">Drag and drop files here or click to browse</p>
-                  <p className="text-xs text-muted-foreground mt-1">Maximum file size: 10MB</p>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <div className="text-sm font-medium">Category</div>
-                  <select className="border rounded-md p-2">
-                    <option value="form990">Form 990</option>
-                    <option value="financial">Financial Data</option>
-                    <option value="tax">Tax Documents</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" onClick={() => setIsUploadDialogOpen(false)}>
-                  Upload Files
-                </Button>
-              </DialogFooter>
+              <DocumentUpload 
+                onUploadComplete={handleUploadComplete}
+                onClose={() => setIsUploadDialogOpen(false)}
+              />
             </DialogContent>
           </Dialog>
           
