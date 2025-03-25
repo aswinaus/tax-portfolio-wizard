@@ -382,15 +382,15 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="united_states">United States</SelectItem>
-                      <SelectItem value="united_kingdom">United Kingdom</SelectItem>
-                      <SelectItem value="india">India</SelectItem>
-                      <SelectItem value="canada">Canada</SelectItem>
-                      <SelectItem value="norway">Norway</SelectItem>
-                      <SelectItem value="sweden">Sweden</SelectItem>
                       <SelectItem value="australia">Australia</SelectItem>
+                      <SelectItem value="canada">Canada</SelectItem>
                       <SelectItem value="denmark">Denmark</SelectItem>
                       <SelectItem value="germany">Germany</SelectItem>
+                      <SelectItem value="india">India</SelectItem>
+                      <SelectItem value="norway">Norway</SelectItem>
+                      <SelectItem value="sweden">Sweden</SelectItem>
+                      <SelectItem value="united_kingdom">United Kingdom</SelectItem>
+                      <SelectItem value="united_states">United States</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
