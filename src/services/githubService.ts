@@ -15,6 +15,46 @@ export interface GitHubRepo {
   homepage: string | null;
 }
 
+export interface GitHubFile {
+  name: string;
+  path: string;
+  sha: string;
+  size: number;
+  url: string;
+  html_url: string;
+  git_url: string;
+  download_url: string;
+  type: string;
+  content?: string;
+  encoding?: string;
+  _links: {
+    self: string;
+    git: string;
+    html: string;
+  };
+}
+
+export interface GitHubDocument {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  uploadedBy: string;
+  uploadDate: string;
+  isArchived: boolean;
+  category: 'form990' | 'financial' | 'tax' | 'other';
+  jurisdiction: string;
+  serviceLine: string;
+  recordType: string;
+  entity: string;
+  clientApproved: boolean;
+  clientContact: string;
+  client: string;
+  url: string;
+  downloadUrl: string;
+  metadata?: Record<string, any>;
+}
+
 export const fetchGitHubRepos = async (username: string = 'aswinaus'): Promise<GitHubRepo[]> => {
   try {
     const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`);
@@ -49,6 +89,137 @@ export const fetchGitHubUserData = async (username: string = 'aswinaus') => {
     
     // Return null on error
     return null;
+  }
+};
+
+export const fetchDocumentsFromGitHub = async (
+  repo: string = 'docstorage',
+  owner: string = 'aswinaus',
+  path: string = 'uploads'
+): Promise<GitHubDocument[]> => {
+  try {
+    // Get GitHub token from localStorage
+    const token = localStorage.getItem('github_token');
+    
+    if (!token) {
+      toast.error('GitHub token required to fetch documents');
+      return [];
+    }
+    
+    // Fetch files from the repository
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch files from GitHub: ${response.status}`);
+    }
+    
+    const files = await response.json() as GitHubFile[];
+    
+    // Filter out metadata files and process document files
+    const documentFiles = files.filter(file => !file.name.endsWith('.metadata.json'));
+    
+    // Create an array to store documents with their metadata
+    const documents: GitHubDocument[] = [];
+    
+    // Process each document file
+    for (const file of documentFiles) {
+      try {
+        // Look for corresponding metadata file
+        const metadataFileName = `${file.name}.metadata.json`;
+        const metadataFileIndex = files.findIndex(f => f.name === metadataFileName);
+        
+        let metadata: Record<string, any> = {};
+        
+        // If metadata file exists, fetch and parse it
+        if (metadataFileIndex !== -1) {
+          const metadataFile = files[metadataFileIndex];
+          const metadataResponse = await fetch(metadataFile.download_url);
+          if (metadataResponse.ok) {
+            metadata = await metadataResponse.json();
+          }
+        }
+        
+        // Parse filename to extract information
+        // Expected format: YYYY-MM-DD_category_filename.ext
+        const nameParts = file.name.split('_');
+        let uploadDate = '';
+        let category: GitHubDocument['category'] = 'other';
+        
+        if (nameParts.length >= 2 && nameParts[0].match(/^\d{4}-\d{2}-\d{2}$/)) {
+          uploadDate = nameParts[0];
+          
+          if (nameParts[1] === 'form990') {
+            category = 'form990';
+          } else if (nameParts[1] === 'financial') {
+            category = 'financial';
+          } else if (nameParts[1] === 'tax') {
+            category = 'tax';
+          }
+        }
+        
+        // Get file extension for type
+        const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+        let fileType = fileExtension;
+        
+        if (fileExtension === 'pdf') {
+          fileType = 'PDF';
+        } else if (['xlsx', 'xls'].includes(fileExtension)) {
+          fileType = 'Excel';
+        } else if (['docx', 'doc'].includes(fileExtension)) {
+          fileType = 'Word';
+        } else if (['pptx', 'ppt'].includes(fileExtension)) {
+          fileType = 'PowerPoint';
+        }
+        
+        // Format size
+        const sizeInKB = Math.round(file.size / 1024 * 10) / 10;
+        const sizeInMB = Math.round(file.size / (1024 * 1024) * 10) / 10;
+        const sizeStr = sizeInMB >= 1 ? `${sizeInMB} MB` : `${sizeInKB} KB`;
+        
+        // Create document object
+        const document: GitHubDocument = {
+          id: file.sha,
+          name: metadata.originalName || file.name,
+          type: fileType,
+          size: sizeStr,
+          uploadedBy: 'Aswin Bhaskaran', // Default, can be updated from metadata if available
+          uploadDate: metadata.uploadDate || uploadDate || new Date().toISOString(),
+          isArchived: false,
+          category: metadata.category || category,
+          jurisdiction: metadata.jurisdiction || 'United States',
+          serviceLine: metadata.serviceLine || 'Tax',
+          recordType: metadata.recordType || 'Document',
+          entity: metadata.entity || 'Corporate',
+          clientApproved: metadata.clientApproved === 'yes' || false,
+          clientContact: 'Aswin Bhaskaran',
+          client: metadata.client || 'Client',
+          url: file.html_url,
+          downloadUrl: file.download_url,
+          metadata
+        };
+        
+        documents.push(document);
+      } catch (error) {
+        console.error(`Error processing file ${file.name}:`, error);
+        // Continue with next file if there's an error with the current one
+      }
+    }
+    
+    // Sort documents by upload date (newest first)
+    documents.sort((a, b) => {
+      return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+    });
+    
+    return documents;
+  } catch (error) {
+    console.error('Error fetching documents from GitHub:', error);
+    toast.error('Failed to load documents from GitHub repository');
+    return [];
   }
 };
 

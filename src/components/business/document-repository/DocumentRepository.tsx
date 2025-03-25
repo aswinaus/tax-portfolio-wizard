@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { 
   Folder, 
   Upload, 
@@ -18,7 +19,9 @@ import {
   List,
   Box,
   User,
-  Move
+  Move,
+  Settings,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +63,7 @@ import {
 } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import DocumentUpload from './DocumentUpload';
+import { GitHubDocument, fetchDocumentsFromGitHub } from '@/services/githubService';
 
 interface Document {
   id: string;
@@ -77,6 +81,8 @@ interface Document {
   clientApproved: boolean;
   clientContact: string;
   client: string;
+  url?: string;
+  downloadUrl?: string;
 }
 
 interface Permission {
@@ -86,434 +92,6 @@ interface Permission {
   role: 'viewer' | 'editor' | 'admin';
   dateAdded: string;
 }
-
-const sampleDocuments: Document[] = [
-  {
-    id: 'doc-1',
-    name: 'Form 990 - 2023.pdf',
-    type: 'PDF',
-    size: '2.4 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-10T10:30:00Z',
-    isArchived: false,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: true,
-    clientContact: 'Sarah Johnson',
-    client: 'Coke'
-  },
-  {
-    id: 'doc-2',
-    name: 'Financial Statement Q4 2023.xlsx',
-    type: 'Excel',
-    size: '1.7 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-15T14:45:00Z',
-    isArchived: false,
-    category: 'financial',
-    jurisdiction: 'United States',
-    serviceLine: 'Assurance',
-    recordType: 'Financial reporting',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Michael Chen',
-    client: 'Boeing'
-  },
-  {
-    id: 'doc-3',
-    name: 'Form 990 - 2022.pdf',
-    type: 'PDF',
-    size: '2.2 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2022-12-05T09:15:00Z',
-    isArchived: true,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: false,
-    clientContact: 'Sarah Johnson',
-    client: 'Coke'
-  },
-  {
-    id: 'doc-4',
-    name: 'Annual Tax Report 2023.pdf',
-    type: 'PDF',
-    size: '3.1 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-11-28T16:30:00Z',
-    isArchived: false,
-    category: 'tax',
-    jurisdiction: 'India',
-    serviceLine: 'Tax',
-    recordType: 'Tax permanent documentation',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Raj Patel',
-    client: 'Air Canada'
-  },
-  {
-    id: 'doc-5',
-    name: 'Budget Projections 2024.xlsx',
-    type: 'Excel',
-    size: '1.5 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-20T11:30:00Z',
-    isArchived: false,
-    category: 'financial',
-    jurisdiction: 'Canada',
-    serviceLine: 'Advisory',
-    recordType: 'Budget planning',
-    entity: 'Government',
-    clientApproved: false,
-    clientContact: 'Emma Thompson',
-    client: 'Air Canada'
-  },
-  {
-    id: 'doc-6',
-    name: 'Form 990-EZ 2023.pdf',
-    type: 'PDF',
-    size: '1.8 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-08T09:45:00Z',
-    isArchived: false,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: true,
-    clientContact: 'Robert Miller',
-    client: 'Microsoft'
-  },
-  {
-    id: 'doc-7',
-    name: 'Transfer Pricing Study 2023.pdf',
-    type: 'PDF',
-    size: '4.2 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-11-15T13:20:00Z',
-    isArchived: false,
-    category: 'tax',
-    jurisdiction: 'Global',
-    serviceLine: 'Transfer Pricing',
-    recordType: 'Tax study',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Jennifer Lee',
-    client: 'Boeing'
-  },
-  {
-    id: 'doc-8',
-    name: 'Q1 Financial Results 2024.xlsx',
-    type: 'Excel',
-    size: '2.1 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2024-04-10T10:15:00Z',
-    isArchived: false,
-    category: 'financial',
-    jurisdiction: 'United States',
-    serviceLine: 'Assurance',
-    recordType: 'Financial reporting',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'David Wang',
-    client: 'Tesla'
-  },
-  {
-    id: 'doc-9',
-    name: 'Donation Records 2023.docx',
-    type: 'Word',
-    size: '1.3 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-22T15:45:00Z',
-    isArchived: false,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Advisory',
-    recordType: 'Supporting documentation',
-    entity: 'Non-profit Organization',
-    clientApproved: true,
-    clientContact: 'Maria Rodriguez',
-    client: 'McDonald'
-  },
-  {
-    id: 'doc-10',
-    name: 'Tax Compliance Checklist 2023.pdf',
-    type: 'PDF',
-    size: '0.8 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-10-05T11:30:00Z',
-    isArchived: false,
-    category: 'tax',
-    jurisdiction: 'Canada',
-    serviceLine: 'Tax',
-    recordType: 'Compliance',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'John Peterson',
-    client: 'WestJet'
-  },
-  {
-    id: 'doc-11',
-    name: 'Form 990-T 2023.pdf',
-    type: 'PDF',
-    size: '2.0 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-12T14:20:00Z',
-    isArchived: false,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: false,
-    clientContact: 'Laura Smith',
-    client: 'Toyota'
-  },
-  {
-    id: 'doc-12',
-    name: 'Revenue Recognition Analysis.xlsx',
-    type: 'Excel',
-    size: '1.9 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-11-10T09:25:00Z',
-    isArchived: false,
-    category: 'financial',
-    jurisdiction: 'United States',
-    serviceLine: 'Advisory',
-    recordType: 'Financial analysis',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Paul Johnson',
-    client: 'Microsoft'
-  },
-  {
-    id: 'doc-13',
-    name: 'Form 990 - 2021.pdf',
-    type: 'PDF',
-    size: '2.3 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2021-12-08T10:15:00Z',
-    isArchived: true,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: true,
-    clientContact: 'Sarah Johnson',
-    client: 'Coke'
-  },
-  {
-    id: 'doc-14',
-    name: 'GST Audit Report 2023.pdf',
-    type: 'PDF',
-    size: '2.5 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-18T16:40:00Z',
-    isArchived: false,
-    category: 'tax',
-    jurisdiction: 'India',
-    serviceLine: 'Tax',
-    recordType: 'Audit report',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Ananya Patel',
-    client: 'Tata'
-  },
-  {
-    id: 'doc-15',
-    name: 'Capital Expenditure Plan 2024.pptx',
-    type: 'PowerPoint',
-    size: '3.4 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2024-01-15T14:30:00Z',
-    isArchived: false,
-    category: 'financial',
-    jurisdiction: 'Global',
-    serviceLine: 'Advisory',
-    recordType: 'Strategic planning',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Thomas Brown',
-    client: 'Apple'
-  },
-  {
-    id: 'doc-16',
-    name: 'Schedule A Form 990 2023.pdf',
-    type: 'PDF',
-    size: '1.6 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-11T11:20:00Z',
-    isArchived: false,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: true,
-    clientContact: 'William Davis',
-    client: 'Pepsi'
-  },
-  {
-    id: 'doc-17',
-    name: 'International Tax Restructuring Memo.docx',
-    type: 'Word',
-    size: '1.2 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-10-25T15:10:00Z',
-    isArchived: false,
-    category: 'tax',
-    jurisdiction: 'Global',
-    serviceLine: 'International Tax',
-    recordType: 'Planning',
-    entity: 'Corporate',
-    clientApproved: false,
-    clientContact: 'Richard Green',
-    client: 'Walmart'
-  },
-  {
-    id: 'doc-18',
-    name: 'Cash Flow Projections 2024-2025.xlsx',
-    type: 'Excel',
-    size: '1.8 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2024-02-05T09:45:00Z',
-    isArchived: false,
-    category: 'financial',
-    jurisdiction: 'United States',
-    serviceLine: 'Advisory',
-    recordType: 'Financial planning',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Karen Williams',
-    client: 'Netflix'
-  },
-  {
-    id: 'doc-19',
-    name: 'Form 990-N E-Postcard 2023.pdf',
-    type: 'PDF',
-    size: '0.5 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-07T13:15:00Z',
-    isArchived: false,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: true,
-    clientContact: 'Jessica Taylor',
-    client: 'Google'
-  },
-  {
-    id: 'doc-20',
-    name: 'VAT Return Q4 2023.pdf',
-    type: 'PDF',
-    size: '1.0 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2024-01-10T10:30:00Z',
-    isArchived: false,
-    category: 'tax',
-    jurisdiction: 'United Kingdom',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'James Wilson',
-    client: 'BP'
-  },
-  {
-    id: 'doc-21',
-    name: 'Annual Financial Statements 2023.pdf',
-    type: 'PDF',
-    size: '5.2 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2024-03-15T14:45:00Z',
-    isArchived: false,
-    category: 'financial',
-    jurisdiction: 'United States',
-    serviceLine: 'Assurance',
-    recordType: 'Financial reporting',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Michelle Robinson',
-    client: 'Ford'
-  },
-  {
-    id: 'doc-22',
-    name: 'Form 990 Schedule B 2023.pdf',
-    type: 'PDF',
-    size: '1.7 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-12-14T11:40:00Z',
-    isArchived: false,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Non-profit Organization',
-    clientApproved: true,
-    clientContact: 'Robert Johnson',
-    client: 'Facebook'
-  },
-  {
-    id: 'doc-23',
-    name: 'Corporate Income Tax Return 2023.pdf',
-    type: 'PDF',
-    size: '3.3 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2024-03-01T10:20:00Z',
-    isArchived: false,
-    category: 'tax',
-    jurisdiction: 'Canada',
-    serviceLine: 'Tax',
-    recordType: 'Tax returns',
-    entity: 'Corporate',
-    clientApproved: true,
-    clientContact: 'Daniel Thompson',
-    client: 'Shell'
-  },
-  {
-    id: 'doc-24',
-    name: 'Audit Planning Memo 2024.docx',
-    type: 'Word',
-    size: '1.4 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2024-01-20T09:30:00Z',
-    isArchived: false,
-    category: 'financial',
-    jurisdiction: 'Global',
-    serviceLine: 'Assurance',
-    recordType: 'Audit planning',
-    entity: 'Corporate',
-    clientApproved: false,
-    clientContact: 'Lisa Garcia',
-    client: 'Amazon'
-  },
-  {
-    id: 'doc-25',
-    name: 'Form 990 Extension Request 2023.pdf',
-    type: 'PDF',
-    size: '0.7 MB',
-    uploadedBy: 'Aswin Bhaskaran',
-    uploadDate: '2023-11-05T15:30:00Z',
-    isArchived: false,
-    category: 'form990',
-    jurisdiction: 'United States',
-    serviceLine: 'Tax',
-    recordType: 'Tax filing',
-    entity: 'Non-profit Organization',
-    clientApproved: true,
-    clientContact: 'Elizabeth Moore',
-    client: 'Twitter'
-  }
-];
 
 const samplePermissions: Permission[] = [
   {
@@ -546,8 +124,61 @@ const DocumentRepository = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
-  const [documents, setDocuments] = useState(sampleDocuments);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+  const [githubToken, setGithubToken] = useState('');
   const { toast } = useToast();
+  
+  // Fetch documents from GitHub on component mount
+  useEffect(() => {
+    fetchDocuments();
+    
+    // Initialize GitHub token from localStorage
+    const token = localStorage.getItem('github_token');
+    if (token) {
+      setGithubToken(token);
+    }
+  }, []);
+  
+  const fetchDocuments = async () => {
+    setIsLoadingDocuments(true);
+    try {
+      const githubDocs = await fetchDocumentsFromGitHub();
+      setDocuments(githubDocs);
+      // Only show success message if documents are loaded
+      if (githubDocs.length > 0) {
+        toast({
+          title: "Documents loaded",
+          description: `${githubDocs.length} documents loaded from GitHub repository`,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      toast({
+        title: "Error loading documents",
+        description: "Failed to load documents from GitHub repository",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingDocuments(false);
+    }
+  };
+  
+  const handleRefresh = () => {
+    fetchDocuments();
+  };
+  
+  const saveGitHubToken = () => {
+    localStorage.setItem('github_token', githubToken);
+    toast({
+      title: "Token saved",
+      description: "Your GitHub token has been saved.",
+    });
+    setIsSettingsDialogOpen(false);
+    // Refresh documents after updating token
+    fetchDocuments();
+  };
   
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -585,7 +216,9 @@ const DocumentRepository = () => {
       filteredDocs = filteredDocs.filter(doc => 
         doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         doc.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase())
+        doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.entity?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -593,13 +226,65 @@ const DocumentRepository = () => {
   };
   
   const downloadSelectedDocuments = () => {
-    console.log('Downloading documents:', selectedDocuments);
-    alert(`Downloading ${selectedDocuments.length} document(s)`);
+    if (selectedDocuments.length === 0) {
+      toast({
+        title: "No documents selected",
+        description: "Please select documents to download",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For documents with downloadUrl, open it in a new tab
+    const docsToDownload = documents.filter(doc => 
+      selectedDocuments.includes(doc.id) && doc.downloadUrl
+    );
+    
+    docsToDownload.forEach(doc => {
+      if (doc.downloadUrl) {
+        window.open(doc.downloadUrl, '_blank');
+      }
+    });
+    
+    if (docsToDownload.length > 0) {
+      toast({
+        title: "Download started",
+        description: `Started downloading ${docsToDownload.length} document(s)`,
+      });
+    } else {
+      toast({
+        title: "Download failed",
+        description: "No download URLs available for selected documents",
+        variant: "destructive",
+      });
+    }
   };
   
   const archiveSelectedDocuments = () => {
-    console.log('Archiving documents:', selectedDocuments);
-    alert(`Archived ${selectedDocuments.length} document(s)`);
+    if (selectedDocuments.length === 0) {
+      toast({
+        title: "No documents selected",
+        description: "Please select documents to archive",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Set isArchived to true for selected documents
+    const updatedDocs = documents.map(doc => {
+      if (selectedDocuments.includes(doc.id)) {
+        return { ...doc, isArchived: true };
+      }
+      return doc;
+    });
+    
+    setDocuments(updatedDocs);
+    
+    toast({
+      title: "Documents archived",
+      description: `${selectedDocuments.length} document(s) archived successfully`,
+    });
+    
     setSelectedDocuments([]);
   };
 
@@ -613,7 +298,8 @@ const DocumentRepository = () => {
       return;
     }
     
-    console.log('Copying documents:', selectedDocuments);
+    // This would typically interact with the GitHub API to copy files
+    // For now, just show a success toast
     toast({
       title: "Documents copied",
       description: `${selectedDocuments.length} document(s) copied successfully`,
@@ -634,12 +320,14 @@ const DocumentRepository = () => {
   };
 
   const handleMoveDocuments = (destination: string) => {
-    console.log('Moving documents:', selectedDocuments, 'to destination:', destination);
+    // This would typically interact with the GitHub API to move files
+    // For now, just show a success toast
     toast({
       title: "Documents moved",
       description: `${selectedDocuments.length} document(s) moved to ${destination}`,
     });
     setIsMoveDialogOpen(false);
+    setSelectedDocuments([]);
   };
 
   const handleUploadComplete = (fileDetails: {
@@ -648,26 +336,37 @@ const DocumentRepository = () => {
     size: string;
     uploadedBy: string;
     uploadDate: string;
+    url?: string;
   }) => {
-    const newDocument: Document = {
-      id: `doc-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      name: fileDetails.name,
-      type: fileDetails.type,
-      size: fileDetails.size,
-      uploadedBy: fileDetails.uploadedBy,
-      uploadDate: fileDetails.uploadDate,
-      isArchived: false,
-      category: 'form990',
-      jurisdiction: 'United States',
-      serviceLine: 'Tax',
-      recordType: 'Tax returns',
-      entity: 'Non-profit Organization',
-      clientApproved: false,
-      clientContact: 'Aswin Bhaskaran',
-      client: 'Client Name'
-    };
+    // Refresh the documents list from GitHub
+    fetchDocuments();
     
-    setDocuments([newDocument, ...documents]);
+    toast({
+      title: "Upload complete",
+      description: `${fileDetails.name} uploaded successfully`,
+    });
+  };
+
+  const handleDeleteDocuments = () => {
+    if (selectedDocuments.length === 0) {
+      toast({
+        title: "No documents selected",
+        description: "Please select documents to delete",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Remove selected documents from state
+    const updatedDocs = documents.filter(doc => !selectedDocuments.includes(doc.id));
+    setDocuments(updatedDocs);
+    
+    toast({
+      title: "Documents deleted",
+      description: `${selectedDocuments.length} document(s) deleted`,
+    });
+    
+    setSelectedDocuments([]);
   };
 
   return (
@@ -722,10 +421,27 @@ const DocumentRepository = () => {
           
           <Button 
             variant="outline" 
+            onClick={handleRefresh}
+            disabled={isLoadingDocuments}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingDocuments ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={() => setIsSettingsDialogOpen(true)}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
+          
+          <Button 
+            variant="outline" 
             onClick={copySelectedDocuments}
           >
             <Copy className="h-4 w-4 mr-2" />
-            Copy Documents
+            Copy
           </Button>
           
           <Button 
@@ -733,7 +449,7 @@ const DocumentRepository = () => {
             onClick={moveSelectedDocuments}
           >
             <Move className="h-4 w-4 mr-2" />
-            Move Documents
+            Move
           </Button>
           
           {selectedDocuments.length > 0 && (
@@ -756,7 +472,7 @@ const DocumentRepository = () => {
               
               <Button 
                 variant="outline" 
-                onClick={() => setSelectedDocuments([])}
+                onClick={handleDeleteDocuments}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
@@ -795,6 +511,47 @@ const DocumentRepository = () => {
           </Popover>
         </div>
       </div>
+      
+      <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Repository Settings</DialogTitle>
+            <DialogDescription>
+              Configure your GitHub integration settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">GitHub Personal Access Token</label>
+              <Input
+                type="text"
+                placeholder="Enter your GitHub token"
+                value={githubToken}
+                onChange={(e) => setGithubToken(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Token needs repo permissions. 
+                <a 
+                  href="https://github.com/settings/tokens/new" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary ml-1"
+                >
+                  Generate token
+                </a>
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSettingsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={saveGitHubToken}>
+              Save Settings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Dialog open={isMoveDialogOpen} onOpenChange={setIsMoveDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -897,7 +654,13 @@ const DocumentRepository = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {getFilteredDocuments().length > 0 ? (
+                    {isLoadingDocuments ? (
+                      <TableRow>
+                        <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                          Loading documents...
+                        </TableCell>
+                      </TableRow>
+                    ) : getFilteredDocuments().length > 0 ? (
                       getFilteredDocuments().map((doc) => (
                         <TableRow key={doc.id} className={doc.isArchived ? "opacity-70" : ""}>
                           <TableCell>
@@ -921,7 +684,14 @@ const DocumentRepository = () => {
                               ) : (
                                 <File className="h-4 w-4" />
                               )}
-                              <span>{doc.name}</span>
+                              <a 
+                                href={doc.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="hover:underline"
+                              >
+                                {doc.name}
+                              </a>
                               {doc.isArchived && (
                                 <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full ml-1">
                                   Archived
@@ -970,7 +740,7 @@ const DocumentRepository = () => {
             <h3 className="font-medium">Archival Management</h3>
           </div>
           <div className="text-muted-foreground text-sm">
-            {sampleDocuments.filter(doc => doc.isArchived).length} archived items
+            {documents.filter(doc => doc.isArchived).length} archived items
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent className="px-4 pb-4">
@@ -1014,7 +784,7 @@ const DocumentRepository = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span>Total archived documents:</span>
-                      <span className="font-medium">{sampleDocuments.filter(doc => doc.isArchived).length}</span>
+                      <span className="font-medium">{documents.filter(doc => doc.isArchived).length}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Archive storage used:</span>
