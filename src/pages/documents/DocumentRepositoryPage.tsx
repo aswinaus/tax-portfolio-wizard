@@ -9,6 +9,7 @@ const DocumentRepositoryPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="flex flex-col w-full"
       >
         <div className="mb-8">
           <h1 className="text-3xl font-display font-semibold tracking-tight mb-2">
