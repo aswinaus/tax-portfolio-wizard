@@ -1,12 +1,10 @@
 
 import { motion } from 'framer-motion';
-import { Bot, Workflow, Zap, MessagesSquare, Sparkles, ArrowRight, FileText } from 'lucide-react';
+import { Bot, Workflow, Zap, MessagesSquare, Sparkles, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import LyzrAgentChat from '@/components/business/LyzrAgentChat';
 
 const AgentServicePage = () => {
   return (
@@ -24,92 +22,6 @@ const AgentServicePage = () => {
             Discover AI agents that can handle tasks and workflows autonomously
           </p>
         </div>
-
-        {/* Form 990 Tax Assistant Featured Card */}
-        <Card className="bg-primary/5 border-primary/10 mb-8">
-          <CardHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <FileText className="h-10 w-10 text-primary" />
-              <div>
-                <CardTitle className="text-xl">Form 990 Tax Filing Assistant</CardTitle>
-                <CardDescription className="text-base">
-                  Our specialized agent for tax filing assistance
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4">
-              The Form 990 Tax Filing Assistant helps nonprofits navigate the complexities of IRS Form 990 filings.
-              Ask questions about filing requirements, deadlines, extensions, and get step-by-step guidance.
-            </p>
-            
-            <Tabs defaultValue="chat" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="chat" className="text-sm">Chat with Agent</TabsTrigger>
-                <TabsTrigger value="features" className="text-sm">Features</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="chat" className="space-y-4">
-                <div className="h-[500px]">
-                  <LyzrAgentChat />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="features" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-card rounded-lg p-4 border">
-                    <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" /> Filing Requirements
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Get clear guidance on which Form 990 version your organization needs to file.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg p-4 border">
-                    <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" /> Deadline Management
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Stay informed about filing deadlines and extension opportunities.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg p-4 border">
-                    <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" /> Documentation Guidance
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Learn which documents and records you need to prepare for accurate filing.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg p-4 border">
-                    <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" /> Compliance Assistance
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Get help ensuring your organization meets all IRS compliance requirements.
-                    </p>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-          <CardFooter>
-            <div className="flex justify-between items-center w-full">
-              <Badge variant="outline" className="text-primary border-primary/30">
-                Available Now
-              </Badge>
-              <Button variant="outline" size="sm" asChild>
-                <a href="/business/form990">
-                  Form 990 Filing Page <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
           <Card className="bg-primary/5 border-primary/20">
