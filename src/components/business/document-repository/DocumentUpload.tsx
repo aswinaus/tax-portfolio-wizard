@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Upload, X, FileText, File as FileIcon, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -58,7 +57,6 @@ interface DocumentMetadata {
   category: string;
 }
 
-// Validation schema for the form
 const formSchema = z.object({
   category: z.string().min(1, "Category is required"),
   jurisdiction: z.string().min(1, "Jurisdiction is required"),
@@ -71,7 +69,6 @@ const formSchema = z.object({
   clientNumber: z.string().optional(),
 });
 
-// Settings schema for GitHub token
 const settingsSchema = z.object({
   githubToken: z.string().min(1, "GitHub token is required")
 });
@@ -83,7 +80,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
   const [showSettings, setShowSettings] = useState(false);
   const { toast: uiToast } = useToast();
 
-  // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -97,7 +93,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
     },
   });
 
-  // Settings form
   const settingsForm = useForm<z.infer<typeof settingsSchema>>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
@@ -106,7 +101,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
   });
 
   useEffect(() => {
-    // Load GitHub token from localStorage if available
     const token = localStorage.getItem('github_token');
     if (token) {
       setGithubToken(token);
@@ -118,7 +112,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files);
       
-      // Filter out files larger than 10MB
       const validFiles = fileArray.filter(file => file.size <= 10 * 1024 * 1024);
       const oversizedFiles = fileArray.filter(file => file.size > 10 * 1024 * 1024);
       
@@ -168,7 +161,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
   const uploadFiles = async (formData: z.infer<typeof formSchema>) => {
     if (selectedFiles.length === 0) return;
     
-    // Check if GitHub token exists
     if (!githubToken) {
       uiToast({
         title: "GitHub token required",
@@ -184,7 +176,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
 
     try {
       for (const file of selectedFiles) {
-        // Extract metadata from form
         const metadata: DocumentMetadata = {
           jurisdiction: formData.jurisdiction,
           serviceLine: formData.serviceLine,
@@ -195,14 +186,12 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
           category: formData.category,
         };
         
-        // Upload file to GitHub
         const uploadResult = await uploadToGitHub(file, metadata);
         
         if (!uploadResult.success) {
           throw new Error(uploadResult.message || 'Failed to upload to GitHub');
         }
         
-        // Notify parent of successful upload
         onUploadComplete({
           name: file.name,
           type: file.type.includes('sheet') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls') 
@@ -224,7 +213,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
 
       toast.success(`Successfully uploaded ${selectedFiles.length} document(s) to GitHub`);
       
-      // Clear the selected files and close the dialog
       setSelectedFiles([]);
       onClose();
     } catch (error) {
@@ -244,7 +232,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
     if (e.dataTransfer.files) {
       const fileArray = Array.from(e.dataTransfer.files);
       
-      // Filter out files larger than 10MB
       const validFiles = fileArray.filter(file => file.size <= 10 * 1024 * 1024);
       const oversizedFiles = fileArray.filter(file => file.size > 10 * 1024 * 1024);
       
@@ -352,7 +339,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(uploadFiles)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Category Field */}
             <FormField
               control={form.control}
               name="category"
@@ -380,7 +366,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
               )}
             />
 
-            {/* Jurisdiction Field */}
             <FormField
               control={form.control}
               name="jurisdiction"
@@ -393,14 +378,19 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select jurisdiction" />
+                        <SelectValue placeholder="Select country" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="federal">Federal</SelectItem>
-                      <SelectItem value="state">State</SelectItem>
-                      <SelectItem value="local">Local</SelectItem>
-                      <SelectItem value="international">International</SelectItem>
+                      <SelectItem value="united_states">United States</SelectItem>
+                      <SelectItem value="united_kingdom">United Kingdom</SelectItem>
+                      <SelectItem value="india">India</SelectItem>
+                      <SelectItem value="canada">Canada</SelectItem>
+                      <SelectItem value="norway">Norway</SelectItem>
+                      <SelectItem value="sweden">Sweden</SelectItem>
+                      <SelectItem value="australia">Australia</SelectItem>
+                      <SelectItem value="denmark">Denmark</SelectItem>
+                      <SelectItem value="germany">Germany</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -408,7 +398,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
               )}
             />
 
-            {/* Service Line Field */}
             <FormField
               control={form.control}
               name="serviceLine"
@@ -436,7 +425,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
               )}
             />
 
-            {/* Entity Field */}
             <FormField
               control={form.control}
               name="entity"
@@ -451,7 +439,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
               )}
             />
 
-            {/* Client Field */}
             <FormField
               control={form.control}
               name="client"
@@ -466,7 +453,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
               )}
             />
 
-            {/* Client Number Field */}
             <FormField
               control={form.control}
               name="clientNumber"
@@ -482,7 +468,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
             />
           </div>
 
-          {/* Client Approved Radio Group */}
           <FormField
             control={form.control}
             name="clientApproved"
