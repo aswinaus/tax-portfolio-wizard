@@ -108,7 +108,7 @@ export const fetchDocumentsFromGitHub = async (
     }
     
     // Fetch files from the repository
-    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?per_page=100`, {
       headers: {
         'Authorization': `token ${token}`,
         'Accept': 'application/vnd.github.v3+json'
@@ -120,9 +120,11 @@ export const fetchDocumentsFromGitHub = async (
     }
     
     const files = await response.json() as GitHubFile[];
+    console.log(`Raw GitHub files fetched: ${files.length}`);
     
     // Filter out metadata files and process document files
     const documentFiles = files.filter(file => !file.name.endsWith('.metadata.json'));
+    console.log(`Document files (excluding metadata): ${documentFiles.length}`);
     
     // Create an array to store documents with their metadata
     const documents: GitHubDocument[] = [];
@@ -206,6 +208,7 @@ export const fetchDocumentsFromGitHub = async (
         };
         
         documents.push(document);
+        console.log(`Processed document: ${document.name} (${document.id})`);
       } catch (error) {
         console.error(`Error processing file ${file.name}:`, error);
         // Continue with next file if there's an error with the current one
