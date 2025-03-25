@@ -12,10 +12,10 @@ const DocumentRepositoryPage = () => {
       >
         <div className="mb-8">
           <h1 className="text-3xl font-display font-semibold tracking-tight mb-2">
-            Documents Repository
+            Document Repository
           </h1>
           <p className="text-muted-foreground">
-            Securely store, organize, and share all your important business documents
+            Securely store, organize, and share documents with GitHub integration
           </p>
         </div>
         

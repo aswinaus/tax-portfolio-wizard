@@ -1,8 +1,9 @@
 
-import { useState } from 'react';
-import { Upload, X, FileText, File as FileIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Upload, X, FileText, File as FileIcon, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -24,6 +25,15 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { uploadToGitHub } from "@/services/githubService";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface DocumentUploadProps {
   onUploadComplete: (fileDetails: {
@@ -33,6 +43,7 @@ interface DocumentUploadProps {
     uploadedBy: string;
     uploadDate: string;
     metadata: DocumentMetadata;
+    githubUrl?: string;
   }) => void;
   onClose: () => void;
 }
@@ -47,9 +58,6 @@ interface DocumentMetadata {
   category: string;
 }
 
-// Using a mock API for development since actual Azure connection is failing
-const useMockUpload = true;
-
 // Validation schema for the form
 const formSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -63,10 +71,17 @@ const formSchema = z.object({
   clientNumber: z.string().optional(),
 });
 
+// Settings schema for GitHub token
+const settingsSchema = z.object({
+  githubToken: z.string().min(1, "GitHub token is required")
+});
+
 const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
+  const [githubToken, setGithubToken] = useState<string>("");
+  const [showSettings, setShowSettings] = useState(false);
+  const { toast: uiToast } = useToast();
 
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -82,6 +97,23 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
     },
   });
 
+  // Settings form
+  const settingsForm = useForm<z.infer<typeof settingsSchema>>({
+    resolver: zodResolver(settingsSchema),
+    defaultValues: {
+      githubToken: ""
+    }
+  });
+
+  useEffect(() => {
+    // Load GitHub token from localStorage if available
+    const token = localStorage.getItem('github_token');
+    if (token) {
+      setGithubToken(token);
+      settingsForm.setValue('githubToken', token);
+    }
+  }, []);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files);
@@ -91,7 +123,7 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
       const oversizedFiles = fileArray.filter(file => file.size > 10 * 1024 * 1024);
       
       if (oversizedFiles.length > 0) {
-        toast({
+        uiToast({
           title: "Files too large",
           description: `${oversizedFiles.length} file(s) exceed the 10MB limit and were not added.`,
           variant: "destructive",
@@ -126,91 +158,78 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
     return <FileIcon className="h-5 w-5 text-gray-600" />;
   };
 
+  const saveSettings = (data: z.infer<typeof settingsSchema>) => {
+    localStorage.setItem('github_token', data.githubToken);
+    setGithubToken(data.githubToken);
+    toast.success('GitHub token saved successfully');
+    setShowSettings(false);
+  };
+
   const uploadFiles = async (formData: z.infer<typeof formSchema>) => {
     if (selectedFiles.length === 0) return;
     
+    // Check if GitHub token exists
+    if (!githubToken) {
+      uiToast({
+        title: "GitHub token required",
+        description: "Please set your GitHub token in settings before uploading.",
+        variant: "destructive",
+      });
+      setShowSettings(true);
+      return;
+    }
+    
     setUploading(true);
-    toast({
-      title: "Upload started",
-      description: `Uploading ${selectedFiles.length} document(s)...`,
-    });
+    toast.loading(`Uploading ${selectedFiles.length} document(s)...`);
 
     try {
       for (const file of selectedFiles) {
-        // If we're in mock mode, simulate a successful upload
-        if (useMockUpload) {
-          // Simulate upload delay
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          console.log(`Mock upload complete for ${file.name}`);
-          
-          // Extract metadata from form
-          const metadata: DocumentMetadata = {
-            jurisdiction: formData.jurisdiction,
-            serviceLine: formData.serviceLine,
-            entity: formData.entity || "",
-            clientApproved: formData.clientApproved,
-            client: formData.client || "",
-            clientNumber: formData.clientNumber || "",
-            category: formData.category,
-          };
-          
-          // Notify parent of "successful" upload
-          onUploadComplete({
-            name: file.name,
-            type: file.type.includes('sheet') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls') 
-              ? 'Excel' 
-              : file.type.includes('pdf') || file.name.endsWith('.pdf') 
-                ? 'PDF' 
-                : file.type.includes('word') || file.name.endsWith('.doc') || file.name.endsWith('.docx') 
-                  ? 'Word' 
-                  : file.name.endsWith('.pptx') || file.name.endsWith('.ppt') 
-                    ? 'PowerPoint' 
-                    : 'Other',
-            size: formatFileSize(file.size),
-            uploadedBy: 'Aswin Bhaskaran',
-            uploadDate: new Date().toISOString(),
-            metadata,
-          });
-        } else {
-          // Real implementation (currently failing due to CORS or network issues)
-          // This code is preserved for when the Azure connection is fixed
-          const formData = new FormData();
-          formData.append('file', file);
-          
-          const response = await fetch('https://aswinaitaxdocs.blob.core.windows.net/general', {
-            method: 'POST',
-            headers: {
-              'x-ms-blob-type': 'BlockBlob',
-              'Content-Type': file.type,
-            },
-            body: file,
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to upload ${file.name}: ${response.statusText}`);
-          }
-
-          // For each successful upload, notify the parent component
-          // We'd include metadata here too in a real implementation
+        // Extract metadata from form
+        const metadata: DocumentMetadata = {
+          jurisdiction: formData.jurisdiction,
+          serviceLine: formData.serviceLine,
+          entity: formData.entity || "",
+          clientApproved: formData.clientApproved,
+          client: formData.client || "",
+          clientNumber: formData.clientNumber || "",
+          category: formData.category,
+        };
+        
+        // Upload file to GitHub
+        const uploadResult = await uploadToGitHub(file, metadata);
+        
+        if (!uploadResult.success) {
+          throw new Error(uploadResult.message || 'Failed to upload to GitHub');
         }
+        
+        // Notify parent of successful upload
+        onUploadComplete({
+          name: file.name,
+          type: file.type.includes('sheet') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls') 
+            ? 'Excel' 
+            : file.type.includes('pdf') || file.name.endsWith('.pdf') 
+              ? 'PDF' 
+              : file.type.includes('word') || file.name.endsWith('.doc') || file.name.endsWith('.docx') 
+                ? 'Word' 
+                : file.name.endsWith('.pptx') || file.name.endsWith('.ppt') 
+                  ? 'PowerPoint' 
+                  : 'Other',
+          size: formatFileSize(file.size),
+          uploadedBy: 'Aswin Bhaskaran',
+          uploadDate: new Date().toISOString(),
+          metadata,
+          githubUrl: uploadResult.url,
+        });
       }
 
-      toast({
-        title: "Upload complete",
-        description: `Successfully uploaded ${selectedFiles.length} document(s)`,
-      });
+      toast.success(`Successfully uploaded ${selectedFiles.length} document(s) to GitHub`);
       
       // Clear the selected files and close the dialog
       setSelectedFiles([]);
       onClose();
     } catch (error) {
       console.error('Error uploading files:', error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred while uploading files.",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "An unknown error occurred while uploading files.");
     } finally {
       setUploading(false);
     }
@@ -230,7 +249,7 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
       const oversizedFiles = fileArray.filter(file => file.size > 10 * 1024 * 1024);
       
       if (oversizedFiles.length > 0) {
-        toast({
+        uiToast({
           title: "Files too large",
           description: `${oversizedFiles.length} file(s) exceed the 10MB limit and were not added.`,
           variant: "destructive",
@@ -243,6 +262,47 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Upload to GitHub Repository</h2>
+        <Dialog open={showSettings} onOpenChange={setShowSettings}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              GitHub Settings
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>GitHub Settings</DialogTitle>
+              <DialogDescription>
+                Set your GitHub personal access token to enable document uploads.
+                The token needs permissions for repository content.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...settingsForm}>
+              <form onSubmit={settingsForm.handleSubmit(saveSettings)} className="space-y-4">
+                <FormField
+                  control={settingsForm.control}
+                  name="githubToken"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>GitHub Personal Access Token</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Enter your GitHub token" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end">
+                  <Button type="submit">Save Settings</Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+      
       <div 
         className="border-2 border-dashed border-primary/20 rounded-lg p-8 text-center cursor-pointer hover:bg-secondary/50 transition-colors"
         onClick={() => document.getElementById('file-upload')?.click()}
@@ -457,13 +517,14 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
             <Button 
               type="submit" 
               disabled={selectedFiles.length === 0 || uploading}
+              className="bg-green-600 hover:bg-green-700"
             >
               {uploading ? (
-                <>Uploading...</>
+                <>Uploading to GitHub...</>
               ) : (
                 <>
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload Files
+                  Upload to GitHub
                 </>
               )}
             </Button>
