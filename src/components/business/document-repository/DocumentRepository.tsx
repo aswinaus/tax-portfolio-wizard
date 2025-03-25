@@ -62,6 +62,7 @@ import {
 } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import DocumentUpload from './DocumentUpload';
+import LyzrDocumentAgentChat from './LyzrDocumentAgentChat';
 import { GitHubDocument, fetchDocumentsFromGitHub } from '@/services/githubService';
 
 interface Document {
@@ -732,62 +733,68 @@ const DocumentRepository = () => {
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent className="px-4 pb-4">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <p className="text-sm text-muted-foreground">
               Manage your archived documents. Archived items are not deleted but kept in a separate section for historical reference.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="border-border/60">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Archive Policies</CardTitle>
-                  <CardDescription>Configure automatic archival policies</CardDescription>
-                </CardHeader>
-                <CardContent className="text-sm">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span>Archive documents older than 1 year</span>
-                      <input type="checkbox" defaultChecked />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <Card className="border-border/60">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Archive Policies</CardTitle>
+                    <CardDescription>Configure automatic archival policies</CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-sm">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span>Archive documents older than 1 year</span>
+                        <input type="checkbox" defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Archive superseded versions</span>
+                        <input type="checkbox" defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Archive based on document category</span>
+                        <input type="checkbox" />
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span>Archive superseded versions</span>
-                      <input type="checkbox" defaultChecked />
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" size="sm" className="w-full">Save Preferences</Button>
+                  </CardFooter>
+                </Card>
+                
+                <Card className="border-border/60">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Archival Statistics</CardTitle>
+                    <CardDescription>Document archival metrics</CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-sm">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span>Total archived documents:</span>
+                        <span className="font-medium">{documents.filter(doc => doc.isArchived).length}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Archive storage used:</span>
+                        <span className="font-medium">5.4 MB</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Most recent archive:</span>
+                        <span className="font-medium">Nov 15, 2023</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span>Archive based on document category</span>
-                      <input type="checkbox" />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" size="sm" className="w-full">Save Preferences</Button>
-                </CardFooter>
-              </Card>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" size="sm" className="w-full">View Full Report</Button>
+                  </CardFooter>
+                </Card>
+              </div>
               
-              <Card className="border-border/60">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Archival Statistics</CardTitle>
-                  <CardDescription>Document archival metrics</CardDescription>
-                </CardHeader>
-                <CardContent className="text-sm">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span>Total archived documents:</span>
-                      <span className="font-medium">{documents.filter(doc => doc.isArchived).length}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Archive storage used:</span>
-                      <span className="font-medium">5.4 MB</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Most recent archive:</span>
-                      <span className="font-medium">Nov 15, 2023</span>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" size="sm" className="w-full">View Full Report</Button>
-                </CardFooter>
-              </Card>
+              <div>
+                <LyzrDocumentAgentChat />
+              </div>
             </div>
           </div>
         </CollapsibleContent>
