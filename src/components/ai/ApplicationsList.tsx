@@ -21,18 +21,18 @@ interface Application {
 export const ApplicationsList = () => {
   const [applications, setApplications] = useState<Application[]>([
     { id: '1', productName: 'QTP', contactName: 'Column data', productOwner: 'Jeff Szpak', requestStatus: 'Pending', productStatus: 'Live' },
-    { id: '2', productName: 'EYMP', contactName: 'Column data', productOwner: 'Nam Hua', requestStatus: 'Pending', productStatus: 'Live' },
+    { id: '2', productName: 'Mobile', contactName: 'Column data', productOwner: 'Nam Hua', requestStatus: 'Pending', productStatus: 'Live' },
     { id: '3', productName: 'Cassandra', contactName: 'Column data', productOwner: 'Tomas Vecchi', requestStatus: 'Pending', productStatus: 'Live' },
-    { id: '4', productName: 'EYI', contactName: 'Column data', productOwner: 'Cordell Haneyh', requestStatus: 'Pending', productStatus: 'Live' },
-    { id: '5', productName: 'Canvas', contactName: 'Column data', productOwner: 'Brad Pixley', requestStatus: 'Approved', productStatus: 'Live' },
-    { id: '6', productName: 'Helix', contactName: 'Column data', productOwner: 'Vanessa Sanchez', requestStatus: 'Approved', productStatus: 'Live' },
-    { id: '7', productName: 'Empowerment', contactName: 'Column data', productOwner: 'Randy Avery', requestStatus: 'Rejected', productStatus: 'In development' },
-    { id: '8', productName: 'Unsubmitted', contactName: 'Column data', productOwner: 'Preston French', requestStatus: 'Approved', productStatus: 'Live' },
-    { id: '9', productName: 'Unsubmitted', contactName: 'Column data', productOwner: 'Michal Mlodzwieniez', requestStatus: 'Approved', productStatus: 'Live' },
-    { id: '10', productName: 'Unsubmitted', contactName: 'Column data', productOwner: 'Kendall Staholfer', requestStatus: 'Approved', productStatus: 'In development' },
-    { id: '11', productName: 'Unsubmitted', contactName: 'Column data', productOwner: 'Emil Jacsinski', requestStatus: 'Pending', productStatus: 'Live' },
-    { id: '12', productName: 'Unsubmitted', contactName: 'Column data', productOwner: 'Mariela Aria', requestStatus: 'Rejected', productStatus: 'Not live' },
-    { id: '13', productName: 'Unsubmitted', contactName: 'Column data', productOwner: 'Steven Eubanks', requestStatus: 'Approved', productStatus: 'Live' },
+    { id: '4', productName: 'PWI', contactName: 'Column data', productOwner: 'Cordell Haneyh', requestStatus: 'Pending', productStatus: 'Live' },
+    { id: '5', productName: 'Tesco', contactName: 'Column data', productOwner: 'Brad Pixley', requestStatus: 'Approved', productStatus: 'Live' },
+    { id: '6', productName: 'Nestle', contactName: 'Column data', productOwner: 'Vanessa Sanchez', requestStatus: 'Approved', productStatus: 'Live' },
+    { id: '7', productName: 'Shopify', contactName: 'Column data', productOwner: 'Randy Avery', requestStatus: 'Rejected', productStatus: 'In development' },
+    { id: '8', productName: 'Microsoft', contactName: 'Column data', productOwner: 'Preston French', requestStatus: 'Approved', productStatus: 'Live' },
+    { id: '9', productName: 'Amazon', contactName: 'Column data', productOwner: 'Michal Mlodzwieniez', requestStatus: 'Approved', productStatus: 'Live' },
+    { id: '10', productName: 'Google', contactName: 'Column data', productOwner: 'Kendall Staholfer', requestStatus: 'Approved', productStatus: 'In development' },
+    { id: '11', productName: 'Facebook', contactName: 'Column data', productOwner: 'Emil Jacsinski', requestStatus: 'Pending', productStatus: 'Live' },
+    { id: '12', productName: 'Twitter', contactName: 'Column data', productOwner: 'Mariela Aria', requestStatus: 'Rejected', productStatus: 'Not live' },
+    { id: '13', productName: 'LinkedIn', contactName: 'Column data', productOwner: 'Steven Eubanks', requestStatus: 'Approved', productStatus: 'Live' },
   ]);
 
   const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
@@ -199,7 +199,7 @@ export const ApplicationsList = () => {
                 </button>
               </TableCell>
               <TableCell className="font-medium">
-                {application.productName === 'Unsubmitted' && application.id === '13' ? (
+                {application.productName === 'LinkedIn' && application.id === '13' ? (
                   <div className="flex items-center">
                     <span className="h-2 w-2 bg-red-600 rounded-full mr-2"></span>
                     {application.productName}
