@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Database, Send, Code, Terminal, Info, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Loader2, Database, Send, Code, Terminal, Info, AlertTriangle, RefreshCw, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 
 type Neo4jCredentials = {
   url: string;
@@ -35,6 +37,8 @@ const ToolsServicePage = () => {
   const [serverlessEndpoint, setServerlessEndpoint] = useState('https://aswin-langchain-neo4j.netlify.app/.netlify/functions');
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('query');
+  const [useCorsProxy, setUseCorsProxy] = useState(true);
+  const [corsProxyUrl, setCorsProxyUrl] = useState('https://corsproxy.io/?');
   
   const credentialsForm = useForm<Neo4jCredentials>({
     defaultValues: {
@@ -54,27 +58,37 @@ Relationship types:
 - BELONGS_TO
 `;
 
+  // Utility function to handle CORS proxy
+  const getFetchUrl = (url: string) => {
+    if (!useCorsProxy) return url;
+    return `${corsProxyUrl}${encodeURIComponent(url)}`;
+  };
+
   // Check if the serverless function is available
   useEffect(() => {
     const checkServerlessAvailability = async () => {
       try {
         const endpoint = `${serverlessEndpoint}/ping`;
         console.log(`Checking serverless function availability at: ${endpoint}`);
+        console.log(`Using CORS proxy: ${useCorsProxy}`);
         
         setExecutionSteps(prev => [...prev, `Pinging serverless function at ${endpoint}...`]);
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
         
-        const response = await fetch(endpoint, { 
+        const fetchUrl = getFetchUrl(endpoint);
+        console.log(`Actual fetch URL: ${fetchUrl}`);
+        
+        const response = await fetch(fetchUrl, { 
           method: 'GET',
           headers: { 
             'Content-Type': 'application/json',
             'Origin': window.location.origin
           },
           signal: controller.signal,
-          mode: 'cors',
-          credentials: 'include'
+          mode: useCorsProxy ? 'cors' : 'cors',
+          credentials: useCorsProxy ? 'omit' : 'include'
         });
         
         clearTimeout(timeoutId);
@@ -87,7 +101,8 @@ Relationship types:
           status: response.status,
           statusText: response.statusText,
           headers: Object.fromEntries([...response.headers]),
-          data: responseData
+          data: responseData,
+          usingProxy: useCorsProxy
         });
         
         if (!response.ok) {
@@ -102,7 +117,8 @@ Relationship types:
         setExecutionSteps(prev => [...prev, `Error connecting to server: ${error instanceof Error ? error.message : String(error)}`]);
         setDebugInfo({
           error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined
+          stack: error instanceof Error ? error.stack : undefined,
+          usingProxy: useCorsProxy
         });
         setIsServerlessFunctionAvailable(false);
         setUseDummyResponse(true);
@@ -110,7 +126,7 @@ Relationship types:
     };
     
     checkServerlessAvailability();
-  }, [serverlessEndpoint]);
+  }, [serverlessEndpoint, useCorsProxy, corsProxyUrl]);
 
   useEffect(() => {
     // Auto-connect on component mount if credentials are present
@@ -151,12 +167,16 @@ Relationship types:
       
       const testConnectionEndpoint = `${serverlessEndpoint}/testConnection`;
       console.log(`Sending connection test to: ${testConnectionEndpoint}`);
+      console.log(`Using CORS proxy: ${useCorsProxy}`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
       
       try {
-        const response = await fetch(testConnectionEndpoint, {
+        const fetchUrl = getFetchUrl(testConnectionEndpoint);
+        console.log(`Actual fetch URL: ${fetchUrl}`);
+        
+        const response = await fetch(fetchUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -168,8 +188,8 @@ Relationship types:
             password: values.password,
           }),
           signal: controller.signal,
-          mode: 'cors',
-          credentials: 'include'
+          mode: useCorsProxy ? 'cors' : 'cors',
+          credentials: useCorsProxy ? 'omit' : 'include'
         });
         
         clearTimeout(timeoutId);
@@ -280,8 +300,12 @@ LIMIT 5`;
           
           const executeQueryEndpoint = `${serverlessEndpoint}/executeQuery`;
           console.log(`Executing query at: ${executeQueryEndpoint}`);
+          console.log(`Using CORS proxy: ${useCorsProxy}`);
           
-          const response = await fetch(executeQueryEndpoint, {
+          const fetchUrl = getFetchUrl(executeQueryEndpoint);
+          console.log(`Actual fetch URL: ${fetchUrl}`);
+          
+          const response = await fetch(fetchUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -295,8 +319,8 @@ LIMIT 5`;
               schema: databaseSchema
             }),
             signal: controller.signal,
-            mode: 'cors',
-            credentials: 'include'
+            mode: useCorsProxy ? 'cors' : 'cors',
+            credentials: useCorsProxy ? 'omit' : 'include'
           });
           
           clearTimeout(timeoutId);
@@ -389,15 +413,19 @@ LIMIT 5`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
       
-      const response = await fetch(`${serverlessEndpoint}/ping`, { 
+      const endpoint = `${serverlessEndpoint}/ping`;
+      const fetchUrl = getFetchUrl(endpoint);
+      console.log(`Actual fetch URL: ${fetchUrl}`);
+      
+      const response = await fetch(fetchUrl, { 
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
           'Origin': window.location.origin 
         },
         signal: controller.signal,
-        mode: 'cors',
-        credentials: 'include'
+        mode: useCorsProxy ? 'cors' : 'cors',
+        credentials: useCorsProxy ? 'omit' : 'include'
       });
       
       clearTimeout(timeoutId);
@@ -409,7 +437,9 @@ LIMIT 5`;
         status: response.status,
         statusText: response.statusText,
         headers: Object.fromEntries([...response.headers]),
-        data: responseData
+        data: responseData,
+        usingProxy: useCorsProxy,
+        fetchUrl
       });
       
       setIsServerlessFunctionAvailable(response.ok);
@@ -426,13 +456,27 @@ LIMIT 5`;
       setExecutionSteps(prev => [...prev, `Connection error: ${error instanceof Error ? error.message : String(error)}`]);
       setDebugInfo({
         error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
+        usingProxy: useCorsProxy
       });
       toast.error(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsServerlessFunctionAvailable(false);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleUseCorsProxyChange = (checked: boolean) => {
+    setUseCorsProxy(checked);
+    setExecutionSteps([]);
+    // Reset connection state when changing CORS settings
+    if (isConnected) {
+      handleDisconnect();
+    }
+  };
+
+  const handleCorsProxyUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCorsProxyUrl(e.target.value);
   };
 
   const codeBlocks = {
@@ -583,7 +627,7 @@ cypher_chain = GraphCypherQAChain.from_llm(
                           <AlertTitle>Backend Connection Notice</AlertTitle>
                           <AlertDescription>
                             {isServerlessFunctionAvailable 
-                              ? `Serverless function at ${serverlessEndpoint} is reachable.`
+                              ? `Serverless function at ${serverlessEndpoint} is reachable${useCorsProxy ? " through CORS proxy" : ""}.`
                               : `Serverless function at ${serverlessEndpoint} appears to be unavailable. Demo mode will be used.`}
                           </AlertDescription>
                         </Alert>
@@ -782,7 +826,7 @@ cypher_chain = GraphCypherQAChain.from_llm(
                     <strong>Note:</strong> This tool {useDummyResponse ? 'is running in demo mode with sample data.' : 'uses serverless functions to connect to your Neo4j database.'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Serverless function endpoint: {serverlessEndpoint}
+                    Serverless function endpoint: {serverlessEndpoint} {useCorsProxy && "• Using CORS proxy"}
                   </p>
                 </CardFooter>
               </Card>
@@ -882,6 +926,60 @@ cypher_chain = GraphCypherQAChain.from_llm(
                   </p>
                 </div>
                 
+                <div className="space-y-2 border p-4 rounded-md">
+                  <h3 className="text-sm font-medium mb-4">CORS Proxy Settings</h3>
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="space-y-0.5">
+                      <FormLabel>Use CORS Proxy</FormLabel>
+                      <p className="text-xs text-muted-foreground">Routes API requests through a CORS proxy to avoid CORS restrictions</p>
+                    </div>
+                    <Switch 
+                      checked={useCorsProxy} 
+                      onCheckedChange={handleUseCorsProxyChange}
+                    />
+                  </div>
+                  
+                  {useCorsProxy && (
+                    <div className="space-y-2">
+                      <FormLabel>CORS Proxy URL</FormLabel>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={corsProxyUrl} 
+                          onChange={handleCorsProxyUrlChange} 
+                          placeholder="e.g., https://corsproxy.io/?"
+                          className="flex-grow"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => {
+                            setCorsProxyUrl('https://corsproxy.io/?');
+                            toast.info('Reset to default CORS proxy');
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Enter the URL of a CORS proxy service. The target URL will be appended to this proxy URL.
+                      </p>
+                      
+                      <Alert className="mt-4">
+                        <Globe className="h-4 w-4" />
+                        <AlertTitle>Available CORS Proxies</AlertTitle>
+                        <AlertDescription>
+                          <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+                            <li><code className="bg-muted p-1 rounded">https://corsproxy.io/?</code> - Public CORS proxy</li>
+                            <li><code className="bg-muted p-1 rounded">https://cors-anywhere.herokuapp.com/</code> - Another public proxy</li>
+                            <li><code className="bg-muted p-1 rounded">https://api.allorigins.win/raw?url=</code> - All Origins proxy</li>
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+                </div>
+                
                 <Alert variant={isServerlessFunctionAvailable ? "default" : "destructive"}>
                   <AlertTitle>Connection Status</AlertTitle>
                   <AlertDescription>
@@ -896,6 +994,7 @@ cypher_chain = GraphCypherQAChain.from_llm(
                   <ol className="list-decimal list-inside space-y-1 text-sm">
                     <li>Verify that the serverless function is deployed and running</li>
                     <li>Check for CORS issues - the server must allow requests from your domain</li>
+                    <li>Use the CORS proxy option to bypass CORS restrictions</li>
                     <li>Ensure network connectivity between your browser and the serverless function</li>
                     <li>If the function is behind authentication, ensure proper credentials are provided</li>
                     <li>Check browser console for more detailed error messages</li>
@@ -945,6 +1044,7 @@ cypher_chain = GraphCypherQAChain.from_llm(
                     <h3 className="text-sm font-medium mb-2">Connection Status</h3>
                     <div className="p-3 bg-muted rounded-md text-sm">
                       <p><strong>Serverless Endpoint:</strong> {serverlessEndpoint}</p>
+                      <p><strong>Using CORS Proxy:</strong> {useCorsProxy ? `Yes (${corsProxyUrl})` : 'No'}</p>
                       <p><strong>Is Available:</strong> {isServerlessFunctionAvailable ? 'Yes' : 'No'}</p>
                       <p><strong>Using Demo Mode:</strong> {useDummyResponse ? 'Yes' : 'No'}</p>
                     </div>
@@ -982,12 +1082,19 @@ cypher_chain = GraphCypherQAChain.from_llm(
                   <Alert>
                     <AlertTitle>How to Fix CORS Issues</AlertTitle>
                     <AlertDescription>
-                      <p className="mb-2">If you're seeing CORS errors, the serverless function needs to include these headers:</p>
-                      <pre className="p-2 bg-slate-100 dark:bg-slate-800 rounded-md text-xs overflow-x-auto">
-{`'Access-Control-Allow-Origin': '*'  // Or specific origins
+                      <p className="mb-2">To fix CORS issues, you can:</p>
+                      <ol className="list-decimal list-inside text-sm space-y-1">
+                        <li>Use the CORS proxy option above (recommended)</li>
+                        <li>Add these headers to your serverless function:</li>
+                      </ol>
+                      <pre className="p-2 bg-slate-100 dark:bg-slate-800 rounded-md text-xs overflow-x-auto mt-2">
+{`'Access-Control-Allow-Origin': '*'  // Or your specific domain
 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
 'Access-Control-Allow-Headers': 'Content-Type'`}
                       </pre>
+                      <p className="text-xs mt-2">
+                        If you have control over the serverless function, consider adding CORS headers directly to your function.
+                      </p>
                     </AlertDescription>
                   </Alert>
                 </div>

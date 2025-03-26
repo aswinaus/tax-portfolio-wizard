@@ -59,6 +59,7 @@ const useFormField = () => {
       formItemId: "",
       formDescriptionId: "",
       formMessageId: "",
+      error: undefined,  // Add error property to match the expected shape
       invalid: false,
     }
   }
