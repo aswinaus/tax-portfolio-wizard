@@ -20,8 +20,8 @@ const AgentServicePage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [isApiKeySet, setIsApiKeySet] = useState(false);
+  const [apiKey, setApiKey] = useState('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');
+  const [isApiKeySet, setIsApiKeySet] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
