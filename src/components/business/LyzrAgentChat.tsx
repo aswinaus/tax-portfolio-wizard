@@ -1,11 +1,12 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, UserCircle2, Loader2 } from 'lucide-react';
+import { Send, Bot, UserCircle2, Loader2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Message {
   content: string;
@@ -25,12 +26,22 @@ const LyzrAgentChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isApiAvailable, setIsApiAvailable] = useState(true);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const MAX_RETRIES = 3;
+  const API_TIMEOUT = 8000; // 8 seconds
 
   useEffect(() => {
     // Scroll to bottom whenever messages change
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Reset connection error when the component remounts
+  useEffect(() => {
+    setConnectionError(null);
+  }, []);
 
   // Check if API is available
   useEffect(() => {
@@ -38,7 +49,7 @@ const LyzrAgentChat = () => {
       try {
         // Add a simple ping to check if the API is reachable
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
         
         const response = await fetch('https://api.lyzr.ai/ping', { 
           method: 'GET',
@@ -48,18 +59,41 @@ const LyzrAgentChat = () => {
         
         clearTimeout(timeoutId);
         
-        setIsApiAvailable(response.ok);
-        if (!response.ok) {
-          console.warn('Lyzr API is not available, using fallback mode');
+        if (response.ok) {
+          setIsApiAvailable(true);
+          setConnectionError(null);
+        } else {
+          setConnectionError('Unable to connect to the Lyzr API service');
+          console.warn('Lyzr API returned an error status:', response.status);
+          
+          // Only fall back to demo mode after multiple retries
+          if (retryCount >= MAX_RETRIES) {
+            setIsApiAvailable(false);
+            console.warn('Max retries exceeded, falling back to demo mode');
+          } else {
+            setRetryCount(prev => prev + 1);
+            // Try again after delay
+            setTimeout(checkApiAvailability, 2000);
+          }
         }
       } catch (error) {
         console.error('Error checking API availability:', error);
-        setIsApiAvailable(false);
+        setConnectionError(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        
+        // Only fall back to demo mode after multiple retries
+        if (retryCount >= MAX_RETRIES) {
+          setIsApiAvailable(false);
+          console.warn('Max retries exceeded, falling back to demo mode');
+        } else {
+          setRetryCount(prev => prev + 1);
+          // Try again after delay
+          setTimeout(checkApiAvailability, 2000);
+        }
       }
     };
     
     checkApiAvailability();
-  }, []);
+  }, [retryCount]);
 
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
@@ -111,7 +145,7 @@ const LyzrAgentChat = () => {
       };
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -130,14 +164,50 @@ const LyzrAgentChat = () => {
     } catch (error) {
       console.error('Error calling Lyzr API:', error);
       
-      // If we encounter an error, switch to fallback mode for future calls
-      setIsApiAvailable(false);
+      // Only switch to fallback mode if we've already tried multiple times
+      if (retryCount >= MAX_RETRIES) {
+        setIsApiAvailable(false);
+      } else {
+        setRetryCount(prev => prev + 1);
+      }
       
       // Return a friendly error message
       return { 
-        response: "I'm having trouble connecting to my knowledge base right now. Let me use my general knowledge to help you with Form 990 questions instead.",
-        conversation_id: 'error-fallback'
+        response: "I'm experiencing connection issues. Let me try to reconnect to my knowledge base. Please try again in a moment.",
+        conversation_id: 'error-retry'
       };
+    }
+  };
+
+  const retryConnection = async () => {
+    setConnectionError(null);
+    setIsApiAvailable(true);
+    setRetryCount(0);
+    toast.info("Attempting to reconnect to the server...");
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+      
+      const response = await fetch('https://api.lyzr.ai/ping', { 
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        toast.success("Successfully reconnected!");
+        setIsApiAvailable(true);
+        setConnectionError(null);
+      } else {
+        throw new Error(`Server returned ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error during reconnection attempt:', error);
+      setConnectionError(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error("Reconnection failed. Please check your network connection.");
     }
   };
 
@@ -191,6 +261,18 @@ const LyzrAgentChat = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow overflow-y-auto pb-0">
+        {connectionError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="flex justify-between items-center">
+              <span>{connectionError}</span>
+              <Button size="sm" variant="outline" onClick={retryConnection}>
+                Retry Connection
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="text-center py-8">
@@ -199,9 +281,19 @@ const LyzrAgentChat = () => {
                 Ask me anything about Form 990 filing requirements, deadlines, or procedures.
               </p>
               {!isApiAvailable && (
-                <p className="text-xs text-amber-500 mt-2">
-                  Running in demo mode with limited responses (API unavailable)
-                </p>
+                <div className="mt-4">
+                  <p className="text-xs text-amber-500">
+                    Running in demo mode with limited responses (API unavailable)
+                  </p>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="mt-2" 
+                    onClick={retryConnection}
+                  >
+                    Attempt to reconnect
+                  </Button>
+                </div>
               )}
             </div>
           ) : (
