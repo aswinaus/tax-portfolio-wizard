@@ -1,5 +1,4 @@
-
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, Workflow, Zap, MessagesSquare, Sparkles, Send, Database, Loader2, UserCircle2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import LyzrAgentChat from '@/components/business/LyzrAgentChat';
 
 interface Message {
   content: string;
@@ -23,10 +23,9 @@ const AgentServicePage = () => {
   const [isApiKeySet, setIsApiKeySet] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // This would handle scrolling to the bottom when new messages arrive
-  useRef(() => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  });
+  }, [messages]);
   
   const handleApiKeySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +34,6 @@ const AgentServicePage = () => {
       return;
     }
     
-    // In a real implementation, this would securely store the API key
-    // For demo purposes, we're just setting a flag
     setIsApiKeySet(true);
     toast.success('API key set successfully');
   };
@@ -65,10 +62,8 @@ const AgentServicePage = () => {
     setIsLoading(true);
     
     try {
-      // In a production environment, this would call the Tax Agent API
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simulate the agent processing the query using the GraphSearch tool
       const simulatedSteps = [
         "I need to answer a question about tax data.",
         "I'll use the GraphSearch tool to query the Neo4j database.",
@@ -81,7 +76,6 @@ const AgentServicePage = () => {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      // Simulate the agent's response
       const simulatedResponse = `Based on the tax data in our graph database, I found that ${userMessage.content.includes('organization') ? 'organizations' : 'taxpayers'} in this category typically report an average of 15% higher deductions compared to the national average. The data shows significant regional variations, with California, New York, and Texas showing the highest volumes of such transactions.`;
       
       const assistantMessage: Message = {
@@ -115,111 +109,19 @@ const AgentServicePage = () => {
           </p>
         </div>
         
-        {/* Tax Agent Demo Section */}
         <div className="mb-16 bg-card border rounded-lg p-6">
           <div className="flex items-center gap-3 mb-6">
             <Database className="h-8 w-8 text-primary" />
             <div>
-              <h2 className="text-2xl font-semibold">Tax Data Analysis Agent</h2>
-              <p className="text-muted-foreground">Ask questions about tax data using our Neo4j-powered agent</p>
+              <h2 className="text-2xl font-semibold">Form 990 Filing Assistant</h2>
+              <p className="text-muted-foreground">Ask questions about Form 990 filing requirements using our Lyzr-powered agent</p>
             </div>
             <Badge className="ml-auto" variant="outline">Live Demo</Badge>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
-              <Card className="h-[400px] flex flex-col">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Bot className="h-5 w-5 text-primary" />
-                    Tax Agent Chat
-                  </CardTitle>
-                  <CardDescription>
-                    Using LangChain's Agent architecture with GraphSearch tool
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent className="flex-grow overflow-y-auto">
-                  <div className="space-y-4">
-                    {messages.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                        <p className="text-muted-foreground">
-                          Ask questions about tax data, filing statistics, or regional trends.
-                        </p>
-                      </div>
-                    ) : (
-                      messages.map((msg, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div 
-                            className={`flex gap-3 max-w-[80%] ${
-                              msg.role === 'user' 
-                                ? 'bg-primary text-primary-foreground' 
-                                : 'bg-muted'
-                            } p-3 rounded-lg`}
-                          >
-                            {msg.role === 'assistant' && (
-                              <Bot className="h-5 w-5 mt-1 flex-shrink-0" />
-                            )}
-                            <div>
-                              <p className="text-sm">{msg.content}</p>
-                              <span className="text-xs opacity-70 block mt-1">
-                                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                            {msg.role === 'user' && (
-                              <UserCircle2 className="h-5 w-5 mt-1 flex-shrink-0" />
-                            )}
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
-                    {isLoading && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="flex justify-start"
-                      >
-                        <div className="bg-muted p-3 rounded-lg flex items-center">
-                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                          <span className="text-sm">Processing your query...</span>
-                        </div>
-                      </motion.div>
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                </CardContent>
-                
-                <CardFooter className="pt-3 border-t">
-                  <form onSubmit={handleTaxAgentQuery} className="w-full flex gap-2">
-                    <Input
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Ask about tax filings, statistics, or trends..."
-                      disabled={isLoading || !isApiKeySet}
-                      className="flex-grow"
-                    />
-                    <Button 
-                      type="submit" 
-                      size="icon" 
-                      disabled={isLoading || !isApiKeySet || !input.trim()}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </form>
-                </CardFooter>
-              </Card>
+              <LyzrAgentChat />
               
               {!isApiKeySet && (
                 <Card>
@@ -280,9 +182,9 @@ TaxAgent = initialize_agent(
                 </CardHeader>
                 <CardContent>
                   <ol className="list-decimal list-inside space-y-1 text-sm">
-                    <li>Your question is sent to the LangChain-powered agent</li>
-                    <li>The agent analyzes your query and decides to use the GraphSearch tool</li>
-                    <li>GraphSearch generates a Cypher query for Neo4j</li>
+                    <li>Your question is sent to the Lyzr-powered agent</li>
+                    <li>The agent analyzes your query and decides what tools to use</li>
+                    <li>Relevant information is retrieved from various sources</li>
                     <li>Results are processed and returned in natural language</li>
                   </ol>
                 </CardContent>
@@ -291,7 +193,6 @@ TaxAgent = initialize_agent(
           </div>
         </div>
         
-        {/* Original content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
           <Card className="bg-primary/5 border-primary/20">
             <CardHeader>
