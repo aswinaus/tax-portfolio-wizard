@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -144,16 +145,23 @@ Entities matching your criteria include tax-exempt organizations located in the 
 
   const codeBlocks = {
     vectorIndex: `
+import os
 from langchain.vectorstores.neo4j_vector import Neo4jVector
 from langchain.embeddings.openai import OpenAIEmbeddings
 
+#Initialize a Neo4jVector object and assigns it to the variable vector_index. It leverages the from_existing_graph method, indicating that it's working with an already populated Neo4j graph
 vector_index = Neo4jVector.from_existing_graph(
+    #This part specifies that the index will utilize OpenAI's embeddings.
     OpenAIEmbeddings(),
+    #These parameters provide the connection details for the Neo4j database. url points to the database's address, while username and password are used for authentication.
     url=url,
     username=username,
     password=password,
+    #This sets the name of the vector index to 'incometax'. This name will be used to refer to the index within Neo4j.
     index_name='incometax',
+    #This indicates that the vector index should be built on nodes with the label "__Entity__" in the graph. In Neo4j, labels categorize nodes with similar characteristics.
     node_label="__Entity__",
+    #Use the values stored in the 'name', 'entity', and 'zipcode' properties of each node to generate embeddings."
     text_node_properties=['name', 'entity', 'zipcode'],
     embedding_node_property='embedding',
 )`,
