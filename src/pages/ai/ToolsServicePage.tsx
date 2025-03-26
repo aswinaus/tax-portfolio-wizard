@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -221,6 +222,7 @@ graph = Neo4jGraph(
     password=password,
     enhanced_schema=True
 )
+#refresh the schema to latest
 graph.refresh_schema()
 
 cypher_chain = GraphCypherQAChain.from_llm(
