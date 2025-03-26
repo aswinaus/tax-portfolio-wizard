@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import LyzrAgentChat from '@/components/business/LyzrAgentChat';
 
 interface Message {
   content: string;
@@ -111,95 +110,14 @@ const AgentServicePage = () => {
           </p>
         </div>
         
-        <div className="mb-16 bg-card border rounded-lg p-6">
+        <div className="bg-card border rounded-lg p-6 mb-16">
           <div className="flex items-center gap-3 mb-6">
             <Database className="h-8 w-8 text-primary" />
             <div>
-              <h2 className="text-2xl font-semibold">Form 990 Filing Assistant</h2>
-              <p className="text-muted-foreground">Ask questions about Form 990 filing requirements using our Neo4j-powered tax agent</p>
+              <h2 className="text-2xl font-semibold">Coming Soon</h2>
+              <p className="text-muted-foreground">Our specialized AI agents are currently in development</p>
             </div>
-            <Badge className="ml-auto" variant="outline">Live Demo</Badge>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-4">
-              <LyzrAgentChat />
-              
-              {!isApiKeySet && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Set OpenAI API Key</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleApiKeySubmit} className="flex gap-2">
-                      <Input
-                        type="password"
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        placeholder="Enter your OpenAI API key"
-                        className="flex-grow"
-                      />
-                      <Button type="submit">
-                        Set Key
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-            
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Agent Implementation</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm">
-                  <pre className="whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-3 rounded-md overflow-x-auto text-xs">
-{`from langchain.agents import initialize_agent, Tool
-from langchain.agents import AgentType
-
-tools = [
-    Tool(
-        name="GraphSearch",
-        func=cypher_chain.run,
-        description="""Useful for questions related to tax mostly analytical data querying,
-        Always have complete questions as input.
-        """,
-    ),
-]
-
-TaxAgent = initialize_agent(
-    tools,
-    ChatOpenAI(temperature=0, model_name='gpt-4'),
-    agent=AgentType.OPENAI_FUNCTIONS, 
-    verbose=True
-)`}
-                  </pre>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">How It Works</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ol className="list-decimal list-inside space-y-1 text-sm">
-                    <li>Your question is sent to the Tax Agent powered by Neo4j</li>
-                    <li>The agent analyzes your query and decides what tools to use</li>
-                    <li>Relevant information is retrieved from the Neo4j graph database</li>
-                    <li>Results are processed and returned in natural language</li>
-                  </ol>
-                </CardContent>
-                <CardFooter>
-                  <Link to="/templates/tax-agent-neo4j" className="text-sm text-primary hover:underline">
-                    View detailed implementation guide →
-                  </Link>
-                  <Link to="/portfolio/blogs" className="text-sm text-primary hover:underline ml-4">
-                    Read blog post →
-                  </Link>
-                </CardFooter>
-              </Card>
-            </div>
+            <Badge className="ml-auto" variant="outline">Preview</Badge>
           </div>
         </div>
         
