@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +25,7 @@ const DocumentRepositoryPage = lazy(() => import("./pages/documents/DocumentRepo
 // AI Pages
 const AgentServicePage = lazy(() => import("./pages/ai/AgentServicePage"));
 const ToolsServicePage = lazy(() => import("./pages/ai/ToolsServicePage"));
+const ApplicationsPage = lazy(() => import("./pages/ai/ApplicationsPage"));
 
 const queryClient = new QueryClient();
 
@@ -53,6 +55,7 @@ const App = () => (
                 {/* AI Routes */}
                 <Route path="ai/agent" element={<AgentServicePage />} />
                 <Route path="ai/tools" element={<ToolsServicePage />} />
+                <Route path="ai/applications" element={<ApplicationsPage />} />
                 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
