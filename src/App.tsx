@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,9 +11,9 @@ import MainLayout from "./layouts/MainLayout";
 
 // Pages
 import NotFound from "./pages/NotFound";
+import Portfolio from "./pages/portfolio/Portfolio";
 
 // Lazy loaded pages for better performance
-const Portfolio = lazy(() => import("./pages/portfolio/Portfolio"));
 const Blogs = lazy(() => import("./pages/portfolio/Blogs"));
 const BlogPost = lazy(() => import("./pages/portfolio/BlogPost"));
 const CreateBlog = lazy(() => import("./pages/portfolio/CreateBlog"));

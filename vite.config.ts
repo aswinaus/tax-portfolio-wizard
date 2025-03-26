@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -15,15 +14,31 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: mode === 'development',
-    // Generate smaller chunks and handle large dependencies better
+    // Improved chunking strategy
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          // Remove the glob pattern which is causing issues
-          motion: ['framer-motion'],
-          utils: ['@/lib/utils'],
-          charts: ['recharts']
+        manualChunks: id => {
+          // Put react and react-dom in the vendor chunk
+          if (id.includes('node_modules/react') || 
+              id.includes('node_modules/react-dom')) {
+            return 'vendor-react';
+          }
+          
+          // Group router-related packages
+          if (id.includes('node_modules/react-router')) {
+            return 'vendor-router';
+          }
+          
+          // Group UI component libraries
+          if (id.includes('node_modules/@radix-ui') || 
+              id.includes('node_modules/framer-motion')) {
+            return 'vendor-ui';
+          }
+          
+          // Other node_modules go to vendor
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         },
         // Ensure assets have consistent naming patterns
         assetFileNames: 'assets/[name]-[hash].[ext]',
@@ -31,6 +46,8 @@ export default defineConfig(({ mode }) => ({
         entryFileNames: 'assets/[name]-[hash].js',
       },
     },
+    // Reduce chunk size
+    chunkSizeWarningLimit: 1000,
   },
   plugins: [
     react(),

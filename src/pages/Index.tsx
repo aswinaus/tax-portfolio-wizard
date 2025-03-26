@@ -1,18 +1,26 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { ArrowRight, User, FileText, BarChart2, Folder } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Portfolio from './portfolio/Portfolio';
 
 const Index = () => {
   const [mounted, setMounted] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      navigate('/portfolio', { replace: true });
+    }
+  }, [mounted, navigate]);
 
   if (!mounted) return null;
 
