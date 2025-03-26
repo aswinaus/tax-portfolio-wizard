@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, Workflow, Zap, MessagesSquare, Sparkles, Send, Database, Loader2, UserCircle2, Code } from 'lucide-react';
@@ -114,14 +113,14 @@ const AgentServicePage = () => {
           <div className="flex items-center gap-3 mb-6">
             <Code className="h-8 w-8 text-primary" />
             <div>
-              <h2 className="text-2xl font-semibold">LangChain TaxAgent Demo</h2>
+              <h2 className="text-2xl font-semibold">Tax Agent</h2>
               <p className="text-muted-foreground">Ask tax-related questions to our AI agent powered by Neo4j and vector search</p>
             </div>
             <Badge className="ml-auto" variant="outline">Live Demo</Badge>
           </div>
           
           <div className="bg-secondary/30 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-medium mb-4">TaxAgent Chat</h3>
+            <h3 className="text-lg font-medium mb-4">Tax Agent Chat</h3>
             
             {!isApiKeySet ? (
               <form onSubmit={handleApiKeySubmit} className="space-y-4">
