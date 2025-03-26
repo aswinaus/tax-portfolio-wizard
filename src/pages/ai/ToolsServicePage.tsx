@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -49,6 +48,8 @@ const ToolsServicePage = () => {
   const [useCorsProxy, setUseCorsProxy] = useState(true);
   const [corsProxyUrl, setCorsProxyUrl] = useState(CORS_PROXIES[0].url);
   const [selectedProxy, setSelectedProxy] = useState(0);
+  const [isAzureFunction, setIsAzureFunction] = useState(false);
+  const [azureFunctionEndpoint, setAzureFunctionEndpoint] = useState('');
   
   const credentialsForm = useForm<Neo4jCredentials>({
     defaultValues: {
@@ -67,6 +68,14 @@ Relationship types:
 - FILED_IN
 - BELONGS_TO
 `;
+
+  // Update the serverless endpoint based on service type
+  const getServerlessEndpoint = () => {
+    if (isAzureFunction) {
+      return azureFunctionEndpoint;
+    }
+    return serverlessEndpoint;
+  };
 
   // Utility function to handle CORS proxy
   const getFetchUrl = (url: string) => {
@@ -111,7 +120,10 @@ Relationship types:
   useEffect(() => {
     const checkServerlessAvailability = async () => {
       try {
-        const endpoint = `${serverlessEndpoint}/ping`;
+        const endpoint = isAzureFunction 
+          ? `${azureFunctionEndpoint}/api/ping` 
+          : `${serverlessEndpoint}/ping`;
+          
         console.log(`Checking serverless function availability at: ${endpoint}`);
         console.log(`Using CORS proxy: ${useCorsProxy ? corsProxyUrl : 'No proxy'}`);
         
@@ -137,7 +149,8 @@ Relationship types:
             headers: Object.fromEntries([...response.headers]),
             data: responseData,
             usingProxy: useCorsProxy,
-            proxyUrl: corsProxyUrl
+            proxyUrl: corsProxyUrl,
+            isAzure: isAzureFunction
           });
           
           if (!response.ok) {
@@ -161,7 +174,8 @@ Relationship types:
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           usingProxy: useCorsProxy,
-          proxyUrl: corsProxyUrl
+          proxyUrl: corsProxyUrl,
+          isAzure: isAzureFunction
         });
         setIsServerlessFunctionAvailable(false);
         setUseDummyResponse(true);
@@ -169,7 +183,7 @@ Relationship types:
     };
     
     checkServerlessAvailability();
-  }, [serverlessEndpoint, useCorsProxy, corsProxyUrl]);
+  }, [serverlessEndpoint, useCorsProxy, corsProxyUrl, isAzureFunction, azureFunctionEndpoint]);
 
   useEffect(() => {
     // Auto-connect on component mount if credentials are present
@@ -209,7 +223,9 @@ Relationship types:
       // Try to connect to the serverless function
       setExecutionSteps(prev => [...prev, "Attempting to connect to Neo4j database via serverless function..."]);
       
-      const testConnectionEndpoint = `${serverlessEndpoint}/testConnection`;
+      const testConnectionEndpoint = isAzureFunction 
+        ? `${azureFunctionEndpoint}/api/testConnection` 
+        : `${serverlessEndpoint}/testConnection`;
       console.log(`Sending connection test to: ${testConnectionEndpoint}`);
       
       try {
@@ -327,7 +343,9 @@ LIMIT 5`;
         setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
         
         try {
-          const executeQueryEndpoint = `${serverlessEndpoint}/executeQuery`;
+          const executeQueryEndpoint = isAzureFunction 
+            ? `${azureFunctionEndpoint}/api/executeQuery` 
+            : `${serverlessEndpoint}/executeQuery`;
           console.log(`Executing query at: ${executeQueryEndpoint}`);
           
           const response = await safeFetch(executeQueryEndpoint, {
@@ -424,12 +442,15 @@ LIMIT 5`;
   };
 
   const checkServerlessConnection = async () => {
-    setExecutionSteps([`Pinging serverless function at ${serverlessEndpoint}/ping...`]);
+    setExecutionSteps([`Pinging serverless function...`]);
     setIsLoading(true);
     setDebugInfo(null);
     
     try {
-      const endpoint = `${serverlessEndpoint}/ping`;
+      const endpoint = isAzureFunction 
+        ? `${azureFunctionEndpoint}/api/ping` 
+        : `${serverlessEndpoint}/ping`;
+        
       console.log(`Testing connection to: ${endpoint}`);
       console.log(`Using CORS proxy: ${useCorsProxy ? corsProxyUrl : 'No proxy'}`);
       
@@ -449,7 +470,8 @@ LIMIT 5`;
         headers: Object.fromEntries([...response.headers]),
         data: responseData,
         usingProxy: useCorsProxy,
-        proxyUrl: corsProxyUrl
+        proxyUrl: corsProxyUrl,
+        isAzure: isAzureFunction
       });
       
       setIsServerlessFunctionAvailable(response.ok);
@@ -470,7 +492,8 @@ LIMIT 5`;
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         usingProxy: useCorsProxy,
-        proxyUrl: corsProxyUrl
+        proxyUrl: corsProxyUrl,
+        isAzure: isAzureFunction
       });
       toast.error(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsServerlessFunctionAvailable(false);
@@ -604,6 +627,219 @@ cypher_chain = GraphCypherQAChain.from_llm(
 )`
   };
 
+  // Update the settings tab content to include Azure Function options
+  const renderSettingsTabContent = () => {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Serverless Function Settings</CardTitle>
+          <CardDescription>
+            Configure connection to the serverless function that handles Neo4j database operations
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="space-y-0.5">
+              <FormLabel>Function Type</FormLabel>
+              <p className="text-xs text-muted-foreground">Select the type of serverless function to use</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant={isAzureFunction ? "outline" : "default"}
+                size="sm"
+                onClick={() => {
+                  setIsAzureFunction(false);
+                  setExecutionSteps([]);
+                }}
+              >
+                Netlify
+              </Button>
+              <Button
+                variant={isAzureFunction ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setIsAzureFunction(true);
+                  setExecutionSteps([]);
+                }}
+              >
+                Azure
+              </Button>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <FormLabel>{isAzureFunction ? "Azure Function Endpoint" : "Netlify Function Endpoint"}</FormLabel>
+            <div className="flex gap-2">
+              <Input 
+                value={isAzureFunction ? azureFunctionEndpoint : serverlessEndpoint} 
+                onChange={(e) => {
+                  if (isAzureFunction) {
+                    setAzureFunctionEndpoint(e.target.value);
+                  } else {
+                    setServerlessEndpoint(e.target.value);
+                  }
+                }} 
+                placeholder={isAzureFunction ? 
+                  "e.g., https://yourapp.azurewebsites.net" : 
+                  "e.g., https://aswin-langchain-neo4j.netlify.app/.netlify/functions"
+                }
+                className="flex-grow"
+              />
+              <Button onClick={checkServerlessConnection} disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Test Connection
+              </Button>
+            </div>
+            <div className="flex items-center">
+              <p className="text-xs text-muted-foreground">
+                {isAzureFunction ? 
+                  "The base URL for your Azure Function App (without /api)" : 
+                  "The base URL for the serverless function endpoints (without /ping, /testConnection, etc.)"
+                }
+              </p>
+              <Button 
+                variant="link" 
+                size="sm" 
+                className="h-auto p-0 ml-2"
+                onClick={() => window.open(isAzureFunction ? azureFunctionEndpoint : serverlessEndpoint, '_blank')}
+              >
+                <ExternalLink className="h-3 w-3 mr-1" />
+                Open
+              </Button>
+            </div>
+          </div>
+          
+          <div className="space-y-4 border p-4 rounded-md">
+            <h3 className="text-sm font-medium mb-4">CORS Proxy Settings</h3>
+            
+            <div className="flex items-center justify-between mb-4">
+              <div className="space-y-0.5">
+                <FormLabel>Use CORS Proxy</FormLabel>
+                <p className="text-xs text-muted-foreground">Routes API requests through a CORS proxy to avoid CORS restrictions</p>
+              </div>
+              <Switch 
+                checked={useCorsProxy} 
+                onCheckedChange={handleUseCorsProxyChange}
+              />
+            </div>
+            
+            {useCorsProxy && (
+              <>
+                <div className="space-y-2">
+                  <FormLabel>Selected CORS Proxy</FormLabel>
+                  <div className="flex flex-wrap gap-2">
+                    {CORS_PROXIES.map((proxy, index) => (
+                      <Badge 
+                        key={proxy.name}
+                        variant={selectedProxy === index ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => changeProxy(index)}
+                      >
+                        {proxy.name}
+                      </Badge>
+                    ))}
+                    <Badge 
+                      variant="destructive"
+                      className="cursor-pointer"
+                      onClick={tryDirectConnection}
+                    >
+                      No Proxy
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Current proxy: <code className="bg-muted p-1 rounded">{corsProxyUrl}</code>
+                  </p>
+                </div>
+                
+                <div className="space-y-2 mt-4">
+                  <FormLabel>Custom CORS Proxy URL (Advanced)</FormLabel>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={corsProxyUrl} 
+                      onChange={(e) => setCorsProxyUrl(e.target.value)} 
+                      placeholder="e.g., https://corsproxy.io/?"
+                      className="flex-grow"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => {
+                        setCorsProxyUrl(CORS_PROXIES[0].url);
+                        toast.info('Reset to default CORS proxy');
+                      }}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter the URL of a CORS proxy service. The target URL will be appended to this proxy URL.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <Alert variant={isServerlessFunctionAvailable ? "default" : "destructive"}>
+            <AlertTitle>Connection Status</AlertTitle>
+            <AlertDescription>
+              {isServerlessFunctionAvailable 
+                ? `${isAzureFunction ? "Azure" : "Netlify"} function is reachable and responding properly.` 
+                : `${isAzureFunction ? "Azure" : "Netlify"} function is not responding. Check the URL and network configuration.`}
+            </AlertDescription>
+          </Alert>
+          
+          {isAzureFunction && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertTitle>Azure Function Configuration</AlertTitle>
+              <AlertDescription>
+                <p className="mb-2">For Azure Functions to work correctly:</p>
+                <ol className="list-decimal list-inside text-sm space-y-1">
+                  <li>Make sure your Azure Function has CORS properly configured</li>
+                  <li>Ensure route templates are set with /api prefix in host.json</li>
+                  <li>Your functions should return proper headers for CORS</li>
+                </ol>
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="p-3 bg-muted rounded-md">
+            <h3 className="text-sm font-medium mb-2">Troubleshooting Steps</h3>
+            <ol className="list-decimal list-inside space-y-1 text-sm">
+              <li>Verify that the serverless function is deployed and running</li>
+              <li>Try different CORS proxy options from the list above</li>
+              <li>Check for CORS issues - the server must allow requests from your domain</li>
+              <li>Ensure network connectivity between your browser and the serverless function</li>
+              <li>If the function is behind authentication, ensure proper credentials are provided</li>
+              <li>Use demo mode to test functionality without a live backend</li>
+            </ol>
+          </div>
+          
+          {executionSteps.length > 0 && (
+            <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-md">
+              <h3 className="font-medium mb-2 flex items-center">
+                <Info className="h-4 w-4 mr-2" />
+                Connection Log
+              </h3>
+              <div className="space-y-2">
+                {executionSteps.map((step, index) => (
+                  <div key={index} className="flex items-start">
+                    <div className="h-2 w-2 rounded-full bg-blue-500 mr-2 mt-1.5"></div>
+                    <p className="text-sm">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 py-8">
       <motion.div
@@ -622,6 +858,12 @@ cypher_chain = GraphCypherQAChain.from_llm(
           {useDummyResponse && (
             <Badge variant="secondary" className="mt-2">
               Demo Mode Active
+            </Badge>
+          )}
+          
+          {isAzureFunction && (
+            <Badge variant="default" className="mt-2 ml-2">
+              Azure Function
             </Badge>
           )}
         </div>
@@ -662,8 +904,8 @@ cypher_chain = GraphCypherQAChain.from_llm(
                           <AlertTitle>Backend Connection Notice</AlertTitle>
                           <AlertDescription>
                             {isServerlessFunctionAvailable 
-                              ? `Serverless function at ${serverlessEndpoint} is reachable${useCorsProxy ? " through CORS proxy" : ""}.`
-                              : `Serverless function at ${serverlessEndpoint} appears to be unavailable. Demo mode will be used.`}
+                              ? `Serverless function at ${isAzureFunction ? azureFunctionEndpoint : serverlessEndpoint} is reachable${useCorsProxy ? " through CORS proxy" : ""}.`
+                              : `Serverless function at ${isAzureFunction ? azureFunctionEndpoint : serverlessEndpoint} appears to be unavailable. Demo mode will be used.`}
                           </AlertDescription>
                         </Alert>
                         
@@ -874,7 +1116,7 @@ cypher_chain = GraphCypherQAChain.from_llm(
                     <strong>Note:</strong> This tool {useDummyResponse ? 'is running in demo mode with sample data.' : 'uses serverless functions to connect to your Neo4j database.'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Serverless function endpoint: {serverlessEndpoint} {useCorsProxy && `• Using ${CORS_PROXIES[selectedProxy].name} proxy`}
+                    Serverless function endpoint: {isAzureFunction ? azureFunctionEndpoint : serverlessEndpoint} {useCorsProxy && `• Using ${CORS_PROXIES[selectedProxy].name} proxy`}
                   </p>
                 </CardFooter>
               </Card>
@@ -967,157 +1209,7 @@ cypher_chain = GraphCypherQAChain.from_llm(
           </TabsContent>
           
           <TabsContent value="settings">
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Serverless Function Settings</CardTitle>
-                <CardDescription>
-                  Configure connection to the serverless function that handles Neo4j database operations
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <FormLabel>Serverless Function Endpoint</FormLabel>
-                  <div className="flex gap-2">
-                    <Input 
-                      value={serverlessEndpoint} 
-                      onChange={handleServerlessEndpointChange} 
-                      placeholder="e.g., https://aswin-langchain-neo4j.netlify.app/.netlify/functions"
-                      className="flex-grow"
-                    />
-                    <Button onClick={checkServerlessConnection} disabled={isLoading}>
-                      {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                      )}
-                      Test Connection
-                    </Button>
-                  </div>
-                  <div className="flex items-center">
-                    <p className="text-xs text-muted-foreground">
-                      The base URL for the serverless function endpoints (without /ping, /testConnection, etc.)
-                    </p>
-                    <Button 
-                      variant="link" 
-                      size="sm" 
-                      className="h-auto p-0 ml-2"
-                      onClick={() => window.open(serverlessEndpoint, '_blank')}
-                    >
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Open
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-4 border p-4 rounded-md">
-                  <h3 className="text-sm font-medium mb-4">CORS Proxy Settings</h3>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="space-y-0.5">
-                      <FormLabel>Use CORS Proxy</FormLabel>
-                      <p className="text-xs text-muted-foreground">Routes API requests through a CORS proxy to avoid CORS restrictions</p>
-                    </div>
-                    <Switch 
-                      checked={useCorsProxy} 
-                      onCheckedChange={handleUseCorsProxyChange}
-                    />
-                  </div>
-                  
-                  {useCorsProxy && (
-                    <>
-                      <div className="space-y-2">
-                        <FormLabel>Selected CORS Proxy</FormLabel>
-                        <div className="flex flex-wrap gap-2">
-                          {CORS_PROXIES.map((proxy, index) => (
-                            <Badge 
-                              key={proxy.name}
-                              variant={selectedProxy === index ? "default" : "outline"}
-                              className="cursor-pointer"
-                              onClick={() => changeProxy(index)}
-                            >
-                              {proxy.name}
-                            </Badge>
-                          ))}
-                          <Badge 
-                            variant="destructive"
-                            className="cursor-pointer"
-                            onClick={tryDirectConnection}
-                          >
-                            No Proxy
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Current proxy: <code className="bg-muted p-1 rounded">{corsProxyUrl}</code>
-                        </p>
-                      </div>
-                      
-                      <div className="space-y-2 mt-4">
-                        <FormLabel>Custom CORS Proxy URL (Advanced)</FormLabel>
-                        <div className="flex gap-2">
-                          <Input 
-                            value={corsProxyUrl} 
-                            onChange={(e) => setCorsProxyUrl(e.target.value)} 
-                            placeholder="e.g., https://corsproxy.io/?"
-                            className="flex-grow"
-                          />
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => {
-                              setCorsProxyUrl(CORS_PROXIES[0].url);
-                              toast.info('Reset to default CORS proxy');
-                            }}
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Enter the URL of a CORS proxy service. The target URL will be appended to this proxy URL.
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-                
-                <Alert variant={isServerlessFunctionAvailable ? "default" : "destructive"}>
-                  <AlertTitle>Connection Status</AlertTitle>
-                  <AlertDescription>
-                    {isServerlessFunctionAvailable 
-                      ? "Serverless function is reachable and responding properly." 
-                      : "Serverless function is not responding. Check the URL and network configuration."}
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="p-3 bg-muted rounded-md">
-                  <h3 className="text-sm font-medium mb-2">Troubleshooting Steps</h3>
-                  <ol className="list-decimal list-inside space-y-1 text-sm">
-                    <li>Verify that the serverless function is deployed and running</li>
-                    <li>Try different CORS proxy options from the list above</li>
-                    <li>Check for CORS issues - the server must allow requests from your domain</li>
-                    <li>Ensure network connectivity between your browser and the serverless function</li>
-                    <li>If the function is behind authentication, ensure proper credentials are provided</li>
-                    <li>Use demo mode to test functionality without a live backend</li>
-                  </ol>
-                </div>
-                
-                {executionSteps.length > 0 && (
-                  <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-md">
-                    <h3 className="font-medium mb-2 flex items-center">
-                      <Info className="h-4 w-4 mr-2" />
-                      Connection Log
-                    </h3>
-                    <div className="space-y-2">
-                      {executionSteps.map((step, index) => (
-                        <div key={index} className="flex items-start">
-                          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2 mt-1.5"></div>
-                          <p className="text-sm">{step}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {renderSettingsTabContent()}
           </TabsContent>
           
           <TabsContent value="debug">
@@ -1142,7 +1234,8 @@ cypher_chain = GraphCypherQAChain.from_llm(
                   <div>
                     <h3 className="text-sm font-medium mb-2">Connection Status</h3>
                     <div className="p-3 bg-muted rounded-md text-sm">
-                      <p><strong>Serverless Endpoint:</strong> {serverlessEndpoint}</p>
+                      <p><strong>Function Type:</strong> {isAzureFunction ? 'Azure Functions' : 'Netlify Functions'}</p>
+                      <p><strong>Endpoint:</strong> {isAzureFunction ? azureFunctionEndpoint : serverlessEndpoint}</p>
                       <p><strong>Using CORS Proxy:</strong> {useCorsProxy ? `Yes (${corsProxyUrl})` : 'No'}</p>
                       <p><strong>Is Available:</strong> {isServerlessFunctionAvailable ? 'Yes' : 'No'}</p>
                       <p><strong>Using Demo Mode:</strong> {useDummyResponse ? 'Yes' : 'No'}</p>
