@@ -22,7 +22,7 @@ export const ApplicationsList = () => {
   const [applications, setApplications] = useState<Application[]>([
     { id: '1', productName: 'QTP', contactName: 'Column data', productOwner: 'Jeff Szpak', requestStatus: 'Pending', productStatus: 'Live' },
     { id: '2', productName: 'Mobile', contactName: 'Column data', productOwner: 'Nam Hua', requestStatus: 'Pending', productStatus: 'Live' },
-    { id: '3', productName: 'Cassandra', contactName: 'Column data', productOwner: 'Tomas Vecchi', requestStatus: 'Pending', productStatus: 'Live' },
+    { id: '3', productName: 'BP', contactName: 'Column data', productOwner: 'Tomas Vecchi', requestStatus: 'Pending', productStatus: 'Live' },
     { id: '4', productName: 'PWI', contactName: 'Column data', productOwner: 'Cordell Haneyh', requestStatus: 'Pending', productStatus: 'Live' },
     { id: '5', productName: 'Tesco', contactName: 'Column data', productOwner: 'Brad Pixley', requestStatus: 'Approved', productStatus: 'Live' },
     { id: '6', productName: 'Nestle', contactName: 'Column data', productOwner: 'Vanessa Sanchez', requestStatus: 'Approved', productStatus: 'Live' },
