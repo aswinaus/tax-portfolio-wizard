@@ -35,7 +35,7 @@ const App = () => (
       <SidebarProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/">
           <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading...</div>}>
             <Routes>
               <Route path="/" element={<MainLayout />}>
