@@ -41,7 +41,7 @@ const FloatingChat = () => {
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
           >
-            <TaxAgentChat />
+            <TaxAgentChat useDirectConnection={true} />
           </motion.div>
         )}
       </AnimatePresence>

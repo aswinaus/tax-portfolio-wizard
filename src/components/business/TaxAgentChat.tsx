@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, UserCircle2, Loader2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -19,7 +20,11 @@ interface LyzrResponse {
   conversation_id?: string;
 }
 
-const TaxAgentChat = () => {
+interface TaxAgentChatProps {
+  useDirectConnection?: boolean;
+}
+
+const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +36,7 @@ const TaxAgentChat = () => {
 
   const MAX_RETRIES = 3;
   const API_TIMEOUT = 8000; // 8 seconds
+  const AZURE_ENDPOINT = "https://taxaiagents.azurewebsites.net";
 
   useEffect(() => {
     // Scroll to bottom whenever messages change
@@ -50,7 +56,11 @@ const TaxAgentChat = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
         
-        const response = await fetch('https://api.lyzr.ai/ping', { 
+        // Use direct connection to Azure Function
+        const pingUrl = `${AZURE_ENDPOINT}/api/ping`;
+        console.log(`Checking API availability at: ${pingUrl}`);
+        
+        const response = await fetch(pingUrl, { 
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           signal: controller.signal
@@ -62,8 +72,8 @@ const TaxAgentChat = () => {
           setIsApiAvailable(true);
           setConnectionError(null);
         } else {
-          setConnectionError('Unable to connect to the Lyzr API service');
-          console.warn('Lyzr API returned an error status:', response.status);
+          setConnectionError('Unable to connect to the Azure Function service');
+          console.warn('Azure Function returned an error status:', response.status);
           
           // Only fall back to demo mode after multiple retries
           if (retryCount >= MAX_RETRIES) {
@@ -92,7 +102,7 @@ const TaxAgentChat = () => {
     };
     
     checkApiAvailability();
-  }, [retryCount]);
+  }, [retryCount, useDirectConnection]);
 
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
@@ -126,8 +136,7 @@ const TaxAgentChat = () => {
       }
       
       // Regular API call implementation
-      const apiUrl = 'https://api.lyzr.ai/chat';
-      const agentId = '67d85a7eb0001308323789d0'; // Your agent ID from the URL
+      const apiUrl = `${AZURE_ENDPOINT}/api/chat`;
       
       const headers = {
         'Content-Type': 'application/json',
@@ -137,7 +146,7 @@ const TaxAgentChat = () => {
       const payload = {
         message: userMessage,
         conversation_id: conversationId,
-        agent_id: agentId,
+        agent_id: '67d85a7eb0001308323789d0', // Your agent ID from the URL
         metadata: {
           source: 'form990_assistant'
         }
@@ -188,7 +197,9 @@ const TaxAgentChat = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
       
-      const response = await fetch('https://api.lyzr.ai/ping', { 
+      const pingUrl = `${AZURE_ENDPOINT}/api/ping`;
+      
+      const response = await fetch(pingUrl, { 
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal
