@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -37,7 +36,6 @@ const ToolsServicePage = () => {
     },
   });
 
-  // Simplified database schema for UI representation
   const databaseSchema = `
 Node labels: 
 - __Entity__ (Properties: name, entity, zipcode, embedding)
@@ -61,7 +59,6 @@ Relationship types:
       "Creating Neo4jGraph instance and refreshing schema"
     ]);
     
-    // Simulate connection to Neo4j
     setTimeout(() => {
       setIsConnected(true);
       setIsLoading(false);
@@ -92,12 +89,9 @@ Relationship types:
     ]);
 
     try {
-      // In a production environment, this would call your API that uses GraphCypherQAChain
       setTimeout(() => {
-        // Simulate steps in GraphCypherQAChain execution
         setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
         
-        // Generate a sample Cypher query based on the question
         const sampleCypherQuery = `MATCH (e:__Entity__)
 WHERE e.name CONTAINS "${query}" OR e.entity CONTAINS "${query}" OR e.zipcode CONTAINS "${query}"
 RETURN e.name, e.entity, e.zipcode
@@ -109,7 +103,6 @@ LIMIT 5`;
         setTimeout(() => {
           setExecutionSteps(prev => [...prev, "Processing results through CYPHER_QA_PROMPT..."]);
           
-          // Simulate a response from the GraphCypherQAChain
           const mockResponse = {
             result: `Based on the query "${query}", I found the following information in the graph database:
 
@@ -167,7 +160,10 @@ vector_index = Neo4jVector.from_existing_graph(
 )`,
     promptTemplates: `
 from langchain.prompts import PromptTemplate
-
+#This template provides clear instructions to the LLM, emphasizing that it should only use the schema provided and strictly focus on generating a Cypher query.
+#Placeholders below
+#{schema}: This will be replaced with the actual schema of the database.
+#{question}: This will be replaced with the user's question.
 CYPHER_GENERATION_TEMPLATE = """Task:Generate Cypher statement to query a graph database.
 Instructions:
 Use only the provided relationship types and properties in the schema. However, always exclude the schema's \`embedding\` property from the Cypher statement.
@@ -184,6 +180,9 @@ The question is:
 Cypher Query:
 """
 
+#This template guides the LLM to format the answer nicely and instructs it to rely solely on the provided context (results from the Cypher query) without using its own knowledge.
+#It includes placeholders: {context}: This will be replaced with the data retrieved from the database.
+#{question}: This will be replaced with the original user question.
 CYPHER_QA_TEMPLATE = """You are an AI assistant that helps to form nice and human understandable answers.
 The information part contains the provided information that you must use to construct an answer.
 The provided information is authoritative, you must never doubt it or try to use your internal knowledge to correct it.
@@ -202,11 +201,13 @@ Information:
 
 Question: {question}
 Helpful Answer:"""
-
+#This prompt is designed to instruct the LLM to generate a Cypher query (Neo4j's query language) based on a user's question and a provided schema of the graph database.
+#create the CYPHER_GENERATION_PROMPT object using the PromptTemplate class.
 CYPHER_GENERATION_PROMPT = PromptTemplate(
+    #Use the CYPHER_GENERATION_TEMPLATE as the base structure.
     input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
 )
-
+#This prompt is used to instruct the LLM to generate a human-readable answer based on the results returned from the Cypher query.
 CYPHER_QA_PROMPT = PromptTemplate(
     input_variables=["context", "question"], template=CYPHER_QA_TEMPLATE
 )`,
