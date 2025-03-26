@@ -1,5 +1,21 @@
 
 exports.handler = async function(event, context) {
+  // Adding connection debugging information
+  const connectionInfo = {
+    message: "If you're seeing this in demo mode, your app is unable to connect to the Azure Function.",
+    possibleIssues: [
+      "The Azure Function might be offline or unavailable",
+      "CORS policy might be blocking access from your domain",
+      "Network connectivity issues between client and Azure endpoint"
+    ],
+    recommendations: [
+      "Check if the Azure Function is running and accessible",
+      "Verify CORS is properly configured on the Azure Function",
+      "Try enabling the CORS proxy option in settings"
+    ],
+    currentEndpoint: "taxaiagents.azurewebsites.net"
+  };
+
   // Demo data for tools
   const tools = [
     {
@@ -25,6 +41,15 @@ exports.handler = async function(event, context) {
       category: "data",
       endpoint: "/api/extract-data",
       demoMode: true
+    },
+    {
+      id: 4, 
+      name: "Connection Debugger",
+      description: "Diagnose connection issues with the Azure Function",
+      category: "utility",
+      endpoint: "/api/debug-connection",
+      demoMode: true,
+      connectionInfo: connectionInfo
     }
   ];
 
@@ -36,6 +61,6 @@ exports.handler = async function(event, context) {
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ tools })
+    body: JSON.stringify({ tools, connectionInfo })
   };
 };
