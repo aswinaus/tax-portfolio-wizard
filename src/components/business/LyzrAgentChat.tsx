@@ -70,7 +70,9 @@ const LyzrAgentChat = () => {
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+    if (e) {
+      e.preventDefault();
+    }
     
     if (!input.trim()) return;
     
@@ -174,7 +176,10 @@ const LyzrAgentChat = () => {
         </div>
       </CardContent>
       <CardFooter className="pt-3">
-        <form onSubmit={handleSendMessage} className="w-full flex gap-2">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleSendMessage();
+        }} className="w-full flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
