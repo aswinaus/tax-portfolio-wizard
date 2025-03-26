@@ -116,7 +116,7 @@ const AgentServicePage = () => {
             <Database className="h-8 w-8 text-primary" />
             <div>
               <h2 className="text-2xl font-semibold">Form 990 Filing Assistant</h2>
-              <p className="text-muted-foreground">Ask questions about Form 990 filing requirements using our Lyzr-powered agent</p>
+              <p className="text-muted-foreground">Ask questions about Form 990 filing requirements using our Neo4j-powered tax agent</p>
             </div>
             <Badge className="ml-auto" variant="outline">Live Demo</Badge>
           </div>
@@ -184,15 +184,18 @@ TaxAgent = initialize_agent(
                 </CardHeader>
                 <CardContent>
                   <ol className="list-decimal list-inside space-y-1 text-sm">
-                    <li>Your question is sent to the Lyzr-powered agent</li>
+                    <li>Your question is sent to the Tax Agent powered by Neo4j</li>
                     <li>The agent analyzes your query and decides what tools to use</li>
-                    <li>Relevant information is retrieved from various sources</li>
+                    <li>Relevant information is retrieved from the Neo4j graph database</li>
                     <li>Results are processed and returned in natural language</li>
                   </ol>
                 </CardContent>
                 <CardFooter>
                   <Link to="/templates/tax-agent-neo4j" className="text-sm text-primary hover:underline">
                     View detailed implementation guide →
+                  </Link>
+                  <Link to="/portfolio/blogs" className="text-sm text-primary hover:underline ml-4">
+                    Read blog post →
                   </Link>
                 </CardFooter>
               </Card>
