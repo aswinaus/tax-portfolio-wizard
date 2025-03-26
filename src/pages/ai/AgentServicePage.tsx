@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, Workflow, Zap, MessagesSquare, Sparkles, Send, Database, Loader2, UserCircle2 } from 'lucide-react';
@@ -7,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 import LyzrAgentChat from '@/components/business/LyzrAgentChat';
 
 interface Message {
@@ -188,6 +190,11 @@ TaxAgent = initialize_agent(
                     <li>Results are processed and returned in natural language</li>
                   </ol>
                 </CardContent>
+                <CardFooter>
+                  <Link to="/templates/tax-agent-neo4j" className="text-sm text-primary hover:underline">
+                    View detailed implementation guide →
+                  </Link>
+                </CardFooter>
               </Card>
             </div>
           </div>

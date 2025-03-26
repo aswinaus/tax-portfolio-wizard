@@ -27,6 +27,9 @@ const AgentServicePage = lazy(() => import("./pages/ai/AgentServicePage"));
 const ToolsServicePage = lazy(() => import("./pages/ai/ToolsServicePage"));
 const ApplicationsPage = lazy(() => import("./pages/ai/ApplicationsPage"));
 
+// Templates
+const TaxAgentNeo4jBlog = lazy(() => import("./templates/TaxAgentNeo4jBlog"));
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -57,6 +60,9 @@ const App = () => (
                 <Route path="ai/agent" element={<AgentServicePage />} />
                 <Route path="ai/tools" element={<ToolsServicePage />} />
                 <Route path="ai/applications" element={<ApplicationsPage />} />
+                
+                {/* Template Routes */}
+                <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jBlog />} />
                 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
