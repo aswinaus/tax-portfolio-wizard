@@ -48,8 +48,8 @@ const ToolsServicePage = () => {
   const [useCorsProxy, setUseCorsProxy] = useState(true);
   const [corsProxyUrl, setCorsProxyUrl] = useState(CORS_PROXIES[0].url);
   const [selectedProxy, setSelectedProxy] = useState(0);
-  const [isAzureFunction, setIsAzureFunction] = useState(false);
-  const [azureFunctionEndpoint, setAzureFunctionEndpoint] = useState('');
+  const [isAzureFunction, setIsAzureFunction] = useState(true); // Set default to Azure
+  const [azureFunctionEndpoint, setAzureFunctionEndpoint] = useState('https://taxaiagents.azurewebsites.net');
   
   const credentialsForm = useForm<Neo4jCredentials>({
     defaultValues: {

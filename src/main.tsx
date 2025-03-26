@@ -7,11 +7,14 @@ import './index.css'
 declare global {
   interface Window {
     isNetlifyDeployment: boolean;
+    isAzureDeployment: boolean;
   }
 }
 
 // Set deployment flag for API calls
 window.isNetlifyDeployment = window.location.hostname.includes("papaya-kleicha-7542d0.netlify.app");
+window.isAzureDeployment = window.location.hostname.includes("aswin.ai") || 
+                           window.location.hostname.includes("taxaiagents.azurewebsites.net");
 
 const rootElement = document.getElementById("root");
 
