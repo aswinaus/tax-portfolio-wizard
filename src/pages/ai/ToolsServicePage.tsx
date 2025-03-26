@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -28,6 +27,7 @@ const ToolsServicePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   const credentialsForm = useForm<Neo4jCredentials>({
     defaultValues: {
@@ -62,6 +62,7 @@ Relationship types:
     }
     
     setIsLoading(true);
+    setConnectionError(null);
     setExecutionSteps([
       "Connecting to Neo4j database...",
       "Establishing connection to Neo4j graph database",
@@ -69,18 +70,36 @@ Relationship types:
     ]);
     
     try {
-      // In a real implementation, this would be a backend call to connect to Neo4j
-      // For now, we'll simulate a successful connection
-      setTimeout(() => {
-        setIsConnected(true);
-        setIsLoading(false);
-        setExecutionSteps(prev => [...prev, "Connection established successfully"]);
-        toast.success('Connected to Neo4j database successfully');
-      }, 1500);
+      // Test connection using a simple Cypher query
+      const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/testConnection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: values.url,
+          username: values.username,
+          password: values.password,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to connect to Neo4j database');
+      }
+      
+      setIsConnected(true);
+      setExecutionSteps(prev => [...prev, "Connection established successfully"]);
+      toast.success('Connected to Neo4j database successfully');
     } catch (error) {
-      setIsLoading(false);
-      toast.error('Failed to connect to Neo4j database');
       console.error('Connection error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setConnectionError(errorMessage);
+      setExecutionSteps(prev => [...prev, `Error: ${errorMessage}`]);
+      toast.error(`Failed to connect: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -106,59 +125,60 @@ Relationship types:
     ]);
 
     try {
-      // This would be a backend call in a real implementation
-      // For demonstration, we'll use a pre-defined flow with real data patterns
+      // Make a real API call to our serverless function
+      const { url, username, password } = credentialsForm.getValues();
       
-      // Step 1: Generate Cypher query
       setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
-        
-      setTimeout(() => {
-        // Generate a search query based on user input
-        const generatedCypherQuery = `MATCH (e:__Entity__)
-WHERE e.name CONTAINS "${query}" OR e.entity CONTAINS "${query}" OR e.zipcode CONTAINS "${query}"
-RETURN e.name, e.entity, e.zipcode
-LIMIT 5`;
-          
-        setCypherQuery(generatedCypherQuery);
-        setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
-          
-        // Step 2: Execute query and format results
-        setTimeout(() => {
-          setExecutionSteps(prev => [...prev, "Processing results through CYPHER_QA_PROMPT..."]);
-            
-          // Step 3: Format response
-          setTimeout(() => {
-            const simulatedResponse = {
-              result: `Based on the query "${query}", I found information related to tax-exempt organizations. 
-              
-The Neo4j database at ${credentialsForm.getValues().url} contains entities that match your search criteria, including organizations with similar names, entity classifications, or located in the specified zip code area.
-
-For more specific details, you might want to refine your query or explore related entities using the HAS_RELATIONSHIP_WITH, FILED_IN, or BELONGS_TO relationships.`
-            };
-              
-            setExecutionSteps(prev => [...prev, "Query completed successfully"]);
-            setResult(simulatedResponse.result);
-            setIsLoading(false);
-            toast.success('Query executed successfully');
-          }, 800);
-        }, 1200);
-      }, 1000);
+      
+      const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/executeQuery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url,
+          username,
+          password,
+          query: query,
+          schema: databaseSchema
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to execute query');
+      }
+      
+      const data = await response.json();
+      
+      setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
+      
+      if (data.generatedCypher) {
+        setCypherQuery(data.generatedCypher);
+        setExecutionSteps(prev => [...prev, "Processing results through CYPHER_QA_PROMPT..."]);
+      }
+      
+      if (data.result) {
+        setResult(data.result);
+        setExecutionSteps(prev => [...prev, "Query completed successfully"]);
+        toast.success('Query executed successfully');
+      } else {
+        throw new Error('No results returned from the query');
+      }
     } catch (error) {
       console.error('Error executing query:', error);
-      toast.error('Failed to execute query. Please try again.');
-      setResult('An error occurred while processing your query.');
-      setExecutionSteps(prev => [...prev, "Error: Failed to complete query execution"]);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to execute query: ${errorMessage}`);
+      setResult(`An error occurred while processing your query: ${errorMessage}`);
+      setExecutionSteps(prev => [...prev, `Error: ${errorMessage}`]);
+    } finally {
       setIsLoading(false);
     }
   };
 
   const handleDisconnect = () => {
     setIsConnected(false);
-    credentialsForm.reset({
-      url: 'neo4j+s://4e3ae988.databases.neo4j.io',
-      username: 'neo4j',
-      password: 'IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8',
-    });
+    setConnectionError(null);
     setCypherQuery(null);
     setResult(null);
     setExecutionSteps([]);
@@ -365,6 +385,13 @@ cypher_chain = GraphCypherQAChain.from_llm(
                         )}
                       </Button>
                     </div>
+
+                    {connectionError && (
+                      <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-600 dark:text-red-400 text-sm">
+                        <p className="font-medium">Connection Error:</p>
+                        <p>{connectionError}</p>
+                      </div>
+                    )}
                   </form>
                 </Form>
               ) : (
@@ -479,8 +506,11 @@ cypher_chain = GraphCypherQAChain.from_llm(
             </CardContent>
             <CardFooter className="flex flex-col items-start">
               <p className="text-xs text-muted-foreground">
-                <strong>Note:</strong> This interface uses the provided Neo4j credentials to demonstrate the connection.
-                Full backend implementation would require a server component to securely handle database connections.
+                <strong>Note:</strong> This tool uses serverless functions to connect to your Neo4j database.
+                For production use, implement proper authentication and rate limiting.
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Using serverless function endpoint: https://aswin-langchain-neo4j.netlify.app/.netlify/functions/
               </p>
             </CardFooter>
           </Card>
