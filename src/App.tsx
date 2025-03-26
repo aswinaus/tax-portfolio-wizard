@@ -13,6 +13,7 @@ import MainLayout from "./layouts/MainLayout";
 // Pages
 import NotFound from "./pages/NotFound";
 import Portfolio from "./pages/portfolio/Portfolio";
+import Index from "./pages/Index";
 
 // Lazy loaded pages for better performance
 const Blogs = lazy(() => import("./pages/portfolio/Blogs"));
@@ -32,47 +33,51 @@ const TaxAgentNeo4jBlog = lazy(() => import("./templates/TaxAgentNeo4jBlog"));
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <SidebarProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter basename="/">
-          <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading...</div>}>
-            <Routes>
-              <Route path="/" element={<MainLayout />}>
-                {/* Redirect base path to portfolio */}
-                <Route index element={<Portfolio />} />
-                
-                {/* Portfolio Routes */}
-                <Route path="portfolio" element={<Portfolio />} />
-                <Route path="portfolio/blogs" element={<Blogs />} />
-                <Route path="portfolio/blogs/:id" element={<BlogPost />} />
-                <Route path="portfolio/blogs/create" element={<CreateBlog />} />
-                
-                {/* Business Routes */}
-                <Route path="business/form990" element={<Form990 />} />
-                <Route path="business/transfer-pricing" element={<TransferPricing />} />
-                <Route path="documents" element={<DocumentRepositoryPage />} />
-                
-                {/* AI Routes */}
-                <Route path="ai/agent" element={<AgentServicePage />} />
-                <Route path="ai/tools" element={<ToolsServicePage />} />
-                <Route path="ai/applications" element={<ApplicationsPage />} />
-                
-                {/* Template Routes */}
-                <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jBlog />} />
-                
-                {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </SidebarProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log("App component rendering");
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <SidebarProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter basename="/">
+            <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading...</div>}>
+              <Routes>
+                <Route path="/" element={<MainLayout />}>
+                  {/* Redirect base path to portfolio */}
+                  <Route index element={<Portfolio />} />
+                  
+                  {/* Portfolio Routes */}
+                  <Route path="portfolio" element={<Portfolio />} />
+                  <Route path="portfolio/blogs" element={<Blogs />} />
+                  <Route path="portfolio/blogs/:id" element={<BlogPost />} />
+                  <Route path="portfolio/blogs/create" element={<CreateBlog />} />
+                  
+                  {/* Business Routes */}
+                  <Route path="business/form990" element={<Form990 />} />
+                  <Route path="business/transfer-pricing" element={<TransferPricing />} />
+                  <Route path="documents" element={<DocumentRepositoryPage />} />
+                  
+                  {/* AI Routes */}
+                  <Route path="ai/agent" element={<AgentServicePage />} />
+                  <Route path="ai/tools" element={<ToolsServicePage />} />
+                  <Route path="ai/applications" element={<ApplicationsPage />} />
+                  
+                  {/* Template Routes */}
+                  <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jBlog />} />
+                  
+                  {/* Catch-all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </SidebarProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
