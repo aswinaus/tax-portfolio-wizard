@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Workflow, Zap, MessagesSquare, Sparkles, Send, Database, Loader2, UserCircle2 } from 'lucide-react';
+import { Bot, Workflow, Zap, MessagesSquare, Sparkles, Send, Database, Loader2, UserCircle2, Code } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -119,6 +119,63 @@ const AgentServicePage = () => {
             </div>
             <Badge className="ml-auto" variant="outline">Preview</Badge>
           </div>
+        </div>
+        
+        <div className="bg-card border rounded-lg p-6 mb-16">
+          <div className="flex items-center gap-3 mb-6">
+            <Code className="h-8 w-8 text-primary" />
+            <div>
+              <h2 className="text-2xl font-semibold">LangChain TaxAgent Implementation</h2>
+              <p className="text-muted-foreground">Sample code for a tax-focused AI agent using Neo4j and vector search</p>
+            </div>
+            <Badge className="ml-auto" variant="outline">Code Sample</Badge>
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Agent Implementation</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm">
+              <pre className="whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-4 rounded-md overflow-x-auto text-xs leading-relaxed">
+{`from langchain.agents import initialize_agent, Tool
+from langchain.agents import AgentType
+
+tools = [
+    Tool(
+        name="VectorSearch",
+        func=vector_qa.run,
+        description="""Answer questions related to tax statistics.
+        For non analytic questions, use the VectorSearch tool.
+        Always have complete questions as input.
+        """,
+    ),
+    Tool(
+        name="GraphSearch",
+        func=cypher_chain.run,
+        description="""Useful for questions related to tax mostly analytical data querying,
+        Always have complete questions as input.
+        """,
+    ),
+]
+
+#Agent Initialization
+#initialize_agent: This function from LangChain is used to create the agent.
+#tools: The list of tools (VectorSearch and GraphSearch) is passed to the agent, giving it access to these functionalities.
+#ChatOpenAI(temperature=0, model_name='gpt-4'): This specifies that the agent will use OpenAI's GPT-4 language model as its reasoning engine. temperature=0 makes the model's responses more deterministic.
+#agent=AgentType.OPENAI_FUNCTIONS: This selects a specific agent type from LangChain designed for interacting with tools using OpenAI's function calling capabilities.
+#verbose=True: This setting enables detailed logging of the agent's actions, which is helpful for debugging and understanding how it's making decisions.
+TaxAgent = initialize_agent(
+    tools,
+    ChatOpenAI(temperature=0, model_name='gpt-4'),
+    agent=AgentType.OPENAI_FUNCTIONS, verbose=True
+)`}
+              </pre>
+            </CardContent>
+            <CardFooter>
+              <div className="text-sm text-muted-foreground">
+                This implementation combines vector search and graph database tools to provide comprehensive tax information retrieval capabilities.
+              </div>
+            </CardFooter>
+          </Card>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
