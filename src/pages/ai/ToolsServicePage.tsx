@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Database, Send, Code, Terminal, Info, AlertTriangle } from 'lucide-react';
+import { Loader2, Database, Send, Code, Terminal, Info, AlertTriangle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
@@ -15,6 +14,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Neo4jCredentials = {
   url: string;
@@ -32,6 +32,9 @@ const ToolsServicePage = () => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [useDummyResponse, setUseDummyResponse] = useState(false);
   const [isServerlessFunctionAvailable, setIsServerlessFunctionAvailable] = useState(true);
+  const [serverlessEndpoint, setServerlessEndpoint] = useState('https://aswin-langchain-neo4j.netlify.app/.netlify/functions');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('query');
   
   const credentialsForm = useForm<Neo4jCredentials>({
     defaultValues: {
@@ -55,26 +58,59 @@ Relationship types:
   useEffect(() => {
     const checkServerlessAvailability = async () => {
       try {
-        const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/ping', { 
+        const endpoint = `${serverlessEndpoint}/ping`;
+        console.log(`Checking serverless function availability at: ${endpoint}`);
+        
+        setExecutionSteps(prev => [...prev, `Pinging serverless function at ${endpoint}...`]);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+        
+        const response = await fetch(endpoint, { 
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(5000) // 5 second timeout
+          headers: { 
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin
+          },
+          signal: controller.signal,
+          mode: 'cors',
+          credentials: 'include'
         });
         
+        clearTimeout(timeoutId);
+        
+        const responseData = await response.text();
+        console.log('Ping response:', response.status, responseData);
+        
         setIsServerlessFunctionAvailable(response.ok);
+        setDebugInfo({
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries([...response.headers]),
+          data: responseData
+        });
+        
         if (!response.ok) {
-          console.warn('Serverless function is not available');
+          console.warn('Serverless function is not available:', response.status, response.statusText);
+          setExecutionSteps(prev => [...prev, `Server responded with status ${response.status}: ${response.statusText}`]);
           setUseDummyResponse(true);
+        } else {
+          setExecutionSteps(prev => [...prev, `Server is available! Response: ${responseData}`]);
         }
       } catch (error) {
         console.error('Error checking serverless function availability:', error);
+        setExecutionSteps(prev => [...prev, `Error connecting to server: ${error instanceof Error ? error.message : String(error)}`]);
+        setDebugInfo({
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
         setIsServerlessFunctionAvailable(false);
         setUseDummyResponse(true);
       }
     };
     
     checkServerlessAvailability();
-  }, []);
+  }, [serverlessEndpoint]);
 
   useEffect(() => {
     // Auto-connect on component mount if credentials are present
@@ -113,24 +149,27 @@ Relationship types:
       // Try to connect to the serverless function
       setExecutionSteps(prev => [...prev, "Attempting to connect to Neo4j database via serverless function..."]);
       
-      const testConnectionEndpoint = 'https://aswin-langchain-neo4j.netlify.app/.netlify/functions/testConnection';
+      const testConnectionEndpoint = `${serverlessEndpoint}/testConnection`;
       console.log(`Sending connection test to: ${testConnectionEndpoint}`);
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
       
       try {
         const response = await fetch(testConnectionEndpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Origin': window.location.origin
           },
           body: JSON.stringify({
             url: values.url,
             username: values.username,
             password: values.password,
           }),
-          signal: controller.signal
+          signal: controller.signal,
+          mode: 'cors',
+          credentials: 'include'
         });
         
         clearTimeout(timeoutId);
@@ -141,8 +180,15 @@ Relationship types:
           setIsConnected(true);
           toast.success('Connected to Neo4j database successfully');
         } else {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Server returned an error');
+          const errorText = await response.text();
+          console.error('Connection error response:', response.status, errorText);
+          
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.error || `Server returned status ${response.status}`);
+          } catch (parseError) {
+            throw new Error(`Server returned status ${response.status}: ${errorText}`);
+          }
         }
       } catch (error) {
         console.error('Connection error:', error);
@@ -230,12 +276,16 @@ LIMIT 5`;
         
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
           
-          const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/executeQuery', {
+          const executeQueryEndpoint = `${serverlessEndpoint}/executeQuery`;
+          console.log(`Executing query at: ${executeQueryEndpoint}`);
+          
+          const response = await fetch(executeQueryEndpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Origin': window.location.origin
             },
             body: JSON.stringify({
               url,
@@ -244,17 +294,27 @@ LIMIT 5`;
               query: query,
               schema: databaseSchema
             }),
-            signal: controller.signal
+            signal: controller.signal,
+            mode: 'cors',
+            credentials: 'include'
           });
           
           clearTimeout(timeoutId);
           
           if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to execute query');
+            const errorText = await response.text();
+            console.error('Query error response:', response.status, errorText);
+            
+            try {
+              const errorData = JSON.parse(errorText);
+              throw new Error(errorData.error || `Failed to execute query: server returned status ${response.status}`);
+            } catch (parseError) {
+              throw new Error(`Failed to execute query: server returned status ${response.status}: ${errorText}`);
+            }
           }
           
           const data = await response.json();
+          console.log('Query response data:', data);
           
           setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
           
@@ -314,6 +374,65 @@ LIMIT 5`;
     setExecutionSteps([]);
     setUseDummyResponse(false);
     toast.success('Disconnected from Neo4j database');
+  };
+
+  const handleServerlessEndpointChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setServerlessEndpoint(e.target.value);
+  };
+
+  const checkServerlessConnection = async () => {
+    setExecutionSteps([`Pinging serverless function at ${serverlessEndpoint}/ping...`]);
+    setIsLoading(true);
+    setDebugInfo(null);
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+      
+      const response = await fetch(`${serverlessEndpoint}/ping`, { 
+        method: 'GET',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin 
+        },
+        signal: controller.signal,
+        mode: 'cors',
+        credentials: 'include'
+      });
+      
+      clearTimeout(timeoutId);
+      
+      const responseData = await response.text();
+      console.log('Ping response:', response.status, responseData);
+      
+      setDebugInfo({
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries([...response.headers]),
+        data: responseData
+      });
+      
+      setIsServerlessFunctionAvailable(response.ok);
+      
+      if (response.ok) {
+        setExecutionSteps(prev => [...prev, `Connection successful! Response: ${responseData}`]);
+        toast.success('Successfully connected to serverless function!');
+      } else {
+        setExecutionSteps(prev => [...prev, `Server responded with status ${response.status}: ${response.statusText}`]);
+        toast.error(`Server error: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error checking serverless function:', error);
+      setExecutionSteps(prev => [...prev, `Connection error: ${error instanceof Error ? error.message : String(error)}`]);
+      setDebugInfo({
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      toast.error(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setIsServerlessFunctionAvailable(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const codeBlocks = {
@@ -430,296 +549,452 @@ cypher_chain = GraphCypherQAChain.from_llm(
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-          <Card className="col-span-1 lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Neo4j Graph Database QA
-              </CardTitle>
-              <CardDescription>
-                This tool uses GraphCypherQAChain with the 'incometax' vector index on '__Entity__' nodes.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Ask questions about your graph data and get natural language responses using LangChain and Neo4j.
-              </p>
-              
-              {!isConnected ? (
-                <Form {...credentialsForm}>
-                  <form onSubmit={credentialsForm.handleSubmit(handleCredentialsSubmit)} className="space-y-4 p-4 border rounded-md">
-                    <h3 className="font-semibold">Connect to Neo4j Database</h3>
-                    
-                    <Alert className="mb-4">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>Backend Connection Notice</AlertTitle>
-                      <AlertDescription>
-                        This demo attempts to connect to a serverless function at aswin-langchain-neo4j.netlify.app.
-                        {!isServerlessFunctionAvailable && " The serverless function appears to be unavailable and will use demo mode."}
-                      </AlertDescription>
-                    </Alert>
-                    
-                    <div className="grid gap-4">
-                      <FormField
-                        control={credentialsForm.control}
-                        name="url"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Neo4j URL</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="e.g., bolt://localhost:7687"
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <FormField
-                          control={credentialsForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Username</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder="neo4j"
-                                  disabled={isLoading}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={credentialsForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Password</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  type="password"
-                                  placeholder="Your password"
-                                  disabled={isLoading}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <Button type="submit" disabled={isLoading}>
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Connecting...
-                          </>
-                        ) : (
-                          <>
-                            <Database className="h-4 w-4 mr-2" />
-                            Connect
-                          </>
-                        )}
-                      </Button>
-                    </div>
-
-                    {connectionError && (
-                      <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-600 dark:text-red-400 text-sm">
-                        <p className="font-medium">Connection Error:</p>
-                        <p>{connectionError}</p>
-                      </div>
-                    )}
-                  </form>
-                </Form>
-              ) : (
-                <>
-                  <div className="flex justify-between items-center mb-4 p-2 bg-green-50 dark:bg-green-900/20 rounded-md">
-                    <div className="flex items-center">
-                      <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                      <span className="text-sm">
-                        {useDummyResponse 
-                          ? "Using demo mode (serverless function unavailable)" 
-                          : `Connected to Neo4j database (${credentialsForm.getValues().url})`}
-                      </span>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={handleDisconnect}>
-                      Disconnect
-                    </Button>
-                  </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="query">Query Tool</TabsTrigger>
+            <TabsTrigger value="settings">Connection Settings</TabsTrigger>
+            <TabsTrigger value="debug">Debug Info</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="query">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
+              <Card className="col-span-1 lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Neo4j Graph Database QA
+                  </CardTitle>
+                  <CardDescription>
+                    This tool uses GraphCypherQAChain with the 'incometax' vector index on '__Entity__' nodes.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                    Ask questions about your graph data and get natural language responses using LangChain and Neo4j.
+                  </p>
                   
-                  <form onSubmit={handleQuerySubmit} className="mt-4">
-                    <div className="flex flex-col space-y-4">
-                      <div>
-                        <label htmlFor="query" className="block text-sm font-medium mb-1">
-                          Ask a question about your graph data
-                        </label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="query"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            placeholder="e.g., Show me non-profit organizations in California"
-                            className="flex-grow"
-                            disabled={isLoading}
-                          />
-                          <Button type="submit" disabled={isLoading || !query.trim()}>
-                            {isLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            ) : (
-                              <Send className="h-4 w-4 mr-2" />
+                  {!isConnected ? (
+                    <Form {...credentialsForm}>
+                      <form onSubmit={credentialsForm.handleSubmit(handleCredentialsSubmit)} className="space-y-4 p-4 border rounded-md">
+                        <h3 className="font-semibold">Connect to Neo4j Database</h3>
+                        
+                        <Alert className="mb-4" variant={isServerlessFunctionAvailable ? "default" : "destructive"}>
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle>Backend Connection Notice</AlertTitle>
+                          <AlertDescription>
+                            {isServerlessFunctionAvailable 
+                              ? `Serverless function at ${serverlessEndpoint} is reachable.`
+                              : `Serverless function at ${serverlessEndpoint} appears to be unavailable. Demo mode will be used.`}
+                          </AlertDescription>
+                        </Alert>
+                        
+                        <div className="grid gap-4">
+                          <FormField
+                            control={credentialsForm.control}
+                            name="url"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Neo4j URL</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder="e.g., bolt://localhost:7687"
+                                    disabled={isLoading}
+                                  />
+                                </FormControl>
+                              </FormItem>
                             )}
-                            Query
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <FormField
+                              control={credentialsForm.control}
+                              name="username"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Username</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      placeholder="neo4j"
+                                      disabled={isLoading}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={credentialsForm.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Password</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="password"
+                                      placeholder="Your password"
+                                      disabled={isLoading}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <Button type="submit" disabled={isLoading}>
+                            {isLoading ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Connecting...
+                              </>
+                            ) : (
+                              <>
+                                <Database className="h-4 w-4 mr-2" />
+                                Connect
+                              </>
+                            )}
                           </Button>
                         </div>
+
+                        {connectionError && (
+                          <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-600 dark:text-red-400 text-sm">
+                            <p className="font-medium">Connection Error:</p>
+                            <p>{connectionError}</p>
+                          </div>
+                        )}
+                      </form>
+                    </Form>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center mb-4 p-2 bg-green-50 dark:bg-green-900/20 rounded-md">
+                        <div className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                          <span className="text-sm">
+                            {useDummyResponse 
+                              ? "Using demo mode (serverless function unavailable)" 
+                              : `Connected to Neo4j database (${credentialsForm.getValues().url})`}
+                          </span>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={handleDisconnect}>
+                          Disconnect
+                        </Button>
+                      </div>
+                      
+                      <form onSubmit={handleQuerySubmit} className="mt-4">
+                        <div className="flex flex-col space-y-4">
+                          <div>
+                            <label htmlFor="query" className="block text-sm font-medium mb-1">
+                              Ask a question about your graph data
+                            </label>
+                            <div className="flex gap-2">
+                              <Input
+                                id="query"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="e.g., Show me non-profit organizations in California"
+                                className="flex-grow"
+                                disabled={isLoading}
+                              />
+                              <Button type="submit" disabled={isLoading || !query.trim()}>
+                                {isLoading ? (
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                ) : (
+                                  <Send className="h-4 w-4 mr-2" />
+                                )}
+                                Query
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </>
+                  )}
+
+                  {isLoading && executionSteps.length > 0 && (
+                    <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-md">
+                      <h3 className="font-medium mb-2 flex items-center">
+                        <Info className="h-4 w-4 mr-2" />
+                        Execution Progress
+                      </h3>
+                      <div className="space-y-2">
+                        {executionSteps.map((step, index) => (
+                          <div 
+                            key={index} 
+                            className="flex items-center"
+                          >
+                            {index === executionSteps.length - 1 && isLoading ? (
+                              <Loader2 className="h-3 w-3 animate-spin mr-2 text-primary" />
+                            ) : (
+                              <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                            )}
+                            <p className="text-sm">{step}</p>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </form>
-                </>
-              )}
+                  )}
 
-              {isLoading && executionSteps.length > 0 && (
-                <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-md">
-                  <h3 className="font-medium mb-2 flex items-center">
-                    <Info className="h-4 w-4 mr-2" />
-                    Execution Progress
-                  </h3>
-                  <div className="space-y-2">
-                    {executionSteps.map((step, index) => (
-                      <div 
-                        key={index} 
-                        className="flex items-center"
-                      >
-                        {index === executionSteps.length - 1 && isLoading ? (
-                          <Loader2 className="h-3 w-3 animate-spin mr-2 text-primary" />
-                        ) : (
-                          <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                        )}
-                        <p className="text-sm">{step}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {cypherQuery && !isLoading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="mt-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-md"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium flex items-center">
-                      <Code className="h-4 w-4 mr-2" />
-                      Generated Cypher Query
-                    </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(cypherQuery);
-                        toast.success('Cypher query copied to clipboard');
-                      }}
+                  {cypherQuery && !isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="mt-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-md"
                     >
-                      Copy
-                    </Button>
-                  </div>
-                  <pre className="whitespace-pre-wrap text-sm p-2 bg-slate-100 dark:bg-slate-800 rounded overflow-x-auto">
-                    {cypherQuery}
-                  </pre>
-                </motion.div>
-              )}
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium flex items-center">
+                          <Code className="h-4 w-4 mr-2" />
+                          Generated Cypher Query
+                        </h3>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(cypherQuery);
+                            toast.success('Cypher query copied to clipboard');
+                          }}
+                        >
+                          Copy
+                        </Button>
+                      </div>
+                      <pre className="whitespace-pre-wrap text-sm p-2 bg-slate-100 dark:bg-slate-800 rounded overflow-x-auto">
+                        {cypherQuery}
+                      </pre>
+                    </motion.div>
+                  )}
 
-              {result && !isLoading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="mt-6 p-4 bg-muted rounded-md"
-                >
-                  <h3 className="font-medium mb-2 flex items-center">
-                    <Terminal className="h-4 w-4 mr-2" />
-                    Results
-                  </h3>
-                  <div className="whitespace-pre-wrap text-sm">{result}</div>
-                </motion.div>
-              )}
-            </CardContent>
-            <CardFooter className="flex flex-col items-start">
-              <p className="text-xs text-muted-foreground">
-                <strong>Note:</strong> This tool {useDummyResponse ? 'is running in demo mode with sample data.' : 'uses serverless functions to connect to your Neo4j database.'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Serverless function endpoint: https://aswin-langchain-neo4j.netlify.app/.netlify/functions/
-              </p>
-            </CardFooter>
-          </Card>
+                  {result && !isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="mt-6 p-4 bg-muted rounded-md"
+                    >
+                      <h3 className="font-medium mb-2 flex items-center">
+                        <Terminal className="h-4 w-4 mr-2" />
+                        Results
+                      </h3>
+                      <div className="whitespace-pre-wrap text-sm">{result}</div>
+                    </motion.div>
+                  )}
+                </CardContent>
+                <CardFooter className="flex flex-col items-start">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Note:</strong> This tool {useDummyResponse ? 'is running in demo mode with sample data.' : 'uses serverless functions to connect to your Neo4j database.'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Serverless function endpoint: {serverlessEndpoint}
+                  </p>
+                </CardFooter>
+              </Card>
 
-          <div className="col-span-1">
+              <div className="col-span-1">
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>How It Works</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ol className="list-decimal list-inside space-y-2">
+                      <li>Your question is processed by LangChain's CYPHER_GENERATION_PROMPT</li>
+                      <li>The prompt converts your natural language into a Cypher query</li>
+                      <li>GraphCypherQAChain executes the query against Neo4j</li>
+                      <li>Results are formatted using CYPHER_QA_PROMPT for human readability</li>
+                      <li>The system uses OpenAI embeddings and the 'incometax' vector index</li>
+                    </ol>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Implementation Code</CardTitle>
+                    <CardDescription>
+                      Python code used on the backend
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="vector-index">
+                        <AccordionTrigger className="text-sm">Vector Index Setup</AccordionTrigger>
+                        <AccordionContent>
+                          <pre className="text-xs whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-2 rounded overflow-x-auto">
+                            {codeBlocks.vectorIndex}
+                          </pre>
+                        </AccordionContent>
+                      </AccordionItem>
+                      
+                      <AccordionItem value="prompt-templates">
+                        <AccordionTrigger className="text-sm">Prompt Templates</AccordionTrigger>
+                        <AccordionContent>
+                          <pre className="text-xs whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-2 rounded overflow-x-auto">
+                            {codeBlocks.promptTemplates}
+                          </pre>
+                        </AccordionContent>
+                      </AccordionItem>
+                      
+                      <AccordionItem value="graph-chain">
+                        <AccordionTrigger className="text-sm">GraphCypherQAChain</AccordionTrigger>
+                        <AccordionContent>
+                          <pre className="text-xs whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-2 rounded overflow-x-auto">
+                            {codeBlocks.graphChain}
+                          </pre>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                    
+                    <div className="mt-4 p-2 bg-slate-100 dark:bg-slate-800 rounded">
+                      <h3 className="text-sm font-semibold mb-1">Database Schema</h3>
+                      <pre className="text-xs whitespace-pre-wrap">{databaseSchema}</pre>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="settings">
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>How It Works</CardTitle>
+                <CardTitle>Serverless Function Settings</CardTitle>
+                <CardDescription>
+                  Configure connection to the serverless function that handles Neo4j database operations
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ol className="list-decimal list-inside space-y-2">
-                  <li>Your question is processed by LangChain's CYPHER_GENERATION_PROMPT</li>
-                  <li>The prompt converts your natural language into a Cypher query</li>
-                  <li>GraphCypherQAChain executes the query against Neo4j</li>
-                  <li>Results are formatted using CYPHER_QA_PROMPT for human readability</li>
-                  <li>The system uses OpenAI embeddings and the 'incometax' vector index</li>
-                </ol>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <FormLabel>Serverless Function Endpoint</FormLabel>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={serverlessEndpoint} 
+                      onChange={handleServerlessEndpointChange} 
+                      placeholder="e.g., https://aswin-langchain-neo4j.netlify.app/.netlify/functions"
+                      className="flex-grow"
+                    />
+                    <Button onClick={checkServerlessConnection} disabled={isLoading}>
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      )}
+                      Test Connection
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    The base URL for the serverless function endpoints (without /ping, /testConnection, etc.)
+                  </p>
+                </div>
+                
+                <Alert variant={isServerlessFunctionAvailable ? "default" : "destructive"}>
+                  <AlertTitle>Connection Status</AlertTitle>
+                  <AlertDescription>
+                    {isServerlessFunctionAvailable 
+                      ? "Serverless function is reachable and responding properly." 
+                      : "Serverless function is not responding. Check the URL and network configuration."}
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="p-3 bg-muted rounded-md">
+                  <h3 className="text-sm font-medium mb-2">Troubleshooting Steps</h3>
+                  <ol className="list-decimal list-inside space-y-1 text-sm">
+                    <li>Verify that the serverless function is deployed and running</li>
+                    <li>Check for CORS issues - the server must allow requests from your domain</li>
+                    <li>Ensure network connectivity between your browser and the serverless function</li>
+                    <li>If the function is behind authentication, ensure proper credentials are provided</li>
+                    <li>Check browser console for more detailed error messages</li>
+                  </ol>
+                </div>
+                
+                {executionSteps.length > 0 && (
+                  <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-md">
+                    <h3 className="font-medium mb-2 flex items-center">
+                      <Info className="h-4 w-4 mr-2" />
+                      Connection Log
+                    </h3>
+                    <div className="space-y-2">
+                      {executionSteps.map((step, index) => (
+                        <div key={index} className="flex items-start">
+                          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2 mt-1.5"></div>
+                          <p className="text-sm">{step}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
-            
+          </TabsContent>
+          
+          <TabsContent value="debug">
             <Card>
               <CardHeader>
-                <CardTitle>Implementation Code</CardTitle>
+                <CardTitle>Debug Information</CardTitle>
                 <CardDescription>
-                  Python code used on the backend
+                  Technical details to help diagnose connection issues
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="vector-index">
-                    <AccordionTrigger className="text-sm">Vector Index Setup</AccordionTrigger>
-                    <AccordionContent>
-                      <pre className="text-xs whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-2 rounded overflow-x-auto">
-                        {codeBlocks.vectorIndex}
-                      </pre>
-                    </AccordionContent>
-                  </AccordionItem>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Browser Information</h3>
+                    <div className="p-3 bg-muted rounded-md text-sm">
+                      <p><strong>User Agent:</strong> {navigator.userAgent}</p>
+                      <p><strong>Origin:</strong> {window.location.origin}</p>
+                      <p><strong>Current URL:</strong> {window.location.href}</p>
+                    </div>
+                  </div>
                   
-                  <AccordionItem value="prompt-templates">
-                    <AccordionTrigger className="text-sm">Prompt Templates</AccordionTrigger>
-                    <AccordionContent>
-                      <pre className="text-xs whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-2 rounded overflow-x-auto">
-                        {codeBlocks.promptTemplates}
-                      </pre>
-                    </AccordionContent>
-                  </AccordionItem>
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Connection Status</h3>
+                    <div className="p-3 bg-muted rounded-md text-sm">
+                      <p><strong>Serverless Endpoint:</strong> {serverlessEndpoint}</p>
+                      <p><strong>Is Available:</strong> {isServerlessFunctionAvailable ? 'Yes' : 'No'}</p>
+                      <p><strong>Using Demo Mode:</strong> {useDummyResponse ? 'Yes' : 'No'}</p>
+                    </div>
+                  </div>
                   
-                  <AccordionItem value="graph-chain">
-                    <AccordionTrigger className="text-sm">GraphCypherQAChain</AccordionTrigger>
-                    <AccordionContent>
-                      <pre className="text-xs whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-2 rounded overflow-x-auto">
-                        {codeBlocks.graphChain}
+                  {debugInfo && (
+                    <div>
+                      <h3 className="text-sm font-medium mb-2">Last Server Response</h3>
+                      <pre className="p-3 bg-slate-100 dark:bg-slate-800 rounded-md text-xs overflow-x-auto">
+                        {JSON.stringify(debugInfo, null, 2)}
                       </pre>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                
-                <div className="mt-4 p-2 bg-slate-100 dark:bg-slate-800 rounded">
-                  <h3 className="text-sm font-semibold mb-1">Database Schema</h3>
-                  <pre className="text-xs whitespace-pre-wrap">{databaseSchema}</pre>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">CORS Test</h3>
+                    <p className="text-sm mb-2">
+                      Test a simple CORS request to the serverless function:
+                    </p>
+                    <Button 
+                      onClick={checkServerlessConnection} 
+                      variant="outline" 
+                      size="sm"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      )}
+                      Test CORS Connection
+                    </Button>
+                  </div>
+                  
+                  <Alert>
+                    <AlertTitle>How to Fix CORS Issues</AlertTitle>
+                    <AlertDescription>
+                      <p className="mb-2">If you're seeing CORS errors, the serverless function needs to include these headers:</p>
+                      <pre className="p-2 bg-slate-100 dark:bg-slate-800 rounded-md text-xs overflow-x-auto">
+{`'Access-Control-Allow-Origin': '*'  // Or specific origins
+'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+'Access-Control-Allow-Headers': 'Content-Type'`}
+                      </pre>
+                    </AlertDescription>
+                  </Alert>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </motion.div>
     </div>
   );
