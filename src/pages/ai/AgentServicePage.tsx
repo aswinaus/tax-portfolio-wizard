@@ -112,24 +112,113 @@ const AgentServicePage = () => {
         
         <div className="bg-card border rounded-lg p-6 mb-16">
           <div className="flex items-center gap-3 mb-6">
-            <Database className="h-8 w-8 text-primary" />
-            <div>
-              <h2 className="text-2xl font-semibold">Coming Soon</h2>
-              <p className="text-muted-foreground">Our specialized AI agents are currently in development</p>
-            </div>
-            <Badge className="ml-auto" variant="outline">Preview</Badge>
-          </div>
-        </div>
-        
-        <div className="bg-card border rounded-lg p-6 mb-16">
-          <div className="flex items-center gap-3 mb-6">
             <Code className="h-8 w-8 text-primary" />
             <div>
-              <h2 className="text-2xl font-semibold">LangChain TaxAgent Implementation</h2>
-              <p className="text-muted-foreground">Sample code for a tax-focused AI agent using Neo4j and vector search</p>
+              <h2 className="text-2xl font-semibold">LangChain TaxAgent Demo</h2>
+              <p className="text-muted-foreground">Ask tax-related questions to our AI agent powered by Neo4j and vector search</p>
             </div>
-            <Badge className="ml-auto" variant="outline">Code Sample</Badge>
+            <Badge className="ml-auto" variant="outline">Live Demo</Badge>
           </div>
+          
+          <div className="bg-secondary/30 rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-medium mb-4">TaxAgent Chat</h3>
+            
+            {!isApiKeySet ? (
+              <form onSubmit={handleApiKeySubmit} className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    To use the TaxAgent, please provide your OpenAI API key. This key is required for the agent to process your queries.
+                  </p>
+                  <div className="flex gap-2">
+                    <Input
+                      type="password"
+                      placeholder="Enter your OpenAI API key"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button type="submit">Set API Key</Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Your API key is stored locally and is never sent to our servers.
+                  </p>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div className="bg-background border rounded-lg mb-4 p-4 h-80 overflow-y-auto">
+                  {messages.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-center">
+                      <Bot className="h-12 w-12 mb-4 text-primary/50" />
+                      <p>Ask the TaxAgent a question about tax data, statistics, or regulations.</p>
+                      <p className="text-xs mt-2">Example: "What is the average charitable contribution for non-profits in California?"</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {messages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-[80%] rounded-lg p-3 ${
+                              message.role === 'user'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted'
+                            }`}
+                          >
+                            {message.role === 'assistant' && (
+                              <div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
+                                <Bot className="h-3 w-3" />
+                                <span>TaxAgent</span>
+                              </div>
+                            )}
+                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            <div className="text-xs text-right mt-1 opacity-70">
+                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {isLoading && (
+                        <div className="flex justify-start">
+                          <div className="max-w-[80%] rounded-lg p-3 bg-muted">
+                            <div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
+                              <Bot className="h-3 w-3" />
+                              <span>TaxAgent</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span className="text-sm">Processing your query...</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
+                <form onSubmit={handleTaxAgentQuery} className="flex gap-2">
+                  <Input
+                    placeholder="Ask a question about tax data..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    <span className="sr-only">Send</span>
+                  </Button>
+                </form>
+              </>
+            )}
+          </div>
+          
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Agent Implementation</CardTitle>
@@ -176,6 +265,17 @@ TaxAgent = initialize_agent(
               </div>
             </CardFooter>
           </Card>
+        </div>
+        
+        <div className="bg-card border rounded-lg p-6 mb-16">
+          <div className="flex items-center gap-3 mb-6">
+            <Database className="h-8 w-8 text-primary" />
+            <div>
+              <h2 className="text-2xl font-semibold">Coming Soon</h2>
+              <p className="text-muted-foreground">Additional specialized AI agents are currently in development</p>
+            </div>
+            <Badge className="ml-auto" variant="outline">Preview</Badge>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
