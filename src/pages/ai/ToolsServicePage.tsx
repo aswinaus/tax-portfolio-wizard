@@ -813,4 +813,4 @@ cypher_chain = GraphCypherQAChain.from_llm(
               <li>Verify that the serverless function is deployed and running</li>
               <li>Try different CORS proxy options from the list above</li>
               <li>Check for CORS issues - the server must allow requests from your domain</li>
-              <li>
+              <li>Use browser developer
