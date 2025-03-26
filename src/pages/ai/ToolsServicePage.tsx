@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -70,7 +69,7 @@ Relationship types:
     }, 1500);
   };
 
-  const handleQuerySubmit = async (e: React.FormEvent) => {
+  const handleQuerySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!query.trim()) {
@@ -93,42 +92,43 @@ Relationship types:
 
     try {
       // In a production environment, this would call your API that uses GraphCypherQAChain
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate steps in GraphCypherQAChain execution
-      setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Generate a sample Cypher query based on the question
-      const sampleCypherQuery = `MATCH (e:__Entity__)
+      setTimeout(() => {
+        // Simulate steps in GraphCypherQAChain execution
+        setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
+        
+        // Generate a sample Cypher query based on the question
+        const sampleCypherQuery = `MATCH (e:__Entity__)
 WHERE e.name CONTAINS "${query}" OR e.entity CONTAINS "${query}" OR e.zipcode CONTAINS "${query}"
 RETURN e.name, e.entity, e.zipcode
 LIMIT 5`;
-      
-      setCypherQuery(sampleCypherQuery);
-      setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
-      
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      setExecutionSteps(prev => [...prev, "Processing results through CYPHER_QA_PROMPT..."]);
-      
-      // Simulate a response from the GraphCypherQAChain
-      const mockResponse = {
-        result: `Based on the query "${query}", I found the following information in the graph database:
+        
+        setCypherQuery(sampleCypherQuery);
+        setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
+        
+        setTimeout(() => {
+          setExecutionSteps(prev => [...prev, "Processing results through CYPHER_QA_PROMPT..."]);
+          
+          // Simulate a response from the GraphCypherQAChain
+          const mockResponse = {
+            result: `Based on the query "${query}", I found the following information in the graph database:
 
 Entities matching your criteria include tax-exempt organizations located in the specified area with related fiscal information. The vector search using the 'incometax' index has retrieved the most relevant nodes based on their name, entity type, and zipcode properties as configured in the Neo4j database.`
-      };
-      
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setExecutionSteps(prev => [...prev, "Query completed successfully"]);
-      
-      setResult(mockResponse.result);
-      toast.success('Query executed successfully');
+          };
+          
+          setTimeout(() => {
+            setExecutionSteps(prev => [...prev, "Query completed successfully"]);
+            
+            setResult(mockResponse.result);
+            setIsLoading(false);
+            toast.success('Query executed successfully');
+          }, 800);
+        }, 1200);
+      }, 1000);
     } catch (error) {
       console.error('Error executing query:', error);
       toast.error('Failed to execute query. Please try again.');
       setResult('An error occurred while processing your query.');
       setExecutionSteps(prev => [...prev, "Error: Failed to complete query execution"]);
-    } finally {
       setIsLoading(false);
     }
   };
