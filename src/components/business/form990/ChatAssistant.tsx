@@ -1,6 +1,6 @@
 
 import { Info, Bot } from 'lucide-react';
-import LyzrAgentChat from '@/components/business/LyzrAgentChat';
+import TaxAgentChat from '@/components/business/TaxAgentChat';
 import { Card } from '@/components/ui/card';
 
 const ChatAssistant = () => {
@@ -21,7 +21,7 @@ const ChatAssistant = () => {
         </div>
       </div>
       
-      <LyzrAgentChat />
+      <TaxAgentChat />
       
       <Card className="p-4 bg-muted/50 border-dashed">
         <div className="flex items-start gap-3">

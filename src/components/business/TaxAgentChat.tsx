@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, UserCircle2, Loader2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -20,7 +19,7 @@ interface LyzrResponse {
   conversation_id?: string;
 }
 
-const LyzrAgentChat = () => {
+const TaxAgentChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -369,4 +368,4 @@ const LyzrAgentChat = () => {
   );
 };
 
-export default LyzrAgentChat;
+export default TaxAgentChat;
