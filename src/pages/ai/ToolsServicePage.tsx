@@ -3,23 +3,39 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Database, Send, Code, Terminal } from 'lucide-react';
+import { Loader2, Database, Send, Code, Terminal, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+type Neo4jCredentials = {
+  url: string;
+  username: string;
+  password: string;
+};
 
 const ToolsServicePage = () => {
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<string | null>(null);
   const [cypherQuery, setCypherQuery] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [neo4jCredentials, setNeo4jCredentials] = useState({
-    url: '',
-    username: '',
-    password: '',
-  });
   const [isConnected, setIsConnected] = useState(false);
+  const [executionSteps, setExecutionSteps] = useState<string[]>([]);
+  
+  const credentialsForm = useForm<Neo4jCredentials>({
+    defaultValues: {
+      url: '',
+      username: '',
+      password: '',
+    },
+  });
 
   // Simplified database schema for UI representation
   const databaseSchema = `
@@ -32,21 +48,26 @@ Relationship types:
 - BELONGS_TO
 `;
 
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!neo4jCredentials.url || !neo4jCredentials.username || !neo4jCredentials.password) {
+  const handleCredentialsSubmit = (values: Neo4jCredentials) => {
+    if (!values.url || !values.username || !values.password) {
       toast.error('Please fill in all Neo4j credentials');
       return;
     }
     
     setIsLoading(true);
+    setExecutionSteps([
+      "Connecting to Neo4j database...",
+      "Establishing connection to Neo4j graph database",
+      "Creating Neo4jGraph instance and refreshing schema"
+    ]);
     
     // Simulate connection to Neo4j
     setTimeout(() => {
       setIsConnected(true);
       setIsLoading(false);
+      setExecutionSteps(prev => [...prev, "Connection established successfully"]);
       toast.success('Connected to Neo4j database successfully');
-    }, 1000);
+    }, 1500);
   };
 
   const handleQuerySubmit = async (e: React.FormEvent) => {
@@ -64,27 +85,41 @@ Relationship types:
 
     setIsLoading(true);
     setResult(null);
+    setCypherQuery(null);
+    setExecutionSteps([
+      "Initializing GraphCypherQAChain...",
+      "Processing query through CYPHER_GENERATION_PROMPT...",
+    ]);
 
     try {
-      // In a production environment, this would call your API that runs the Python code
-      // with the CYPHER_GENERATION_PROMPT and CYPHER_QA_PROMPT
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // In a production environment, this would call your API that uses GraphCypherQAChain
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simulate steps in GraphCypherQAChain execution
+      setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       // Generate a sample Cypher query based on the question
-      // This simulates what CYPHER_GENERATION_PROMPT would produce
       const sampleCypherQuery = `MATCH (e:__Entity__)
 WHERE e.name CONTAINS "${query}" OR e.entity CONTAINS "${query}" OR e.zipcode CONTAINS "${query}"
 RETURN e.name, e.entity, e.zipcode
 LIMIT 5`;
       
       setCypherQuery(sampleCypherQuery);
+      setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
       
-      // Simulate a response from the Neo4j database and processed through CYPHER_QA_PROMPT
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      setExecutionSteps(prev => [...prev, "Processing results through CYPHER_QA_PROMPT..."]);
+      
+      // Simulate a response from the GraphCypherQAChain
       const mockResponse = {
         result: `Based on the query "${query}", I found the following information in the graph database:
 
 Entities matching your criteria include tax-exempt organizations located in the specified area with related fiscal information. The vector search using the 'incometax' index has retrieved the most relevant nodes based on their name, entity type, and zipcode properties as configured in the Neo4j database.`
       };
+      
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setExecutionSteps(prev => [...prev, "Query completed successfully"]);
       
       setResult(mockResponse.result);
       toast.success('Query executed successfully');
@@ -92,6 +127,7 @@ Entities matching your criteria include tax-exempt organizations located in the 
       console.error('Error executing query:', error);
       toast.error('Failed to execute query. Please try again.');
       setResult('An error occurred while processing your query.');
+      setExecutionSteps(prev => [...prev, "Error: Failed to complete query execution"]);
     } finally {
       setIsLoading(false);
     }
@@ -99,14 +135,93 @@ Entities matching your criteria include tax-exempt organizations located in the 
 
   const handleDisconnect = () => {
     setIsConnected(false);
-    setNeo4jCredentials({
-      url: '',
-      username: '',
-      password: '',
-    });
+    credentialsForm.reset();
     setCypherQuery(null);
     setResult(null);
+    setExecutionSteps([]);
     toast.success('Disconnected from Neo4j database');
+  };
+
+  const codeBlocks = {
+    vectorIndex: `
+from langchain.vectorstores.neo4j_vector import Neo4jVector
+from langchain.embeddings.openai import OpenAIEmbeddings
+
+vector_index = Neo4jVector.from_existing_graph(
+    OpenAIEmbeddings(),
+    url=url,
+    username=username,
+    password=password,
+    index_name='incometax',
+    node_label="__Entity__",
+    text_node_properties=['name', 'entity', 'zipcode'],
+    embedding_node_property='embedding',
+)`,
+    promptTemplates: `
+from langchain.prompts import PromptTemplate
+
+CYPHER_GENERATION_TEMPLATE = """Task:Generate Cypher statement to query a graph database.
+Instructions:
+Use only the provided relationship types and properties in the schema. However, always exclude the schema's \`embedding\` property from the Cypher statement.
+Do not use any other relationship types or properties that are not provided.
+Schema:
+{schema}
+Note: Do not include any explanations or apologies in your responses.
+Do not respond to any questions that might ask anything else than for you to construct a Cypher statement.
+Do not include any text except the generated Cypher statement.
+
+The question is:
+{question}
+
+Cypher Query:
+"""
+
+CYPHER_QA_TEMPLATE = """You are an AI assistant that helps to form nice and human understandable answers.
+The information part contains the provided information that you must use to construct an answer.
+The provided information is authoritative, you must never doubt it or try to use your internal knowledge to correct it.
+Make the answer sound as a response to the question. Do not mention that you based the result on the given information.
+Here is an example:
+
+Question: Which state has the maximum number of returns?
+Context:[{{'STATE': 'CA'}}, {{'No_of_return': '5506120'}}]
+Helpful Answer: The state CA has the maximum number of returns with 5506120
+
+Follow this example when generating answers.
+If the provided information is empty, say that you don't know the answer.
+
+Information:
+{context}
+
+Question: {question}
+Helpful Answer:"""
+
+CYPHER_GENERATION_PROMPT = PromptTemplate(
+    input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
+)
+
+CYPHER_QA_PROMPT = PromptTemplate(
+    input_variables=["context", "question"], template=CYPHER_QA_TEMPLATE
+)`,
+    graphChain: `
+from langchain.chains import GraphCypherQAChain
+from langchain.graphs import Neo4jGraph
+
+graph = Neo4jGraph(
+    url=url,
+    username=username,
+    password=password,
+    enhanced_schema=True
+)
+graph.refresh_schema()
+
+cypher_chain = GraphCypherQAChain.from_llm(
+    cypher_llm = ChatOpenAI(temperature=0, model_name='gpt-4'),
+    qa_llm = ChatOpenAI(temperature=0),
+    graph=graph,
+    verbose=True,
+    qa_prompt=CYPHER_QA_PROMPT,
+    cypher_prompt=CYPHER_GENERATION_PROMPT
+)`
   };
 
   return (
@@ -118,93 +233,107 @@ Entities matching your criteria include tax-exempt organizations located in the 
       >
         <div className="mb-8">
           <h1 className="text-3xl font-display font-semibold tracking-tight mb-2">
-            Tools as a Service
+            Neo4j Graph Database QA Tool
           </h1>
           <p className="text-muted-foreground">
-            Access powerful AI-powered tools to streamline your business processes
+            Ask questions about your graph data using natural language
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
           <Card className="col-span-1 lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Database className="h-5 w-5" />
-                Neo4j Graph Database Query
+                Neo4j Graph Database QA
               </CardTitle>
               <CardDescription>
-                This tool uses the 'incometax' vector index on '__Entity__' nodes, utilizing the name, entity, and zipcode properties.
+                This tool uses GraphCypherQAChain with the 'incometax' vector index on '__Entity__' nodes.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                This tool translates natural language questions into Cypher queries using LangChain prompts, executes them against a Neo4j graph database, and provides formatted results.
+                Ask questions about your graph data and get natural language responses using LangChain and Neo4j.
               </p>
               
               {!isConnected ? (
-                <form onSubmit={handleCredentialsSubmit} className="space-y-4 p-4 border rounded-md">
-                  <h3 className="font-semibold">Connect to Neo4j Database</h3>
-                  <div className="grid gap-4">
-                    <div className="grid grid-cols-1 gap-2">
-                      <label htmlFor="url" className="text-sm font-medium">
-                        Neo4j URL
-                      </label>
-                      <Input
-                        id="url"
-                        value={neo4jCredentials.url}
-                        onChange={(e) => setNeo4jCredentials({...neo4jCredentials, url: e.target.value})}
-                        placeholder="e.g., bolt://localhost:7687"
-                        disabled={isLoading}
+                <Form {...credentialsForm}>
+                  <form onSubmit={credentialsForm.handleSubmit(handleCredentialsSubmit)} className="space-y-4 p-4 border rounded-md">
+                    <h3 className="font-semibold">Connect to Neo4j Database</h3>
+                    <div className="grid gap-4">
+                      <FormField
+                        control={credentialsForm.control}
+                        name="url"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Neo4j URL</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="e.g., bolt://localhost:7687"
+                                disabled={isLoading}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label htmlFor="username" className="text-sm font-medium">
-                          Username
-                        </label>
-                        <Input
-                          id="username"
-                          value={neo4jCredentials.username}
-                          onChange={(e) => setNeo4jCredentials({...neo4jCredentials, username: e.target.value})}
-                          placeholder="neo4j"
-                          disabled={isLoading}
+                      <div className="grid grid-cols-2 gap-2">
+                        <FormField
+                          control={credentialsForm.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Username</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="neo4j"
+                                  disabled={isLoading}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={credentialsForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Password</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  type="password"
+                                  placeholder="Your password"
+                                  disabled={isLoading}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
                         />
                       </div>
-                      <div>
-                        <label htmlFor="password" className="text-sm font-medium">
-                          Password
-                        </label>
-                        <Input
-                          id="password"
-                          type="password"
-                          value={neo4jCredentials.password}
-                          onChange={(e) => setNeo4jCredentials({...neo4jCredentials, password: e.target.value})}
-                          placeholder="Your password"
-                          disabled={isLoading}
-                        />
-                      </div>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Connecting...
+                          </>
+                        ) : (
+                          <>
+                            <Database className="h-4 w-4 mr-2" />
+                            Connect
+                          </>
+                        )}
+                      </Button>
                     </div>
-                    <Button type="submit" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Connecting...
-                        </>
-                      ) : (
-                        <>
-                          <Database className="h-4 w-4 mr-2" />
-                          Connect
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
+                  </form>
+                </Form>
               ) : (
                 <>
                   <div className="flex justify-between items-center mb-4 p-2 bg-green-50 dark:bg-green-900/20 rounded-md">
                     <div className="flex items-center">
                       <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                      <span className="text-sm">Connected to Neo4j database ({neo4jCredentials.url})</span>
+                      <span className="text-sm">Connected to Neo4j database ({credentialsForm.getValues().url})</span>
                     </div>
                     <Button variant="outline" size="sm" onClick={handleDisconnect}>
                       Disconnect
@@ -241,10 +370,27 @@ Entities matching your criteria include tax-exempt organizations located in the 
                 </>
               )}
 
-              {isLoading && (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <span className="ml-2">Processing query...</span>
+              {isLoading && executionSteps.length > 0 && (
+                <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-md">
+                  <h3 className="font-medium mb-2 flex items-center">
+                    <Info className="h-4 w-4 mr-2" />
+                    Execution Progress
+                  </h3>
+                  <div className="space-y-2">
+                    {executionSteps.map((step, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center"
+                      >
+                        {index === executionSteps.length - 1 && isLoading ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-2 text-primary" />
+                        ) : (
+                          <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                        )}
+                        <p className="text-sm">{step}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -295,54 +441,71 @@ Entities matching your criteria include tax-exempt organizations located in the 
             <CardFooter className="flex flex-col items-start">
               <p className="text-xs text-muted-foreground">
                 <strong>Note:</strong> This interface demonstrates how the backend would use LangChain with Neo4j. 
-                In a production environment, it would connect to a real Neo4j database using the Python code with 
-                OpenAI embeddings on the 'incometax' vector index.
+                In a production environment, it would connect to a real Neo4j database using GraphCypherQAChain.
               </p>
             </CardFooter>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>How It Works</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ol className="list-decimal list-inside space-y-2">
-                <li>Your question is processed by LangChain with the CYPHER_GENERATION_PROMPT</li>
-                <li>The prompt converts your natural language into a Cypher query</li>
-                <li>The query runs against Neo4j using the 'incometax' vector index</li>
-                <li>Results are formatted using the CYPHER_QA_PROMPT for human readability</li>
-                <li>The system uses OpenAI embeddings to find semantically relevant information</li>
-              </ol>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Prompt Templates</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold mb-1">CYPHER_GENERATION_PROMPT</h3>
-                <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded text-xs overflow-hidden">
-                  <p>Converts questions to Cypher queries using the database schema</p>
-                  <p className="text-muted-foreground mt-1">Uses schema and question as input variables</p>
+          <div className="col-span-1">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>How It Works</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ol className="list-decimal list-inside space-y-2">
+                  <li>Your question is processed by LangChain's CYPHER_GENERATION_PROMPT</li>
+                  <li>The prompt converts your natural language into a Cypher query</li>
+                  <li>GraphCypherQAChain executes the query against Neo4j</li>
+                  <li>Results are formatted using CYPHER_QA_PROMPT for human readability</li>
+                  <li>The system uses OpenAI embeddings and the 'incometax' vector index</li>
+                </ol>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Implementation Code</CardTitle>
+                <CardDescription>
+                  Python code used on the backend
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="vector-index">
+                    <AccordionTrigger className="text-sm">Vector Index Setup</AccordionTrigger>
+                    <AccordionContent>
+                      <pre className="text-xs whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-2 rounded overflow-x-auto">
+                        {codeBlocks.vectorIndex}
+                      </pre>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="prompt-templates">
+                    <AccordionTrigger className="text-sm">Prompt Templates</AccordionTrigger>
+                    <AccordionContent>
+                      <pre className="text-xs whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-2 rounded overflow-x-auto">
+                        {codeBlocks.promptTemplates}
+                      </pre>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="graph-chain">
+                    <AccordionTrigger className="text-sm">GraphCypherQAChain</AccordionTrigger>
+                    <AccordionContent>
+                      <pre className="text-xs whitespace-pre-wrap bg-slate-100 dark:bg-slate-800 p-2 rounded overflow-x-auto">
+                        {codeBlocks.graphChain}
+                      </pre>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+                
+                <div className="mt-4 p-2 bg-slate-100 dark:bg-slate-800 rounded">
+                  <h3 className="text-sm font-semibold mb-1">Database Schema</h3>
+                  <pre className="text-xs whitespace-pre-wrap">{databaseSchema}</pre>
                 </div>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-semibold mb-1">CYPHER_QA_PROMPT</h3>
-                <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded text-xs overflow-hidden">
-                  <p>Formats Neo4j query results into human-readable answers</p>
-                  <p className="text-muted-foreground mt-1">Uses context and question as input variables</p>
-                </div>
-              </div>
-              
-              <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded">
-                <h3 className="text-sm font-semibold mb-1">Database Schema</h3>
-                <pre className="text-xs whitespace-pre-wrap">{databaseSchema}</pre>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </motion.div>
     </div>
