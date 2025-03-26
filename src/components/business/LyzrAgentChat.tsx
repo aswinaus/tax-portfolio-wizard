@@ -24,6 +24,7 @@ const LyzrAgentChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [isApiAvailable, setIsApiAvailable] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,10 +32,63 @@ const LyzrAgentChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Check if API is available
+  useEffect(() => {
+    const checkApiAvailability = async () => {
+      try {
+        // Add a simple ping to check if the API is reachable
+        const response = await fetch('https://api.lyzr.ai/ping', { 
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          // Add a timeout to avoid long waits
+          signal: AbortSignal.timeout(3000)
+        });
+        
+        setIsApiAvailable(response.ok);
+        if (!response.ok) {
+          console.warn('Lyzr API is not available, using fallback mode');
+        }
+      } catch (error) {
+        console.error('Error checking API availability:', error);
+        setIsApiAvailable(false);
+      }
+    };
+    
+    checkApiAvailability();
+  }, []);
+
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
-      // Replace this URL with your Lyzr agent's API endpoint
-      // https://studio.lyzr.ai/agent-create/67d85a7eb0001308323789d0
+      // If API is not available, use fallback mode with demo responses
+      if (!isApiAvailable) {
+        console.log('Using fallback mode for Lyzr API');
+        
+        // Simple fallback responses for demo purposes
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+        
+        const demoResponses: Record<string, string> = {
+          default: "I can help you with Form 990 filing information. What would you like to know?",
+          deadline: "Form 990 is generally due by the 15th day of the 5th month after the organization's accounting period ends. For calendar-year filers, this is May 15.",
+          extension: "You can request an automatic 6-month extension by filing Form 8868 before the due date.",
+          requirements: "Organizations with gross receipts ≥ $200,000 or total assets ≥ $500,000 must file Form 990. Smaller organizations may file Form 990-EZ or 990-N (e-Postcard).",
+        };
+        
+        // Simple keyword matching
+        let response = demoResponses.default;
+        const lowercaseMsg = userMessage.toLowerCase();
+        
+        if (lowercaseMsg.includes('deadline') || lowercaseMsg.includes('due date')) {
+          response = demoResponses.deadline;
+        } else if (lowercaseMsg.includes('extension')) {
+          response = demoResponses.extension;
+        } else if (lowercaseMsg.includes('requirement') || lowercaseMsg.includes('who needs')) {
+          response = demoResponses.requirements;
+        }
+        
+        return { response, conversation_id: 'demo-mode' };
+      }
+      
+      // Regular API call implementation
       const apiUrl = 'https://api.lyzr.ai/chat';
       const agentId = '67d85a7eb0001308323789d0'; // Your agent ID from the URL
       
@@ -65,7 +119,15 @@ const LyzrAgentChat = () => {
       return await response.json();
     } catch (error) {
       console.error('Error calling Lyzr API:', error);
-      throw error;
+      
+      // If we encounter an error, switch to fallback mode for future calls
+      setIsApiAvailable(false);
+      
+      // Return a friendly error message
+      return { 
+        response: "I'm having trouble connecting to my knowledge base right now. Let me use my general knowledge to help you with Form 990 questions instead.",
+        conversation_id: 'error-fallback'
+      };
     }
   };
 
@@ -115,7 +177,7 @@ const LyzrAgentChat = () => {
       <CardHeader className="pb-3 pt-5">
         <CardTitle className="text-lg flex items-center gap-2">
           <Bot className="h-5 w-5 text-primary" />
-          Form 990 Filing Assistant
+          Form 990 Filing Assistant {!isApiAvailable && "(Demo Mode)"}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow overflow-y-auto pb-0">
@@ -126,6 +188,11 @@ const LyzrAgentChat = () => {
               <p className="text-muted-foreground">
                 Ask me anything about Form 990 filing requirements, deadlines, or procedures.
               </p>
+              {!isApiAvailable && (
+                <p className="text-xs text-amber-500 mt-2">
+                  Running in demo mode with limited responses (API unavailable)
+                </p>
+              )}
             </div>
           ) : (
             messages.map((msg, index) => (

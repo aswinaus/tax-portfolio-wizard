@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Database, Send, Code, Terminal, Info } from 'lucide-react';
+import { Loader2, Database, Send, Code, Terminal, Info, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
@@ -13,6 +14,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Neo4jCredentials = {
   url: string;
@@ -28,6 +30,7 @@ const ToolsServicePage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [useDummyResponse, setUseDummyResponse] = useState(false);
   
   const credentialsForm = useForm<Neo4jCredentials>({
     defaultValues: {
@@ -70,32 +73,50 @@ Relationship types:
     ]);
     
     try {
-      // Test connection using a simple Cypher query
-      const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/testConnection', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: values.url,
-          username: values.username,
-          password: values.password,
-        }),
-      });
+      // Try to connect to the serverless function
+      let connected = false;
       
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to connect to Neo4j database');
+      try {
+        // Test connection using a simple Cypher query
+        const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/testConnection', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: values.url,
+            username: values.username,
+            password: values.password,
+          }),
+        });
+        
+        if (response.ok) {
+          connected = true;
+          const data = await response.json();
+          setExecutionSteps(prev => [...prev, "Connection established successfully"]);
+        } else {
+          throw new Error('Server returned an error');
+        }
+      } catch (error) {
+        console.error('Connection error:', error);
+        // Fall back to dummy mode due to CORS or network issues
+        setExecutionSteps(prev => [...prev, "Could not connect to serverless function - using demo mode"]);
+        setUseDummyResponse(true);
+        connected = true; // We're "connected" in dummy mode
       }
       
-      setIsConnected(true);
-      setExecutionSteps(prev => [...prev, "Connection established successfully"]);
-      toast.success('Connected to Neo4j database successfully');
+      if (connected) {
+        setIsConnected(true);
+        toast.success(useDummyResponse 
+          ? 'Using demo mode (serverless function unavailable)' 
+          : 'Connected to Neo4j database successfully');
+      } else {
+        throw new Error('Failed to connect to Neo4j database');
+      }
     } catch (error) {
       console.error('Connection error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      setConnectionError(errorMessage);
+      setConnectionError(`${errorMessage}. The serverless function might be unavailable or there could be CORS issues.`);
       setExecutionSteps(prev => [...prev, `Error: ${errorMessage}`]);
       toast.error(`Failed to connect: ${errorMessage}`);
     } finally {
@@ -125,45 +146,83 @@ Relationship types:
     ]);
 
     try {
-      // Make a real API call to our serverless function
-      const { url, username, password } = credentialsForm.getValues();
-      
-      setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
-      
-      const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/executeQuery', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url,
-          username,
-          password,
-          query: query,
-          schema: databaseSchema
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to execute query');
-      }
-      
-      const data = await response.json();
-      
-      setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
-      
-      if (data.generatedCypher) {
-        setCypherQuery(data.generatedCypher);
+      if (useDummyResponse) {
+        // Use dummy data for demo mode
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Add a delay for realism
+        
+        setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
+        const dummyCypher = `MATCH (e:__Entity__)
+WHERE e.entity CONTAINS 'NON-PROFIT' AND e.zipcode STARTS WITH '9'
+RETURN e.name, e.entity, e.zipcode
+LIMIT 5`;
+        
+        setCypherQuery(dummyCypher);
+        
+        setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Add a delay for realism
+        
         setExecutionSteps(prev => [...prev, "Processing results through CYPHER_QA_PROMPT..."]);
-      }
-      
-      if (data.result) {
-        setResult(data.result);
+        
+        setResult(`Based on the provided information, here are several non-profit organizations in California:
+
+1. CALIFORNIA COALITION FOR RURAL HOUSING (Entity: 501(C)(3) NON-PROFIT, Zipcode: 95814)
+2. CALIFORNIA STATE HORSEMENS ASSOCIATION INC (Entity: 501(C)(3) NON-PROFIT, Zipcode: 95864)
+3. CALIFORNIA DENTAL ASSOCIATION (Entity: 501(C)(6) NON-PROFIT, Zipcode: 95814)
+4. BETTER HOUSE FOUNDATION (Entity: 501(C)(3) NON-PROFIT, Zipcode: 91335)
+5. GOLDEN STATE MANUFACTURED-HOME OWNERS LEAGUE (Entity: 501(C)(4) NON-PROFIT, Zipcode: 92806)`);
+        
         setExecutionSteps(prev => [...prev, "Query completed successfully"]);
-        toast.success('Query executed successfully');
+        toast.success('Query executed successfully (demo mode)');
       } else {
-        throw new Error('No results returned from the query');
+        // Make a real API call to our serverless function
+        const { url, username, password } = credentialsForm.getValues();
+        
+        setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
+        
+        try {
+          const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/executeQuery', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url,
+              username,
+              password,
+              query: query,
+              schema: databaseSchema
+            }),
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to execute query');
+          }
+          
+          const data = await response.json();
+          
+          setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
+          
+          if (data.generatedCypher) {
+            setCypherQuery(data.generatedCypher);
+            setExecutionSteps(prev => [...prev, "Processing results through CYPHER_QA_PROMPT..."]);
+          }
+          
+          if (data.result) {
+            setResult(data.result);
+            setExecutionSteps(prev => [...prev, "Query completed successfully"]);
+            toast.success('Query executed successfully');
+          } else {
+            throw new Error('No results returned from the query');
+          }
+        } catch (error) {
+          console.error('API error:', error);
+          // Fall back to demo mode
+          setUseDummyResponse(true);
+          toast.error('Serverless function unavailable, falling back to demo mode');
+          handleQuerySubmit(e); // Retry with dummy mode
+          return;
+        }
       }
     } catch (error) {
       console.error('Error executing query:', error);
@@ -182,6 +241,7 @@ Relationship types:
     setCypherQuery(null);
     setResult(null);
     setExecutionSteps([]);
+    setUseDummyResponse(false);
     toast.success('Disconnected from Neo4j database');
   };
 
@@ -319,6 +379,16 @@ cypher_chain = GraphCypherQAChain.from_llm(
                 <Form {...credentialsForm}>
                   <form onSubmit={credentialsForm.handleSubmit(handleCredentialsSubmit)} className="space-y-4 p-4 border rounded-md">
                     <h3 className="font-semibold">Connect to Neo4j Database</h3>
+                    
+                    <Alert variant="warning" className="mb-4">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>Backend Connection Notice</AlertTitle>
+                      <AlertDescription>
+                        This demo attempts to connect to a serverless function at aswin-langchain-neo4j.netlify.app.
+                        If connection fails, it will fall back to demo mode.
+                      </AlertDescription>
+                    </Alert>
+                    
                     <div className="grid gap-4">
                       <FormField
                         control={credentialsForm.control}
@@ -399,7 +469,11 @@ cypher_chain = GraphCypherQAChain.from_llm(
                   <div className="flex justify-between items-center mb-4 p-2 bg-green-50 dark:bg-green-900/20 rounded-md">
                     <div className="flex items-center">
                       <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                      <span className="text-sm">Connected to Neo4j database ({credentialsForm.getValues().url})</span>
+                      <span className="text-sm">
+                        {useDummyResponse 
+                          ? "Using demo mode (serverless function unavailable)" 
+                          : `Connected to Neo4j database (${credentialsForm.getValues().url})`}
+                      </span>
                     </div>
                     <Button variant="outline" size="sm" onClick={handleDisconnect}>
                       Disconnect
@@ -506,11 +580,10 @@ cypher_chain = GraphCypherQAChain.from_llm(
             </CardContent>
             <CardFooter className="flex flex-col items-start">
               <p className="text-xs text-muted-foreground">
-                <strong>Note:</strong> This tool uses serverless functions to connect to your Neo4j database.
-                For production use, implement proper authentication and rate limiting.
+                <strong>Note:</strong> This tool {useDummyResponse ? 'is running in demo mode with sample data.' : 'uses serverless functions to connect to your Neo4j database.'}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Using serverless function endpoint: https://aswin-langchain-neo4j.netlify.app/.netlify/functions/
+                Serverless function endpoint: https://aswin-langchain-neo4j.netlify.app/.netlify/functions/
               </p>
             </CardFooter>
           </Card>
