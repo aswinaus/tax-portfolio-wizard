@@ -31,6 +31,7 @@ const ToolsServicePage = () => {
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [useDummyResponse, setUseDummyResponse] = useState(false);
+  const [isServerlessFunctionAvailable, setIsServerlessFunctionAvailable] = useState(true);
   
   const credentialsForm = useForm<Neo4jCredentials>({
     defaultValues: {
@@ -49,6 +50,31 @@ Relationship types:
 - FILED_IN
 - BELONGS_TO
 `;
+
+  // Check if the serverless function is available
+  useEffect(() => {
+    const checkServerlessAvailability = async () => {
+      try {
+        const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/ping', { 
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(5000) // 5 second timeout
+        });
+        
+        setIsServerlessFunctionAvailable(response.ok);
+        if (!response.ok) {
+          console.warn('Serverless function is not available');
+          setUseDummyResponse(true);
+        }
+      } catch (error) {
+        console.error('Error checking serverless function availability:', error);
+        setIsServerlessFunctionAvailable(false);
+        setUseDummyResponse(true);
+      }
+    };
+    
+    checkServerlessAvailability();
+  }, []);
 
   useEffect(() => {
     // Auto-connect on component mount if credentials are present
@@ -72,13 +98,29 @@ Relationship types:
       "Creating Neo4jGraph instance and refreshing schema"
     ]);
     
+    if (!isServerlessFunctionAvailable) {
+      console.log('Serverless function is not available, using demo mode');
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Add a delay for realism
+      setUseDummyResponse(true);
+      setIsConnected(true);
+      setExecutionSteps(prev => [...prev, "Using demo mode (serverless function unavailable)"]);
+      toast.info('Using demo mode with sample data (serverless function unavailable)');
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       // Try to connect to the serverless function
-      let connected = false;
+      setExecutionSteps(prev => [...prev, "Attempting to connect to Neo4j database via serverless function..."]);
+      
+      const testConnectionEndpoint = 'https://aswin-langchain-neo4j.netlify.app/.netlify/functions/testConnection';
+      console.log(`Sending connection test to: ${testConnectionEndpoint}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
       try {
-        // Test connection using a simple Cypher query
-        const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/testConnection', {
+        const response = await fetch(testConnectionEndpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -88,37 +130,44 @@ Relationship types:
             username: values.username,
             password: values.password,
           }),
+          signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
+        
         if (response.ok) {
-          connected = true;
           const data = await response.json();
           setExecutionSteps(prev => [...prev, "Connection established successfully"]);
+          setIsConnected(true);
+          toast.success('Connected to Neo4j database successfully');
         } else {
-          throw new Error('Server returned an error');
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Server returned an error');
         }
       } catch (error) {
         console.error('Connection error:', error);
-        // Fall back to dummy mode due to CORS or network issues
-        setExecutionSteps(prev => [...prev, "Could not connect to serverless function - using demo mode"]);
-        setUseDummyResponse(true);
-        connected = true; // We're "connected" in dummy mode
+        
+        // Check if error is due to timeout or network
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        const isTimeoutOrNetworkError = 
+          errorMessage.includes('timeout') || 
+          errorMessage.includes('network') ||
+          errorMessage.includes('fetch') ||
+          error.name === 'AbortError';
+        
+        if (isTimeoutOrNetworkError) {
+          setExecutionSteps(prev => [...prev, "Connection timeout - serverless function is unreachable"]);
+          setConnectionError("Cannot reach the serverless function. This could be due to CORS restrictions or network issues. Using demo mode instead.");
+          toast.info('Using demo mode with sample data due to connection issues');
+          setUseDummyResponse(true);
+          setIsConnected(true);
+        } else {
+          setExecutionSteps(prev => [...prev, `Error: ${errorMessage}`]);
+          setConnectionError(`Failed to connect to Neo4j: ${errorMessage}`);
+          toast.error(`Connection failed: ${errorMessage}`);
+          setIsConnected(false);
+        }
       }
-      
-      if (connected) {
-        setIsConnected(true);
-        toast.success(useDummyResponse 
-          ? 'Using demo mode (serverless function unavailable)' 
-          : 'Connected to Neo4j database successfully');
-      } else {
-        throw new Error('Failed to connect to Neo4j database');
-      }
-    } catch (error) {
-      console.error('Connection error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      setConnectionError(`${errorMessage}. The serverless function might be unavailable or there could be CORS issues.`);
-      setExecutionSteps(prev => [...prev, `Error: ${errorMessage}`]);
-      toast.error(`Failed to connect: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -180,6 +229,9 @@ LIMIT 5`;
         setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
         
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+          
           const response = await fetch('https://aswin-langchain-neo4j.netlify.app/.netlify/functions/executeQuery', {
             method: 'POST',
             headers: {
@@ -192,7 +244,10 @@ LIMIT 5`;
               query: query,
               schema: databaseSchema
             }),
+            signal: controller.signal
           });
+          
+          clearTimeout(timeoutId);
           
           if (!response.ok) {
             const errorData = await response.json();
@@ -217,11 +272,27 @@ LIMIT 5`;
           }
         } catch (error) {
           console.error('API error:', error);
-          // Fall back to demo mode
-          setUseDummyResponse(true);
-          toast.error('Serverless function unavailable, falling back to demo mode');
-          handleQuerySubmit(e); // Retry with dummy mode
-          return;
+          
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+          const isTimeoutOrNetworkError = 
+            errorMessage.includes('timeout') || 
+            errorMessage.includes('network') ||
+            errorMessage.includes('fetch') ||
+            error.name === 'AbortError';
+          
+          if (isTimeoutOrNetworkError) {
+            setExecutionSteps(prev => [...prev, "Connection timeout - falling back to demo mode"]);
+            toast.info('Serverless function unreachable, falling back to demo mode');
+            setUseDummyResponse(true);
+            // Retry with dummy mode immediately
+            await new Promise(resolve => setTimeout(resolve, 500));
+            handleQuerySubmit(e);
+            return;
+          } else {
+            setExecutionSteps(prev => [...prev, `Error: ${errorMessage}`]);
+            toast.error(`Failed to execute query: ${errorMessage}`);
+            setResult(`An error occurred while processing your query: ${errorMessage}`);
+          }
         }
       }
     } catch (error) {
@@ -380,12 +451,12 @@ cypher_chain = GraphCypherQAChain.from_llm(
                   <form onSubmit={credentialsForm.handleSubmit(handleCredentialsSubmit)} className="space-y-4 p-4 border rounded-md">
                     <h3 className="font-semibold">Connect to Neo4j Database</h3>
                     
-                    <Alert variant="warning" className="mb-4">
+                    <Alert className="mb-4">
                       <AlertTriangle className="h-4 w-4" />
                       <AlertTitle>Backend Connection Notice</AlertTitle>
                       <AlertDescription>
                         This demo attempts to connect to a serverless function at aswin-langchain-neo4j.netlify.app.
-                        If connection fails, it will fall back to demo mode.
+                        {!isServerlessFunctionAvailable && " The serverless function appears to be unavailable and will use demo mode."}
                       </AlertDescription>
                     </Alert>
                     

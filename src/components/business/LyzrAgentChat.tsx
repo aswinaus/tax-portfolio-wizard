@@ -37,12 +37,16 @@ const LyzrAgentChat = () => {
     const checkApiAvailability = async () => {
       try {
         // Add a simple ping to check if the API is reachable
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
         const response = await fetch('https://api.lyzr.ai/ping', { 
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-          // Add a timeout to avoid long waits
-          signal: AbortSignal.timeout(3000)
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         setIsApiAvailable(response.ok);
         if (!response.ok) {
@@ -105,12 +109,18 @@ const LyzrAgentChat = () => {
           source: 'form990_assistant'
         }
       };
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(`API error: ${response.status} ${response.statusText}`);
