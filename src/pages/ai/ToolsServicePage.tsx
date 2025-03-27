@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +28,7 @@ const ToolsServicePage = () => {
   const [result, setResult] = useState<string | null>(null);
   const [cypherQuery, setCypherQuery] = useState<string | null>(null);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
-  const driverRef = useRef<any | null>(null);
+  const driverRef = useRef<neo4j.Driver | null>(null);
   const [connectionDetails, setConnectionDetails] = useState({
     url: "neo4j+s://demo.neo4jlabs.com:7687",
     username: "movies",
@@ -41,12 +42,13 @@ const ToolsServicePage = () => {
   });
 
   const credentialsForm = useForm<z.infer<typeof formSchema>>({
-    defaultValues: {
-      url: "neo4j+s://demo.neo4jlabs.com:7687",
-      username: "movies",
-      password: "",
-    },
+    defaultValues: connectionDetails,
   });
+
+  // Set form values when connectionDetails change
+  useEffect(() => {
+    credentialsForm.reset(connectionDetails);
+  }, [connectionDetails, credentialsForm]);
 
   useEffect(() => {
     return () => {
@@ -57,7 +59,7 @@ const ToolsServicePage = () => {
   }, []);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+    console.log("Connecting with values:", values);
     setIsLoading(true);
     
     const newExecutionSteps: string[] = [];

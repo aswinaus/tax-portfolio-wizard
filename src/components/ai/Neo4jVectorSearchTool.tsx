@@ -21,7 +21,7 @@ interface Neo4jVectorSearchToolProps {
   neo4jUsername: string;
   neo4jPassword: string;
   isConnected: boolean;
-  driver: any; // neo4j.Driver
+  driver: neo4j.Driver | null;
 }
 
 const Neo4jVectorSearchTool = ({
@@ -40,6 +40,7 @@ const Neo4jVectorSearchTool = ({
   const [cypherQuery, setCypherQuery] = useState<string | null>(null);
   const [rawResults, setRawResults] = useState<any[] | null>(null);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const apiKeyForm = useForm<z.infer<typeof apiKeySchema>>({
     resolver: zodResolver(apiKeySchema),
@@ -57,15 +58,28 @@ const Neo4jVectorSearchTool = ({
   }, []);
 
   useEffect(() => {
-    if (apiKey && isConnected && driver) {
+    // Reset initialized state when connection details change
+    setIsInitialized(false);
+  }, [neo4jUrl, neo4jUsername, neo4jPassword]);
+
+  useEffect(() => {
+    if (apiKey && isConnected && driver && !isInitialized) {
+      console.log("Initializing vector search with connection details");
       initializeVectorSearch(apiKey);
+      setIsInitialized(true);
     }
-  }, [apiKey, isConnected, driver]);
+  }, [apiKey, isConnected, driver, isInitialized, neo4jUrl, neo4jUsername, neo4jPassword]);
 
   const initializeVectorSearch = async (key: string) => {
     if (!isConnected || !driver) return;
     
     try {
+      console.log("Creating Neo4jVectorSearch instance with config:", {
+        url: neo4jUrl,
+        username: neo4jUsername,
+        indexName: "incometax"
+      });
+      
       const search = new Neo4jVectorSearch(key, {
         url: neo4jUrl,
         username: neo4jUsername,
@@ -104,6 +118,7 @@ const Neo4jVectorSearchTool = ({
     localStorage.setItem('openai_api_key', values.apiKey);
     setApiKey(values.apiKey);
     setIsApiKeyDialogOpen(false);
+    setIsInitialized(false); // Reset to trigger reinitialization
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -190,6 +205,9 @@ const Neo4jVectorSearchTool = ({
               <p className="text-sm mt-1">
                 Neo4j Vector Search is configured and ready to use
               </p>
+              <div className="mt-2 text-xs">
+                Connected to: {neo4jUrl} as {neo4jUsername}
+              </div>
             </div>
           )}
 
