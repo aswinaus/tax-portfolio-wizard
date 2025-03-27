@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { ChevronLeft, PlusCircle, Presentation } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -523,7 +522,7 @@ prompt templates with domain-specific knowledge.</p>
           <Badge variant="outline" className="mb-2">Blog</Badge>
           <h1 className="text-3xl font-display font-bold">My Blog Posts</h1>
           <p className="text-muted-foreground mt-1">
-            Thoughts, insights, and expertise from abtechnet.com
+            Thoughts, insights, and expertise on technology and business
           </p>
         </div>
         <div className="flex gap-2">
