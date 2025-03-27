@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Database, Bot, Workflow, MessagesSquare, Sparkles, Code, Search } from 'lucide-react';
+import { Database, Bot, Workflow, MessagesSquare, Sparkles, Code, Search, FileCode } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +65,7 @@ const TaxAgentNeo4jGraphDB = () => {
             <pre className="text-sm">
 {`import { Neo4jGraphDB } from "langchain/graphs/neo4j_graph";
 
-// Neo4j connection setup
+# Neo4j connection setup
 const neo4jGraph = new Neo4jGraphDB({
   url: process.env.NEO4J_URI || "bolt://localhost:7687",
   username: process.env.NEO4J_USERNAME || "neo4j",
@@ -97,7 +97,7 @@ const neo4jGraph = new Neo4jGraphDB({
 {`import { Neo4jVectorStore } from "langchain/vectorstores/neo4j_vector";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
-// Vector store setup for Neo4j
+# Vector store setup for Neo4j
 const vectorStore = new Neo4jVectorStore(
   new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY }),
   {
@@ -140,14 +140,14 @@ const vectorStore = new Neo4jVectorStore(
           
           <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-md overflow-x-auto my-6">
             <pre className="text-sm">
-{`// Create a retriever from the vector store
+{`# Create a retriever from the vector store
 const retriever = vectorStore.asRetriever({
-  k: 5, // Number of documents to retrieve
-  searchType: "hybrid", // Use both vector similarity and keyword search
-  scoreThreshold: 0.7, // Minimum relevance score
+  k: 5, # Number of documents to retrieve
+  searchType: "hybrid", # Use both vector similarity and keyword search
+  scoreThreshold: 0.7, # Minimum relevance score
 });
 
-// Function to perform a search
+# Function to perform a search
 const searchTaxDocuments = async (query) => {
   try {
     console.log("Searching for:", query);
@@ -196,7 +196,7 @@ const searchTaxDocuments = async (query) => {
 import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 
-// Cypher generation prompt
+# Cypher generation prompt
 const cypherPrompt = PromptTemplate.fromTemplate(
   \`You are an expert Neo4j Cypher translator who converts questions about tax data into Cypher queries.
   
@@ -246,7 +246,7 @@ const cypherPrompt = PromptTemplate.fromTemplate(
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { ChatPromptTemplate } from "langchain/prompts";
 
-// Create a prompt template for the RAG chain
+# Create a prompt template for the RAG chain
 const ragPrompt = ChatPromptTemplate.fromTemplate(\`
 You are a tax expert assistant. Use the following retrieved documents to answer the user's question.
 If you don't know the answer based on the documents, say that you don't know but provide general tax advice.
@@ -257,19 +257,19 @@ Retrieved documents:
 User question: {input}
 \`);
 
-// Create a document chain that combines retrieved documents
+# Create a document chain that combines retrieved documents
 const documentChain = await createStuffDocumentsChain({
   llm: new ChatOpenAI({ temperature: 0, modelName: "gpt-4" }),
   prompt: ragPrompt,
 });
 
-// Create the retrieval chain
+# Create the retrieval chain
 const retrievalChain = await createRetrievalChain({
   retriever,
   combineDocsChain: documentChain,
 });
 
-// Function to query the RAG system
+# Function to query the RAG system
 const queryRagSystem = async (question) => {
   try {
     const response = await retrievalChain.invoke({
@@ -313,20 +313,20 @@ const queryRagSystem = async (question) => {
           
           <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-md overflow-x-auto my-6">
             <pre className="text-sm">
-{`// OpenAI model setup
+{`# OpenAI model setup
 const llm = new ChatOpenAI({
-  modelName: "gpt-4", // Using GPT-4 for better Cypher generation
+  modelName: "gpt-4", # Using GPT-4 for better Cypher generation
   temperature: 0,
   openAIApiKey: process.env.OPENAI_API_KEY,
 });
 
-// Creating the GraphCypherQAChain
+# Creating the GraphCypherQAChain
 const cypherChain = GraphCypherQAChain.fromLLM({
   llm: llm,
   graph: neo4jGraph,
   cypherPrompt: cypherPrompt,
-  returnDirect: false, // Set to true to return the direct result from Neo4j
-  returnIntermediateSteps: true, // Set to true to return the generated Cypher query
+  returnDirect: false, # Set to true to return the direct result from Neo4j
+  returnIntermediateSteps: true, # Set to true to return the generated Cypher query
 });`}
             </pre>
           </div>
@@ -356,7 +356,7 @@ const cypherChain = GraphCypherQAChain.fromLLM({
 import { Tool } from "langchain/agents";
 import { AgentType, initialize_agent } from "langchain/agents";
 
-// Creating tools for the agent
+# Creating tools for the agent
 const tools = [
   new Tool({
     name: "GraphSearch",
@@ -422,17 +422,17 @@ const tools = [
           
           <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-md overflow-x-auto my-6">
             <pre className="text-sm">
-{`// Initialize the agent with tools
+{`# Initialize the agent with tools
 const TaxAgent = initialize_agent(
   tools,
   new ChatOpenAI({ temperature: 0, modelName: "gpt-4" }),
   {
     agentType: AgentType.OPENAI_FUNCTIONS,
-    verbose: true, // Set to true for detailed logging
+    verbose: true, # Set to true for detailed logging
   }
 );
 
-// Example of using the agent
+# Example of using the agent
 const runAgent = async (query) => {
   try {
     console.log("Processing query:", query);
@@ -458,6 +458,163 @@ const runAgent = async (query) => {
             <li>Create a helper function (runAgent) to invoke the agent with a user query</li>
             <li>Include proper error handling to ensure a graceful user experience</li>
           </ol>
+          
+          <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
+            <FileCode className="h-6 w-6 text-primary" />
+            Step 9: Python Implementation for LangChain Tools
+          </h2>
+          
+          <p>
+            Below is a complete Python implementation for creating Neo4j-powered tools using LangChain. This code demonstrates how to implement 
+            similar functionality in a Python environment, which is a common choice for AI agent development.
+          </p>
+          
+          <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-md overflow-x-auto my-6">
+            <pre className="text-sm">
+{`# Import required libraries
+import os
+from langchain.chat_models import ChatOpenAI
+from langchain.agents import Tool, initialize_agent, AgentType
+from langchain.chains import GraphCypherQAChain
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores.neo4j_vector import Neo4jVector
+from langchain.graphs import Neo4jGraph
+from langchain.prompts import PromptTemplate
+from langchain.chains.retrieval_qa.base import RetrievalQA
+
+# Set environment variables
+os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
+os.environ["NEO4J_URI"] = "bolt://localhost:7687"
+os.environ["NEO4J_USERNAME"] = "neo4j"
+os.environ["NEO4J_PASSWORD"] = "password"
+
+# Connect to Neo4j
+graph = Neo4jGraph(
+    url=os.environ["NEO4J_URI"],
+    username=os.environ["NEO4J_USERNAME"],
+    password=os.environ["NEO4J_PASSWORD"]
+)
+
+# Set up embeddings
+embeddings = OpenAIEmbeddings()
+
+# Create vector store for document retrieval
+vector_store = Neo4jVector.from_existing_index(
+    embeddings,
+    url=os.environ["NEO4J_URI"],
+    username=os.environ["NEO4J_USERNAME"],
+    password=os.environ["NEO4J_PASSWORD"],
+    index_name="tax_documents",
+    node_label="Document",
+    text_node_property="content",
+    embedding_node_property="embedding",
+)
+
+# Create a retriever
+retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+
+# Create a RetrievalQA chain for document lookup
+retrieval_qa = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(temperature=0, model_name="gpt-4"),
+    chain_type="stuff",
+    retriever=retriever,
+    return_source_documents=True
+)
+
+# Define Cypher QA prompt template
+cypher_prompt = PromptTemplate.from_template(
+    """You are an expert Neo4j Cypher translator who converts questions about tax data into Cypher queries.
+    
+    Graph schema:
+    - Nodes with label TaxOrganization have properties: name, type, ein, fiscalYear, revenueTotal, expensesTotal, assetsTotal
+    - Nodes with label TaxForm have properties: formType, filingStatus, submissionDate, period
+    - Relationships: (TaxOrganization)-[:FILED]->(TaxForm)
+    - Relationships: (TaxOrganization)-[:REPORTS]->(FinancialData)
+    - Nodes with label FinancialData have properties: category, amount, year, quarter
+    - Relationships: (TaxForm)-[:CONTAINS]->(ScheduleItem)
+    - Nodes with label ScheduleItem have properties: schedule, part, line, description, amount
+    
+    Remember to use appropriate pattern matching and filtering. Return only the Cypher query without explanation.
+    
+    Question: {question}
+    
+    Cypher query:"""
+)
+
+# Create GraphCypherQAChain for Cypher query generation and execution
+cypher_chain = GraphCypherQAChain.from_llm(
+    llm=ChatOpenAI(temperature=0, model_name="gpt-4"),
+    graph=graph,
+    verbose=True,
+    cypher_prompt=cypher_prompt,
+    return_intermediate_steps=True
+)
+
+# Define tools for the agent
+tools = [
+    Tool(
+        name="GraphDatabaseSearch",
+        func=lambda q: cypher_chain({"question": q})["result"],
+        description="Useful for questions about tax organizations, their filings, financial data, and specific schedule items. Use this for analytical queries that need structured data."
+    ),
+    Tool(
+        name="DocumentSearch",
+        func=lambda q: retrieval_qa({"query": q})["result"],
+        description="Useful for questions about tax regulations, procedures, form instructions, and general information that would be found in tax documents."
+    )
+]
+
+# Create the agent
+agent = initialize_agent(
+    tools,
+    ChatOpenAI(temperature=0, model_name="gpt-4"),
+    agent=AgentType.OPENAI_FUNCTIONS,
+    verbose=True
+)
+
+# Example function to run the agent
+def run_tax_agent(query):
+    try:
+        response = agent.run(query)
+        return response
+    except Exception as e:
+        print(f"Error running agent: {e}")
+        return "I encountered an error processing your query. Please try again."
+
+# Example usage
+if __name__ == "__main__":
+    example_questions = [
+        "Which organizations had the highest revenue in 2022?",
+        "What is the deadline for filing Form 990?",
+        "Show me organizations that reported over $1 million in assets",
+        "What are the requirements for Schedule B?"
+    ]
+    
+    for question in example_questions:
+        print(f"\nQuestion: {question}")
+        answer = run_tax_agent(question)
+        print(f"Answer: {answer}\n" + "-"*50)
+`}
+            </pre>
+          </div>
+          
+          <p>
+            This Python implementation includes:
+          </p>
+          
+          <ul>
+            <li>Neo4j graph database connection setup</li>
+            <li>Vector store creation for document retrieval</li>
+            <li>Cypher query generation with LLM-based translation</li>
+            <li>Two specialized tools for different types of queries</li>
+            <li>An agent that can intelligently choose between tools based on the query</li>
+            <li>Error handling and example usage with sample questions</li>
+          </ul>
+          
+          <p>
+            The Python implementation follows the same architectural pattern as the JavaScript version, 
+            making it easy to port the application between different environments.
+          </p>
           
           <p>
             Our Tax Agent implementation is now complete. When a user asks a question, the agent will:
@@ -608,7 +765,8 @@ TaxAgent = initialize_agent(
           </p>
           <p className="text-lg">
             The agent's architecture is modular and can be adapted to other domains by replacing the graph schema and 
-            prompt templates with domain-specific knowledge.
+            prompt templates with domain-specific knowledge. The Python implementation provides an alternative for 
+            developers who prefer Python for AI development.
           </p>
         </div>
       </motion.div>
