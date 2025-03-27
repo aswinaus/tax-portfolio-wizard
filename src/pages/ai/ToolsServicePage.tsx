@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Database, Server, Settings, Terminal, Code, Send, Loader2 } from "lucide-react";
+import { Database, Server, Settings, Terminal, Code, Send, Loader2, Bot } from "lucide-react";
 import * as z from "zod";
 import neo4j from 'neo4j-driver';
 import { toast } from "@/components/ui/use-toast";
 import Neo4jVectorSearchTool from "@/components/ai/Neo4jVectorSearchTool";
+
+type Neo4jQueryResult = {
+  records: {
+    keys: string[];
+    get: (key: string) => any;
+  }[];
+};
 
 const ToolsServicePage = () => {
   const [activeTab, setActiveTab] = useState<'neo4j' | 'vector-search' | 'settings'>('neo4j');
@@ -21,21 +27,19 @@ const ToolsServicePage = () => {
   const [result, setResult] = useState<string | null>(null);
   const [cypherQuery, setCypherQuery] = useState<string | null>(null);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
-  const driverRef = useRef<neo4j.Driver | null>(null);
+  const driverRef = useRef<any | null>(null);
   const [connectionDetails, setConnectionDetails] = useState({
     url: "neo4j+s://demo.neo4jlabs.com:7687",
     username: "movies",
     password: "",
   });
   
-  // Form schema for Neo4j credentials
   const formSchema = z.object({
     url: z.string().url("Please enter a valid URL"),
     username: z.string().min(1, "Username is required"),
     password: z.string().min(1, "Password is required"),
   });
 
-  // Create form
   const credentialsForm = useForm<z.infer<typeof formSchema>>({
     defaultValues: {
       url: "neo4j+s://demo.neo4jlabs.com:7687",
@@ -44,7 +48,6 @@ const ToolsServicePage = () => {
     },
   });
 
-  // Cleanup the driver when the component unmounts
   useEffect(() => {
     return () => {
       if (driverRef.current) {
@@ -58,34 +61,33 @@ const ToolsServicePage = () => {
     setIsLoading(true);
     
     try {
-      // Close any existing connection
       if (driverRef.current) {
         await driverRef.current.close();
         driverRef.current = null;
       }
       
-      // Add connection message to execution steps
       setExecutionSteps(prev => [
         ...prev,
         `Connecting to Neo4j database at ${values.url} with username ${values.username}...`
       ]);
       
-      // Create a new driver instance
       const driver = neo4j.driver(
         values.url,
         neo4j.auth.basic(values.username, values.password),
         { disableLosslessIntegers: true }
       );
       
-      // Verify the connection
       const session = driver.session();
       try {
         await session.run('RETURN 1 AS result');
         driverRef.current = driver;
         setIsConnected(true);
-        setConnectionDetails(values);
+        setConnectionDetails({
+          url: values.url,
+          username: values.username,
+          password: values.password,
+        });
         
-        // Add success message to execution steps
         setExecutionSteps(prev => [
           ...prev,
           `Connected successfully to Neo4j database!`
@@ -145,29 +147,22 @@ const ToolsServicePage = () => {
     setResult(null);
     
     try {
-      // First, we'll convert natural language to Cypher
-      // For now we're doing a simple simulation
-      // In a real app, you'd use an LLM API to convert natural language to Cypher
       const generatedCypher = generateSimpleCypher(query);
       setCypherQuery(generatedCypher);
       
-      // Add query to execution steps
       setExecutionSteps(prev => [
         ...prev,
         `Executing query: ${query}`,
         `Generated Cypher query: ${generatedCypher}`
       ]);
       
-      // Now execute the Cypher query
       const session = driverRef.current.session();
       try {
         const queryResult = await session.run(generatedCypher);
         
-        // Format the results
         const formattedResult = formatNeo4jResults(queryResult);
         setResult(formattedResult);
         
-        // Add completion to execution steps
         setExecutionSteps(prev => [
           ...prev,
           `Query completed successfully. Retrieved ${queryResult.records.length} records.`
@@ -203,8 +198,7 @@ const ToolsServicePage = () => {
       setIsLoading(false);
     }
   };
-  
-  // Helper function to generate a simple Cypher query based on natural language
+
   const generateSimpleCypher = (naturalLanguage: string): string => {
     const normalizedQuery = naturalLanguage.toLowerCase();
     
@@ -226,39 +220,32 @@ WHERE p.name CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
 RETURN p.name AS Name, p.born AS Born
 LIMIT 5`;
     } else {
-      // Default query
       return `MATCH (n)
 WHERE toString(n) CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
 RETURN labels(n) AS Labels, n.name AS Name
 LIMIT 5`;
     }
   };
-  
-  // Helper function to format Neo4j results into a readable string
-  const formatNeo4jResults = (queryResult: neo4j.QueryResult): string => {
+
+  const formatNeo4jResults = (queryResult: Neo4jQueryResult): string => {
     if (queryResult.records.length === 0) {
       return "No results found.";
     }
     
-    // Get column keys from the first record
     const keys = queryResult.records[0].keys;
     
-    // Calculate column widths
     const columnWidths: Record<string, number> = {};
     keys.forEach(key => {
       columnWidths[key] = key.length;
       
-      // Check the width needed for each value
       queryResult.records.forEach(record => {
         const valueStr = String(record.get(key) ?? '');
         columnWidths[key] = Math.max(columnWidths[key], valueStr.length);
       });
       
-      // Add some padding
       columnWidths[key] += 2;
     });
     
-    // Build the header
     let result = '';
     keys.forEach(key => {
       result += key.padEnd(columnWidths[key], ' ');
@@ -266,14 +253,12 @@ LIMIT 5`;
     });
     result += '\n';
     
-    // Add separator line
     keys.forEach(key => {
       result += '-'.repeat(columnWidths[key]);
       result += '+-';
     });
     result += '\n';
     
-    // Add data rows
     queryResult.records.forEach(record => {
       keys.forEach(key => {
         const valueStr = String(record.get(key) ?? '');
