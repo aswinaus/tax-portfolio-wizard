@@ -79,7 +79,7 @@ const MainLayout = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 p-6 md:p-8 max-w-full overflow-auto bg-white text-black"
+            className="flex-1 p-6 md:p-8 max-w-full overflow-auto bg-white text-black text-left"
           >
             <Outlet />
           </motion.main>
