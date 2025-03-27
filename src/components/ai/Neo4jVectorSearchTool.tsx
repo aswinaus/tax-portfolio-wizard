@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,9 +53,14 @@ const Neo4jVectorSearchTool = ({
     const storedApiKey = localStorage.getItem('openai_api_key');
     if (storedApiKey) {
       setApiKey(storedApiKey);
-      initializeVectorSearch(storedApiKey);
     }
-  }, [isConnected, driver]);
+  }, []);
+
+  useEffect(() => {
+    if (apiKey && isConnected && driver) {
+      initializeVectorSearch(apiKey);
+    }
+  }, [apiKey, isConnected, driver]);
 
   const initializeVectorSearch = async (key: string) => {
     if (!isConnected || !driver) return;
@@ -100,8 +104,6 @@ const Neo4jVectorSearchTool = ({
     localStorage.setItem('openai_api_key', values.apiKey);
     setApiKey(values.apiKey);
     setIsApiKeyDialogOpen(false);
-    
-    await initializeVectorSearch(values.apiKey);
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -123,10 +125,7 @@ const Neo4jVectorSearchTool = ({
     setCypherQuery(null);
     setRawResults(null);
     
-    setExecutionSteps(prev => [
-      ...prev,
-      `Executing search: ${searchQuery}`
-    ]);
+    const newExecutionSteps = [`Executing search: ${searchQuery}`];
     
     try {
       const result = await vectorSearch.query(searchQuery, { includeRawResults: true });
@@ -135,18 +134,12 @@ const Neo4jVectorSearchTool = ({
       if (result.cypher) setCypherQuery(result.cypher);
       if (result.rawResults) setRawResults(result.rawResults);
       
-      setExecutionSteps(prev => [
-        ...prev,
-        `Search completed successfully`,
-        result.cypher ? `Generated Cypher query: ${result.cypher}` : ''
-      ].filter(Boolean));
+      newExecutionSteps.push(`Search completed successfully`);
+      if (result.cypher) newExecutionSteps.push(`Generated Cypher query: ${result.cypher}`);
     } catch (error) {
       console.error("Search failed:", error);
       
-      setExecutionSteps(prev => [
-        ...prev,
-        `Error executing search: ${error instanceof Error ? error.message : String(error)}`
-      ]);
+      newExecutionSteps.push(`Error executing search: ${error instanceof Error ? error.message : String(error)}`);
       
       toast({
         title: "Search Failed",
@@ -155,6 +148,7 @@ const Neo4jVectorSearchTool = ({
       });
     } finally {
       setIsSearching(false);
+      setExecutionSteps(prev => [...prev, ...newExecutionSteps]);
     }
   };
 

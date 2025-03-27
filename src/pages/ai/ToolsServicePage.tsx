@@ -60,16 +60,14 @@ const ToolsServicePage = () => {
     console.log(values);
     setIsLoading(true);
     
+    const newExecutionSteps: string[] = [];
+    newExecutionSteps.push(`Connecting to Neo4j database at ${values.url} with username ${values.username}...`);
+    
     try {
       if (driverRef.current) {
         await driverRef.current.close();
         driverRef.current = null;
       }
-      
-      setExecutionSteps(prev => [
-        ...prev,
-        `Connecting to Neo4j database at ${values.url} with username ${values.username}...`
-      ]);
       
       const driver = neo4j.driver(
         values.url,
@@ -88,10 +86,7 @@ const ToolsServicePage = () => {
           password: values.password,
         });
         
-        setExecutionSteps(prev => [
-          ...prev,
-          `Connected successfully to Neo4j database!`
-        ]);
+        newExecutionSteps.push(`Connected successfully to Neo4j database!`);
         
         toast({
           title: "Connection Successful",
@@ -100,10 +95,7 @@ const ToolsServicePage = () => {
         });
       } catch (error) {
         console.error('Connection error:', error);
-        setExecutionSteps(prev => [
-          ...prev,
-          `Error connecting to database: ${error instanceof Error ? error.message : String(error)}`
-        ]);
+        newExecutionSteps.push(`Error connecting to database: ${error instanceof Error ? error.message : String(error)}`);
         
         toast({
           title: "Connection Failed",
@@ -115,10 +107,7 @@ const ToolsServicePage = () => {
       }
     } catch (error) {
       console.error('Driver creation error:', error);
-      setExecutionSteps(prev => [
-        ...prev,
-        `Error creating driver: ${error instanceof Error ? error.message : String(error)}`
-      ]);
+      newExecutionSteps.push(`Error creating driver: ${error instanceof Error ? error.message : String(error)}`);
       
       toast({
         title: "Connection Failed",
@@ -127,6 +116,7 @@ const ToolsServicePage = () => {
       });
     } finally {
       setIsLoading(false);
+      setExecutionSteps(prev => [...prev, ...newExecutionSteps]);
     }
   };
 
@@ -146,15 +136,14 @@ const ToolsServicePage = () => {
     setIsLoading(true);
     setResult(null);
     
+    const newExecutionSteps: string[] = [];
+    newExecutionSteps.push(`Executing query: ${query}`);
+    
     try {
       const generatedCypher = generateSimpleCypher(query);
       setCypherQuery(generatedCypher);
       
-      setExecutionSteps(prev => [
-        ...prev,
-        `Executing query: ${query}`,
-        `Generated Cypher query: ${generatedCypher}`
-      ]);
+      newExecutionSteps.push(`Generated Cypher query: ${generatedCypher}`);
       
       const session = driverRef.current.session();
       try {
@@ -163,16 +152,10 @@ const ToolsServicePage = () => {
         const formattedResult = formatNeo4jResults(queryResult);
         setResult(formattedResult);
         
-        setExecutionSteps(prev => [
-          ...prev,
-          `Query completed successfully. Retrieved ${queryResult.records.length} records.`
-        ]);
+        newExecutionSteps.push(`Query completed successfully. Retrieved ${queryResult.records.length} records.`);
       } catch (error) {
         console.error('Query execution error:', error);
-        setExecutionSteps(prev => [
-          ...prev,
-          `Error executing query: ${error instanceof Error ? error.message : String(error)}`
-        ]);
+        newExecutionSteps.push(`Error executing query: ${error instanceof Error ? error.message : String(error)}`);
         
         toast({
           title: "Query Failed",
@@ -184,10 +167,7 @@ const ToolsServicePage = () => {
       }
     } catch (error) {
       console.error('Query processing error:', error);
-      setExecutionSteps(prev => [
-        ...prev,
-        `Error processing query: ${error instanceof Error ? error.message : String(error)}`
-      ]);
+      newExecutionSteps.push(`Error processing query: ${error instanceof Error ? error.message : String(error)}`);
       
       toast({
         title: "Query Failed",
@@ -196,6 +176,7 @@ const ToolsServicePage = () => {
       });
     } finally {
       setIsLoading(false);
+      setExecutionSteps(prev => [...prev, ...newExecutionSteps]);
     }
   };
 
