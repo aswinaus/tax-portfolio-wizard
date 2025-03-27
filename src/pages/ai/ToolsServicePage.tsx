@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Database, Server, Settings, Terminal, Code, Send, Loader2 } from "lucide-react";
 import * as z from "zod";
+import neo4j from 'neo4j-driver';
+import { toast } from "@/components/ui/use-toast";
 
 const ToolsServicePage = () => {
   const [activeTab, setActiveTab] = useState<'neo4j' | 'settings'>('neo4j');
@@ -18,6 +20,7 @@ const ToolsServicePage = () => {
   const [result, setResult] = useState<string | null>(null);
   const [cypherQuery, setCypherQuery] = useState<string | null>(null);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
+  const driverRef = useRef<neo4j.Driver | null>(null);
   
   // Form schema for Neo4j credentials
   const formSchema = z.object({
@@ -35,81 +38,245 @@ const ToolsServicePage = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  // Cleanup the driver when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (driverRef.current) {
+        driverRef.current.close();
+      }
+    };
+  }, []);
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log(values);
     setIsLoading(true);
     
-    // Simulate connecting to Neo4j
-    setTimeout(() => {
-      setIsConnected(true);
-      setIsLoading(false);
+    try {
+      // Close any existing connection
+      if (driverRef.current) {
+        await driverRef.current.close();
+        driverRef.current = null;
+      }
       
       // Add connection message to execution steps
       setExecutionSteps(prev => [
         ...prev,
-        `Connected to Neo4j database at ${values.url} with username ${values.username}`
+        `Connecting to Neo4j database at ${values.url} with username ${values.username}...`
       ]);
-    }, 1500);
+      
+      // Create a new driver instance
+      const driver = neo4j.driver(
+        values.url,
+        neo4j.auth.basic(values.username, values.password),
+        { disableLosslessIntegers: true }
+      );
+      
+      // Verify the connection
+      const session = driver.session();
+      try {
+        await session.run('RETURN 1 AS result');
+        driverRef.current = driver;
+        setIsConnected(true);
+        
+        // Add success message to execution steps
+        setExecutionSteps(prev => [
+          ...prev,
+          `Connected successfully to Neo4j database!`
+        ]);
+        
+        toast({
+          title: "Connection Successful",
+          description: "Successfully connected to Neo4j database.",
+          variant: "default",
+        });
+      } catch (error) {
+        console.error('Connection error:', error);
+        setExecutionSteps(prev => [
+          ...prev,
+          `Error connecting to database: ${error instanceof Error ? error.message : String(error)}`
+        ]);
+        
+        toast({
+          title: "Connection Failed",
+          description: error instanceof Error ? error.message : String(error),
+          variant: "destructive",
+        });
+      } finally {
+        await session.close();
+      }
+    } catch (error) {
+      console.error('Driver creation error:', error);
+      setExecutionSteps(prev => [
+        ...prev,
+        `Error creating driver: ${error instanceof Error ? error.message : String(error)}`
+      ]);
+      
+      toast({
+        title: "Connection Failed",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleQuerySubmit = (e: React.FormEvent) => {
+  const handleQuerySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!query.trim()) return;
+    if (!driverRef.current) {
+      toast({
+        title: "Not Connected",
+        description: "Please connect to a Neo4j database first.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsLoading(true);
     setResult(null);
     
-    // Add query to execution steps
-    setExecutionSteps(prev => [
-      ...prev,
-      `Executing query: ${query}`
-    ]);
-    
-    // Simulate processing the query
-    setTimeout(() => {
-      // Generate a fake Cypher query
-      const generatedCypher = `MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
-WHERE m.title CONTAINS '${query}'
-RETURN m.title AS Movie, p.name AS Actor
-LIMIT 5`;
-      
+    try {
+      // First, we'll convert natural language to Cypher
+      // For now we're doing a simple simulation
+      // In a real app, you'd use an LLM API to convert natural language to Cypher
+      const generatedCypher = generateSimpleCypher(query);
       setCypherQuery(generatedCypher);
       
-      // Add Cypher generation to execution steps
+      // Add query to execution steps
       setExecutionSteps(prev => [
         ...prev,
+        `Executing query: ${query}`,
         `Generated Cypher query: ${generatedCypher}`
       ]);
       
-      // Add more execution steps
-      setExecutionSteps(prev => [
-        ...prev,
-        `Executing Cypher query against Neo4j database...`,
-        `Processing results...`
-      ]);
-      
-      // Simulate getting a result
-      setTimeout(() => {
-        const fakeResult = `
-Movie                  | Actor
-----------------------|------------------
-"The Matrix"          | "Keanu Reeves"
-"The Matrix"          | "Laurence Fishburne"
-"The Matrix Reloaded" | "Keanu Reeves"
-"The Matrix Reloaded" | "Carrie-Anne Moss"
-"The Matrix Revolutions" | "Hugo Weaving"`;
+      // Now execute the Cypher query
+      const session = driverRef.current.session();
+      try {
+        const queryResult = await session.run(generatedCypher);
         
-        setResult(fakeResult);
-        setIsLoading(false);
+        // Format the results
+        const formattedResult = formatNeo4jResults(queryResult);
+        setResult(formattedResult);
         
         // Add completion to execution steps
         setExecutionSteps(prev => [
           ...prev,
-          `Query completed successfully. Retrieved 5 records.`
+          `Query completed successfully. Retrieved ${queryResult.records.length} records.`
         ]);
-      }, 1000);
-    }, 1500);
+      } catch (error) {
+        console.error('Query execution error:', error);
+        setExecutionSteps(prev => [
+          ...prev,
+          `Error executing query: ${error instanceof Error ? error.message : String(error)}`
+        ]);
+        
+        toast({
+          title: "Query Failed",
+          description: error instanceof Error ? error.message : String(error),
+          variant: "destructive",
+        });
+      } finally {
+        await session.close();
+      }
+    } catch (error) {
+      console.error('Query processing error:', error);
+      setExecutionSteps(prev => [
+        ...prev,
+        `Error processing query: ${error instanceof Error ? error.message : String(error)}`
+      ]);
+      
+      toast({
+        title: "Query Failed",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Helper function to generate a simple Cypher query based on natural language
+  const generateSimpleCypher = (naturalLanguage: string): string => {
+    const normalizedQuery = naturalLanguage.toLowerCase();
+    
+    if (normalizedQuery.includes('movie') || normalizedQuery.includes('film')) {
+      if (normalizedQuery.includes('actor') || normalizedQuery.includes('acted')) {
+        return `MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WHERE m.title CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
+RETURN m.title AS Movie, p.name AS Actor
+LIMIT 5`;
+      } else {
+        return `MATCH (m:Movie)
+WHERE m.title CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
+RETURN m.title AS Movie, m.released AS Released, m.tagline AS Tagline
+LIMIT 5`;
+      }
+    } else if (normalizedQuery.includes('person') || normalizedQuery.includes('actor') || normalizedQuery.includes('director')) {
+      return `MATCH (p:Person)
+WHERE p.name CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
+RETURN p.name AS Name, p.born AS Born
+LIMIT 5`;
+    } else {
+      // Default query
+      return `MATCH (n)
+WHERE toString(n) CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
+RETURN labels(n) AS Labels, n.name AS Name
+LIMIT 5`;
+    }
+  };
+  
+  // Helper function to format Neo4j results into a readable string
+  const formatNeo4jResults = (queryResult: neo4j.QueryResult): string => {
+    if (queryResult.records.length === 0) {
+      return "No results found.";
+    }
+    
+    // Get column keys from the first record
+    const keys = queryResult.records[0].keys;
+    
+    // Calculate column widths
+    const columnWidths: Record<string, number> = {};
+    keys.forEach(key => {
+      columnWidths[key] = key.length;
+      
+      // Check the width needed for each value
+      queryResult.records.forEach(record => {
+        const valueStr = String(record.get(key) ?? '');
+        columnWidths[key] = Math.max(columnWidths[key], valueStr.length);
+      });
+      
+      // Add some padding
+      columnWidths[key] += 2;
+    });
+    
+    // Build the header
+    let result = '';
+    keys.forEach(key => {
+      result += key.padEnd(columnWidths[key], ' ');
+      result += '| ';
+    });
+    result += '\n';
+    
+    // Add separator line
+    keys.forEach(key => {
+      result += '-'.repeat(columnWidths[key]);
+      result += '+-';
+    });
+    result += '\n';
+    
+    // Add data rows
+    queryResult.records.forEach(record => {
+      keys.forEach(key => {
+        const valueStr = String(record.get(key) ?? '');
+        result += valueStr.padEnd(columnWidths[key], ' ');
+        result += '| ';
+      });
+      result += '\n';
+    });
+    
+    return result;
   };
 
   const renderSettingsTabContent = () => {
@@ -298,14 +465,21 @@ Movie                  | Actor
                       <FormItem>
                         <FormLabel>Neo4j Password</FormLabel>
                         <FormControl>
-                          <Input {...field} type="password" placeholder="IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8" />
+                          <Input {...field} type="password" placeholder="your-password-here" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <Button type="submit" disabled={isLoading}>
-                    Connect
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Connecting...
+                      </>
+                    ) : (
+                      "Connect"
+                    )}
                   </Button>
                 </div>
               </form>
@@ -321,10 +495,10 @@ Movie                  | Actor
                         id="query"
                         value={query} 
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Enter your query here" 
+                        placeholder="Enter your query here (e.g., 'Show me movies with Tom Hanks')" 
                         className="flex-grow"
                       />
-                      <Button type="submit" disabled={isLoading}>
+                      <Button type="submit" disabled={isLoading || !isConnected}>
                         {isLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         ) : (
@@ -384,7 +558,7 @@ Movie                  | Actor
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="whitespace-pre-line bg-muted p-4 rounded-md">
+                        <div className="whitespace-pre-line bg-muted p-4 rounded-md font-mono text-sm overflow-x-auto">
                           {result}
                         </div>
                       </CardContent>
