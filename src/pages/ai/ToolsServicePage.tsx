@@ -410,209 +410,209 @@ LIMIT 10`;
                   <span className="sm:hidden">Config</span>
                 </TabsTrigger>
               </TabsList>
+              
+              <TabsContent value="neo4j" className="mt-6">
+                <div className="grid gap-6">
+                  <Card className="overflow-hidden shadow-sm border-2 border-primary/10">
+                    <CardHeader className="bg-muted/50">
+                      <CardTitle className="flex items-center text-xl">
+                        <Server className="mr-2 h-5 w-5 text-primary" />
+                        Neo4j Tax Database Connection
+                      </CardTitle>
+                      <CardDescription>
+                        Connect to your Neo4j tax database to execute queries
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      {isConnected ? (
+                        <div className="bg-green-50 p-4 rounded-md border border-green-200 text-green-800 mb-4">
+                          <p className="font-medium">Successfully connected to Neo4j database</p>
+                          <p className="text-sm mt-1">You can now execute tax data queries below</p>
+                        </div>
+                      ) : null}
+                      
+                      <Form {...credentialsForm}>
+                        <form onSubmit={credentialsForm.handleSubmit(onSubmit)} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={credentialsForm.control}
+                              name="url"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Neo4j URL</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="neo4j+s://your-tax-db.neo4j.io:7687" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={credentialsForm.control}
+                              name="username"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Neo4j Username</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="taxdata" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="md:col-span-2 lg:col-span-1">
+                              <FormField
+                                control={credentialsForm.control}
+                                name="password"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Neo4j Password</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} type="password" placeholder="your-password-here" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <div className="flex justify-start md:justify-end md:items-end md:self-end">
+                              <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
+                                {isLoading ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    Connecting...
+                                  </>
+                                ) : (
+                                  "Connect"
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </form>
+                      </Form>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-xl">Execute Query</CardTitle>
+                      <CardDescription>
+                        Enter a natural language query to query your tax database
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleQuerySubmit} className="space-y-4">
+                        <div>
+                          <FormLabel htmlFor="query">Query</FormLabel>
+                          <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                            <Input 
+                              id="query"
+                              value={query} 
+                              onChange={(e) => setQuery(e.target.value)}
+                              placeholder="Enter your query here (e.g., 'Show me tax returns from California')" 
+                              className="flex-grow"
+                            />
+                            <Button 
+                              type="submit" 
+                              disabled={isLoading || !isConnected || !query.trim()}
+                              className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                            >
+                              {isLoading ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  Executing...
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Execute
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+
+                  {(result || cypherQuery || executionSteps.length > 0) && (
+                    <div className="space-y-6">
+                      {cypherQuery && (
+                        <Card className="shadow-sm border-primary/10">
+                          <CardHeader className="bg-muted/50 pb-2">
+                            <CardTitle className="flex items-center text-lg font-medium">
+                              <Code className="mr-2 h-5 w-5 text-primary" />
+                              Generated Cypher Query
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                              <pre className="bg-muted p-4 rounded-b-md text-xs sm:text-sm whitespace-pre-wrap sm:whitespace-pre">
+                                <code>{cypherQuery}</code>
+                              </pre>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {result && (
+                        <Card className="shadow-sm border-primary/10">
+                          <CardHeader className="bg-muted/50 pb-2">
+                            <CardTitle className="flex items-center text-lg font-medium">
+                              <Database className="mr-2 h-5 w-5 text-primary" />
+                              Query Results
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                              <div className="whitespace-pre font-mono text-xs sm:text-sm bg-muted p-4 rounded-b-md">
+                                {result}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {executionSteps.length > 0 && (
+                        <Card className="shadow-sm">
+                          <CardHeader className="bg-muted/50 pb-2">
+                            <CardTitle className="flex items-center text-lg font-medium">
+                              <Terminal className="mr-2 h-5 w-5 text-primary" />
+                              Execution Log
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ol className="space-y-2 ml-6 list-decimal">
+                              {executionSteps.map((step, index) => (
+                                <li key={index} className="text-sm">
+                                  {step}
+                                </li>
+                              ))}
+                            </ol>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="vector-search" className="mt-6">
+                <Neo4jVectorSearchTool
+                  neo4jUrl={connectionDetails.url}
+                  neo4jUsername={connectionDetails.username}
+                  neo4jPassword={connectionDetails.password}
+                  isConnected={isConnected}
+                  driver={driverRef.current}
+                />
+              </TabsContent>
+              
+              <TabsContent value="settings" className="mt-6">
+                {renderSettingsTabContent()}
+              </TabsContent>
             </Tabs>
           </div>
         </div>
-        
-        <TabsContent value="neo4j" className="mt-0">
-          <div className="grid gap-6">
-            <Card className="overflow-hidden shadow-sm border-2 border-primary/10">
-              <CardHeader className="bg-muted/50">
-                <CardTitle className="flex items-center text-xl">
-                  <Server className="mr-2 h-5 w-5 text-primary" />
-                  Neo4j Tax Database Connection
-                </CardTitle>
-                <CardDescription>
-                  Connect to your Neo4j tax database to execute queries
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                {isConnected ? (
-                  <div className="bg-green-50 p-4 rounded-md border border-green-200 text-green-800 mb-4">
-                    <p className="font-medium">Successfully connected to Neo4j database</p>
-                    <p className="text-sm mt-1">You can now execute tax data queries below</p>
-                  </div>
-                ) : null}
-                
-                <Form {...credentialsForm}>
-                  <form onSubmit={credentialsForm.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={credentialsForm.control}
-                        name="url"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Neo4j URL</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="neo4j+s://your-tax-db.neo4j.io:7687" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={credentialsForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Neo4j Username</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="taxdata" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="md:col-span-2 lg:col-span-1">
-                        <FormField
-                          control={credentialsForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Neo4j Password</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="password" placeholder="your-password-here" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="flex justify-start md:justify-end md:items-end md:self-end">
-                        <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                              Connecting...
-                            </>
-                          ) : (
-                            "Connect"
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-            
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl">Execute Query</CardTitle>
-                <CardDescription>
-                  Enter a natural language query to query your tax database
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleQuerySubmit} className="space-y-4">
-                  <div>
-                    <FormLabel htmlFor="query">Query</FormLabel>
-                    <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                      <Input 
-                        id="query"
-                        value={query} 
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Enter your query here (e.g., 'Show me tax returns from California')" 
-                        className="flex-grow"
-                      />
-                      <Button 
-                        type="submit" 
-                        disabled={isLoading || !isConnected || !query.trim()}
-                        className="w-full sm:w-auto bg-primary hover:bg-primary/90"
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Executing...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="h-4 w-4 mr-2" />
-                            Execute
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-
-            {(result || cypherQuery || executionSteps.length > 0) && (
-              <div className="space-y-6">
-                {cypherQuery && (
-                  <Card className="shadow-sm border-primary/10">
-                    <CardHeader className="bg-muted/50 pb-2">
-                      <CardTitle className="flex items-center text-lg font-medium">
-                        <Code className="mr-2 h-5 w-5 text-primary" />
-                        Generated Cypher Query
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="overflow-x-auto">
-                        <pre className="bg-muted p-4 rounded-b-md text-xs sm:text-sm whitespace-pre-wrap sm:whitespace-pre">
-                          <code>{cypherQuery}</code>
-                        </pre>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {result && (
-                  <Card className="shadow-sm border-primary/10">
-                    <CardHeader className="bg-muted/50 pb-2">
-                      <CardTitle className="flex items-center text-lg font-medium">
-                        <Database className="mr-2 h-5 w-5 text-primary" />
-                        Query Results
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="overflow-x-auto">
-                        <div className="whitespace-pre font-mono text-xs sm:text-sm bg-muted p-4 rounded-b-md">
-                          {result}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {executionSteps.length > 0 && (
-                  <Card className="shadow-sm">
-                    <CardHeader className="bg-muted/50 pb-2">
-                      <CardTitle className="flex items-center text-lg font-medium">
-                        <Terminal className="mr-2 h-5 w-5 text-primary" />
-                        Execution Log
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ol className="space-y-2 ml-6 list-decimal">
-                        {executionSteps.map((step, index) => (
-                          <li key={index} className="text-sm">
-                            {step}
-                          </li>
-                        ))}
-                      </ol>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="vector-search" className="mt-0">
-          <Neo4jVectorSearchTool
-            neo4jUrl={connectionDetails.url}
-            neo4jUsername={connectionDetails.username}
-            neo4jPassword={connectionDetails.password}
-            isConnected={isConnected}
-            driver={driverRef.current}
-          />
-        </TabsContent>
-        
-        <TabsContent value="settings" className="mt-0">
-          {renderSettingsTabContent()}
-        </TabsContent>
       </div>
     </div>
   );
