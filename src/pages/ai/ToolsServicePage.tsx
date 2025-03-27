@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Database, Send, Code, Terminal, Info, AlertTriangle, RefreshCw, Globe, ExternalLink } from 'lucide-react';
+import { Loader2, Database, Send, Code, Terminal, Info, AlertTriangle, RefreshCw, Globe, ExternalLink, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
@@ -868,53 +868,4 @@ cypher_chain = GraphCypherQAChain.from_llm(
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Neo4j Password</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="password" placeholder="IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={isLoading}>
-                  Connect
-                </Button>
-              </div>
-            </form>
-            
-            <div className="flex flex-col space-y-4 mt-4">
-              <form onSubmit={handleQuerySubmit}>
-                <div className="space-y-4">
-                  <div>
-                    <FormLabel htmlFor="query">Query</FormLabel>
-                    <div className="flex space-x-2">
-                      <Input 
-                        id="query"
-                        value={query} 
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Enter your query here" 
-                        className="flex-grow"
-                      />
-                      <Button type="submit" disabled={isLoading}>
-                        {isLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <Send className="h-4 w-4 mr-2" />
-                        )}
-                        Execute
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-        
-        {activeTab === 'settings' && renderSettingsTabContent()}
-      </div>
-    </motion.div>
-  );
-};
-
-export default ToolsServicePage;
+                      <FormLabel>Neo
