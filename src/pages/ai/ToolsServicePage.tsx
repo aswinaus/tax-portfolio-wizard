@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,7 +44,6 @@ const ToolsServicePage = () => {
     defaultValues: connectionDetails,
   });
 
-  // Set form values when connectionDetails change
   useEffect(() => {
     credentialsForm.reset(connectionDetails);
   }, [connectionDetails, credentialsForm]);

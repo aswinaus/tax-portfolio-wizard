@@ -50,7 +50,6 @@ const Neo4jVectorSearchTool = ({
   });
 
   useEffect(() => {
-    // Check if API key is in local storage
     const storedApiKey = localStorage.getItem('openai_api_key');
     if (storedApiKey) {
       setApiKey(storedApiKey);
@@ -58,7 +57,6 @@ const Neo4jVectorSearchTool = ({
   }, []);
 
   useEffect(() => {
-    // Reset initialized state when connection details change
     setIsInitialized(false);
   }, [neo4jUrl, neo4jUsername, neo4jPassword]);
 
@@ -84,10 +82,10 @@ const Neo4jVectorSearchTool = ({
         url: neo4jUrl,
         username: neo4jUsername,
         password: neo4jPassword,
-        indexName: "incometax", // From the Python code
-        nodeLabel: "__Entity__", // From the Python code
-        textNodeProperties: ["name", "entity", "zipcode"], // From the Python code
-        embeddingNodeProperty: "embedding" // From the Python code
+        indexName: "incometax",
+        nodeLabel: "__Entity__",
+        textNodeProperties: ["name", "entity", "zipcode"],
+        embeddingNodeProperty: "embedding"
       });
       
       await search.connect(driver);
@@ -118,7 +116,7 @@ const Neo4jVectorSearchTool = ({
     localStorage.setItem('openai_api_key', values.apiKey);
     setApiKey(values.apiKey);
     setIsApiKeyDialogOpen(false);
-    setIsInitialized(false); // Reset to trigger reinitialization
+    setIsInitialized(false);
   };
 
   const handleSearch = async (e: React.FormEvent) => {
