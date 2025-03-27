@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -137,7 +138,7 @@ const ToolsServicePage = () => {
     newExecutionSteps.push(`Executing query: ${query}`);
     
     try {
-      const generatedCypher = generateSimpleCypher(query);
+      const generatedCypher = generateTaxDataCypher(query);
       setCypherQuery(generatedCypher);
       
       newExecutionSteps.push(`Generated Cypher query: ${generatedCypher}`);
@@ -177,31 +178,37 @@ const ToolsServicePage = () => {
     }
   };
 
-  const generateSimpleCypher = (naturalLanguage: string): string => {
+  const generateTaxDataCypher = (naturalLanguage: string): string => {
     const normalizedQuery = naturalLanguage.toLowerCase();
     
-    if (normalizedQuery.includes('movie') || normalizedQuery.includes('film')) {
-      if (normalizedQuery.includes('actor') || normalizedQuery.includes('acted')) {
-        return `MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
-WHERE m.title CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
-RETURN m.title AS Movie, p.name AS Actor
-LIMIT 5`;
+    if (normalizedQuery.includes('return') || normalizedQuery.includes('filing')) {
+      if (normalizedQuery.includes('state') || normalizedQuery.includes('states')) {
+        return `MATCH (r:Return)-[:FILED_IN]->(s:State)
+WHERE s.name CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
+RETURN s.name AS State, count(r) AS ReturnCount, 
+       sum(r.singleReturns) AS SingleReturns, 
+       sum(r.jointReturns) AS JointReturns
+LIMIT 10`;
       } else {
-        return `MATCH (m:Movie)
-WHERE m.title CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
-RETURN m.title AS Movie, m.released AS Released, m.tagline AS Tagline
-LIMIT 5`;
+        return `MATCH (r:Return)
+WHERE r.type CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
+RETURN r.type AS ReturnType, count(r) AS Count, 
+       avg(r.amount) AS AvgAmount
+LIMIT 10`;
       }
-    } else if (normalizedQuery.includes('person') || normalizedQuery.includes('actor') || normalizedQuery.includes('director')) {
-      return `MATCH (p:Person)
-WHERE p.name CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
-RETURN p.name AS Name, p.born AS Born
-LIMIT 5`;
+    } else if (normalizedQuery.includes('income') || normalizedQuery.includes('bracket')) {
+      return `MATCH (i:Income)
+WHERE i.bracket CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
+RETURN i.bracket AS IncomeBracket, count(i) AS Count,
+       sum(i.taxPaid) AS TotalTaxPaid
+LIMIT 10`;
     } else {
       return `MATCH (n)
-WHERE n.name CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}' OR n.title CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
-RETURN labels(n) AS Labels, COALESCE(n.name, n.title) AS Name
-LIMIT 5`;
+WHERE (n.name CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}' OR 
+       n.type CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}' OR 
+       n.category CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}')
+RETURN labels(n)[0] AS Type, COALESCE(n.name, n.type, n.category) AS Name
+LIMIT 10`;
     }
   };
 
@@ -213,36 +220,44 @@ LIMIT 5`;
     const keys = queryResult.records[0].keys;
     
     const columnWidths: Record<string, number> = {};
-    keys.forEach(key => {
-      columnWidths[key] = key.length;
-      
-      queryResult.records.forEach(record => {
-        const valueStr = String(record.get(key) ?? '');
-        columnWidths[key] = Math.max(columnWidths[key], valueStr.length);
-      });
-      
-      columnWidths[key] += 2;
-    });
+    for (const key of keys) {
+      if (typeof key === 'string') {
+        columnWidths[key] = key.length;
+        
+        queryResult.records.forEach(record => {
+          const valueStr = String(record.get(key) ?? '');
+          columnWidths[key] = Math.max(columnWidths[key], valueStr.length);
+        });
+        
+        columnWidths[key] += 2;
+      }
+    }
     
     let result = '';
-    keys.forEach(key => {
-      result += key.padEnd(columnWidths[key], ' ');
-      result += '| ';
-    });
+    for (const key of keys) {
+      if (typeof key === 'string') {
+        result += key.padEnd(columnWidths[key], ' ');
+        result += '| ';
+      }
+    }
     result += '\n';
     
-    keys.forEach(key => {
-      result += '-'.repeat(columnWidths[key]);
-      result += '+-';
-    });
+    for (const key of keys) {
+      if (typeof key === 'string') {
+        result += '-'.repeat(columnWidths[key]);
+        result += '+-';
+      }
+    }
     result += '\n';
     
     queryResult.records.forEach(record => {
-      keys.forEach(key => {
-        const valueStr = String(record.get(key) ?? '');
-        result += valueStr.padEnd(columnWidths[key], ' ');
-        result += '| ';
-      });
+      for (const key of keys) {
+        if (typeof key === 'string') {
+          const valueStr = String(record.get(key) ?? '');
+          result += valueStr.padEnd(columnWidths[key], ' ');
+          result += '| ';
+        }
+      }
       result += '\n';
     });
     
@@ -362,7 +377,7 @@ LIMIT 5`;
     <div className="flex flex-col">
       <div className="flex flex-col space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Tools Service</h1>
+          <h1 className="text-2xl font-bold">Tax Data Tools</h1>
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'neo4j' | 'vector-search' | 'settings')}>
             <TabsList>
               <TabsTrigger value="neo4j" className="flex items-center">
@@ -387,17 +402,17 @@ LIMIT 5`;
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Server className="mr-2 h-5 w-5" />
-                  Neo4j Connection
+                  Neo4j Tax Database Connection
                 </CardTitle>
                 <CardDescription>
-                  Connect to your Neo4j database to execute queries
+                  Connect to your Neo4j tax database to execute queries
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {isConnected ? (
                   <div className="bg-green-50 p-4 rounded-md border border-green-200 text-green-800 mb-4">
                     <p className="font-medium">Successfully connected to Neo4j database</p>
-                    <p className="text-sm mt-1">You can now execute queries below</p>
+                    <p className="text-sm mt-1">You can now execute tax data queries below</p>
                   </div>
                 ) : null}
               </CardContent>
@@ -469,7 +484,7 @@ LIMIT 5`;
                         id="query"
                         value={query} 
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Enter your query here (e.g., 'Show me movies with Tom Hanks')" 
+                        placeholder="Enter your query here (e.g., 'Show me tax returns from California')" 
                         className="flex-grow"
                       />
                       <Button type="submit" disabled={isLoading || !isConnected}>
