@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
-const TaxAgentNeo4jBlog = () => {
+const TaxAgentNeo4jGraphDB = () => {
   return (
     <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <motion.div
@@ -17,15 +17,15 @@ const TaxAgentNeo4jBlog = () => {
       >
         <div className="space-y-3">
           <h1 className="text-4xl font-display font-bold tracking-tight">
-            Building a Tax Agent with Neo4j Graph Database Integration
+            Building a Tax Agent with Neo4J GraphDB Integration
           </h1>
           <p className="text-xl text-muted-foreground leading-relaxed">
-            A comprehensive guide to creating an intelligent Tax Agent that leverages Neo4j graph database
+            A comprehensive guide to creating an intelligent Tax Agent that leverages Neo4J graph database
             for answering tax-related queries.
           </p>
           <div className="flex gap-2 pt-2">
-            <Badge variant="outline">Neo4j</Badge>
-            <Badge variant="outline">Graph Database</Badge>
+            <Badge variant="outline">Neo4J</Badge>
+            <Badge variant="outline">GraphDB</Badge>
             <Badge variant="outline">LangChain</Badge>
             <Badge variant="outline">OpenAI</Badge>
             <Badge variant="outline">Tax Assistant</Badge>
@@ -40,24 +40,24 @@ const TaxAgentNeo4jBlog = () => {
           
           <p>
             The Form 990 Filing Assistant is a specialized AI-powered agent designed to help users navigate 
-            the complexities of Form 990 filing requirements. At its core, the agent uses a Neo4j graph database 
+            the complexities of Form 990 filing requirements. At its core, the agent uses a Neo4J graph database 
             to store and query tax-related information, combined with LangChain and OpenAI to process natural 
             language queries and generate informative responses.
           </p>
           
           <p>
             This blog post provides a detailed breakdown of the code implementation for this Tax Agent, 
-            including connecting to Neo4j, creating vector indices, writing Cypher queries, and 
+            including connecting to Neo4J, creating vector indices, writing Cypher queries, and 
             integrating these components into a cohesive agent system.
           </p>
           
           <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
             <Database className="h-6 w-6 text-primary" />
-            Connecting to the Neo4j Graph Database
+            Connecting to the Neo4J GraphDB
           </h2>
           
           <p>
-            The first step in building our Tax Agent is to establish a connection to the Neo4j graph database.
+            The first step in building our Tax Agent is to establish a connection to the Neo4J graph database.
             This connection allows us to store, retrieve, and query tax-related information efficiently.
           </p>
           
@@ -76,7 +76,7 @@ const neo4jGraph = new Neo4jGraphDB({
           </div>
           
           <p>
-            Here, we're using LangChain's Neo4jGraphDB class to establish a connection to our Neo4j database. 
+            Here, we're using LangChain's Neo4jGraphDB class to establish a connection to our Neo4J database. 
             The connection details (URL, username, password) can be configured via environment variables or 
             default to the provided values for local development. This connection instance will be used 
             throughout our application to interact with the graph database.
@@ -84,7 +84,7 @@ const neo4jGraph = new Neo4jGraphDB({
           
           <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
             <Bot className="h-6 w-6 text-primary" />
-            Setting Up Vector Indexing for Neo4j
+            Setting Up Vector Indexing for Neo4J
           </h2>
           
           <p>
@@ -121,7 +121,7 @@ const vectorStore = new Neo4jVectorStore(
           </p>
           
           <ul>
-            <li><strong>indexName</strong>: Name of the vector index in Neo4j ("tax_documents_vector_index")</li>
+            <li><strong>indexName</strong>: Name of the vector index in Neo4J ("tax_documents_vector_index")</li>
             <li><strong>keywordIndexName</strong>: Name of the keyword index ("tax_documents_keyword_index")</li>
             <li><strong>searchType</strong>: Set to "hybrid" to enable both vector similarity and keyword matching</li>
             <li><strong>nodeLabel</strong>: The label for nodes in the graph ("TaxDocument")</li>
@@ -135,7 +135,7 @@ const vectorStore = new Neo4jVectorStore(
           </h2>
           
           <p>
-            Cypher is Neo4j's query language. For our Tax Agent, we create a template that helps convert natural language 
+            Cypher is Neo4J's query language. For our Tax Agent, we create a template that helps convert natural language 
             questions into structured Cypher queries that can be executed against the graph database.
           </p>
           
@@ -215,7 +215,7 @@ const cypherChain = GraphCypherQAChain.fromLLM({
           
           <ol>
             <li>Initialize a ChatOpenAI model instance with GPT-4 (configured for precise output with temperature=0)</li>
-            <li>Create a GraphCypherQAChain that combines the language model, our Neo4j graph connection, and the Cypher prompt template</li>
+            <li>Create a GraphCypherQAChain that combines the language model, our Neo4J graph connection, and the Cypher prompt template</li>
             <li>Configure the chain to return both the final answer and the intermediate steps (including the generated Cypher query)</li>
           </ol>
           
@@ -261,7 +261,7 @@ const tools = [
           
           <ul>
             <li>Takes a natural language question as input</li>
-            <li>Passes the question to our cypherChain, which converts it to a Cypher query and executes it against Neo4j</li>
+            <li>Passes the question to our cypherChain, which converts it to a Cypher query and executes it against Neo4J</li>
             <li>Logs the generated Cypher query for debugging purposes</li>
             <li>Returns the text result from the database query</li>
             <li>Includes error handling to provide a friendly message if the query fails</li>
@@ -323,7 +323,7 @@ const runAgent = async (query) => {
           <ol>
             <li>Analyze the question to determine if the GraphSearch tool is needed</li>
             <li>If so, it will pass the question to the tool, which will convert it to a Cypher query</li>
-            <li>Execute the Cypher query against the Neo4j database</li>
+            <li>Execute the Cypher query against the Neo4J database</li>
             <li>Process the results and formulate a natural language response for the user</li>
           </ol>
         </div>
@@ -435,7 +435,7 @@ TaxAgent = initialize_agent(
         <div className="mt-10 space-y-4">
           <h2 className="text-2xl font-semibold">Conclusion</h2>
           <p className="text-lg">
-            By integrating Neo4j's graph database capabilities with the power of large language models, we've created 
+            By integrating Neo4J's graph database capabilities with the power of large language models, we've created 
             a specialized Tax Agent that can understand and answer complex questions about Form 990 filings and tax data.
             This approach allows for more nuanced and accurate responses by leveraging the structured relationships within 
             the tax domain.
@@ -450,4 +450,4 @@ TaxAgent = initialize_agent(
   );
 };
 
-export default TaxAgentNeo4jBlog;
+export default TaxAgentNeo4jGraphDB;
