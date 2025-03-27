@@ -868,4 +868,109 @@ cypher_chain = GraphCypherQAChain.from_llm(
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Neo
+                      <FormLabel>Neo4j Password</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="password" placeholder="IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isLoading}>
+                  Connect
+                </Button>
+              </div>
+            </form>
+            
+            <div className="flex flex-col space-y-4 mt-4">
+              <form onSubmit={handleQuerySubmit}>
+                <div className="space-y-4">
+                  <div>
+                    <FormLabel htmlFor="query">Query</FormLabel>
+                    <div className="flex space-x-2">
+                      <Input 
+                        id="query"
+                        value={query} 
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Enter your query here" 
+                        className="flex-grow"
+                      />
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Send className="h-4 w-4 mr-2" />
+                        )}
+                        Execute
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+
+              {(result || cypherQuery || executionSteps.length > 0) && (
+                <div className="mt-6 space-y-6">
+                  {executionSteps.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Terminal className="mr-2 h-5 w-5" />
+                          Execution Log
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ol className="space-y-2 ml-6 list-decimal">
+                          {executionSteps.map((step, index) => (
+                            <li key={index} className="text-sm">
+                              {step}
+                            </li>
+                          ))}
+                        </ol>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {cypherQuery && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Code className="mr-2 h-5 w-5" />
+                          Generated Cypher Query
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm">
+                          <code>{cypherQuery}</code>
+                        </pre>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {result && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Database className="mr-2 h-5 w-5" />
+                          Result
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="whitespace-pre-line bg-muted p-4 rounded-md">
+                          {result}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {activeTab === 'settings' && renderSettingsTabContent()}
+      </div>
+    </motion.div>
+  );
+};
+
+export default ToolsServicePage;
