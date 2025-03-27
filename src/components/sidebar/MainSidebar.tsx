@@ -217,7 +217,7 @@ export const MainSidebar: FC = () => {
         <SidebarSection title="Business" collapsible={true}>
           <SidebarItem 
             icon={Folder} 
-            label="My Documents Repository" 
+            label="Document Repository & Tax Agent" 
             to="/documents" 
             isActive={pathname === "/documents"} 
           />
