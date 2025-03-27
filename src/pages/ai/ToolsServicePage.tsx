@@ -24,7 +24,6 @@ type Neo4jCredentials = {
   password: string;
 };
 
-// List of reliable CORS proxies
 const CORS_PROXIES = [
   { name: 'corsproxy.io', url: 'https://corsproxy.io/?' },
   { name: 'cors-anywhere', url: 'https://cors-anywhere.herokuapp.com/' },
@@ -40,18 +39,17 @@ const ToolsServicePage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [useDummyResponse, setUseDummyResponse] = useState(true); // Default to true for better UX
+  const [useDummyResponse, setUseDummyResponse] = useState(true);
   const [isServerlessFunctionAvailable, setIsServerlessFunctionAvailable] = useState(false);
   const [serverlessEndpoint, setServerlessEndpoint] = useState('https://aswin-langchain-neo4j.netlify.app/.netlify/functions');
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('query');
-  // Set useCorsProxy to false by default as requested
-  const [useCorsProxy, setUseCorsProxy] = useState(false); 
+  const [useCorsProxy, setUseCorsProxy] = useState(false);
   const [corsProxyUrl, setCorsProxyUrl] = useState(CORS_PROXIES[0].url);
   const [selectedProxy, setSelectedProxy] = useState(0);
-  const [isAzureFunction, setIsAzureFunction] = useState(true); // Set default to Azure
+  const [isAzureFunction, setIsAzureFunction] = useState(true);
   const [azureFunctionEndpoint, setAzureFunctionEndpoint] = useState('https://taxaiagents.azurewebsites.net');
-  
+
   const credentialsForm = useForm<Neo4jCredentials>({
     defaultValues: {
       url: 'neo4j+s://4e3ae988.databases.neo4j.io',
@@ -70,16 +68,13 @@ Relationship types:
 - BELONGS_TO
 `;
 
-  // Update the serverless endpoint based on service type
   const getServerlessEndpoint = () => {
     let endpoint = isAzureFunction ? azureFunctionEndpoint : serverlessEndpoint;
     
-    // Ensure the endpoint has a protocol prefix
     if (isAzureFunction && !endpoint.startsWith('http')) {
       endpoint = `https://${endpoint}`;
     }
     
-    // Remove trailing slash if present
     if (endpoint.endsWith('/')) {
       endpoint = endpoint.slice(0, -1);
     }
@@ -87,14 +82,10 @@ Relationship types:
     return endpoint;
   };
 
-  // Utility function to handle CORS proxy - Updated to NOT use proxy by default
   const getFetchUrl = (url: string) => {
-    // Return the original URL directly if we're not using a proxy
     if (!useCorsProxy) return url;
     
-    // Make sure the URL is properly encoded
     try {
-      // Ensure the URL is valid before encoding
       new URL(url);
       return `${corsProxyUrl}${encodeURIComponent(url)}`;
     } catch (e) {
@@ -104,11 +95,10 @@ Relationship types:
     }
   };
 
-  // Safely make fetch requests with proper error handling
   const safeFetch = async (url: string, options: RequestInit = {}) => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
       const fetchUrl = getFetchUrl(url);
       console.log(`Fetching URL: ${fetchUrl}`);
@@ -128,7 +118,6 @@ Relationship types:
     }
   };
 
-  // Check if the serverless function is available
   useEffect(() => {
     const checkServerlessAvailability = async () => {
       try {
@@ -142,7 +131,7 @@ Relationship types:
         
         setExecutionSteps(prev => [...prev, `Pinging serverless function at ${endpoint}...`]);
         
-        await new Promise(r => setTimeout(r, 500)); // Small delay for UI update
+        await new Promise(r => setTimeout(r, 500));
         
         try {
           const response = await safeFetch(endpoint, { 
@@ -155,7 +144,6 @@ Relationship types:
           const responseData = await response.text();
           console.log('Ping response:', response.status, responseData);
           
-          // Check if the response is actually a success or if it's the HTML fallback page
           const isSuccessResponse = response.ok && !responseData.includes('<!DOCTYPE html>');
           
           setIsServerlessFunctionAvailable(isSuccessResponse);
@@ -163,7 +151,7 @@ Relationship types:
             status: response.status,
             statusText: response.statusText,
             headers: Object.fromEntries([...response.headers]),
-            data: responseData.substring(0, 500), // Truncate long responses
+            data: responseData.substring(0, 500),
             usingProxy: useCorsProxy,
             proxyUrl: corsProxyUrl,
             isAzure: isAzureFunction,
@@ -204,7 +192,6 @@ Relationship types:
   }, [serverlessEndpoint, useCorsProxy, corsProxyUrl, isAzureFunction, azureFunctionEndpoint]);
 
   useEffect(() => {
-    // Auto-connect on component mount if credentials are present
     const { url, username, password } = credentialsForm.getValues();
     if (url && username && password) {
       handleCredentialsSubmit(credentialsForm.getValues());
@@ -225,10 +212,9 @@ Relationship types:
       "Creating Neo4jGraph instance and refreshing schema"
     ]);
     
-    // Use demo mode by default for better UX since the serverless function is likely unavailable
     if (!isServerlessFunctionAvailable) {
       console.log('Serverless function is not available, using demo mode');
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Add a delay for realism
+      await new Promise(resolve => setTimeout(resolve, 1500));
       setUseDummyResponse(true);
       setIsConnected(true);
       setExecutionSteps(prev => [...prev, "Using demo mode (serverless function unavailable)"]);
@@ -238,7 +224,6 @@ Relationship types:
     }
     
     try {
-      // Try to connect to the serverless function
       setExecutionSteps(prev => [...prev, "Attempting to connect to Neo4j database via serverless function..."]);
       
       const testConnectionEndpoint = isAzureFunction 
@@ -279,7 +264,6 @@ Relationship types:
       } catch (error) {
         console.error('Connection error:', error);
         
-        // Check if error is due to timeout or network
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         const isTimeoutOrNetworkError = 
           errorMessage.includes('timeout') || 
@@ -328,8 +312,7 @@ Relationship types:
 
     try {
       if (useDummyResponse) {
-        // Use dummy data for demo mode
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Add a delay for realism
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
         const dummyCypher = `MATCH (e:__Entity__)
@@ -340,7 +323,7 @@ LIMIT 5`;
         setCypherQuery(dummyCypher);
         
         setExecutionSteps(prev => [...prev, "Executing Cypher query against Neo4j database..."]);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Add a delay for realism
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         setExecutionSteps(prev => [...prev, "Processing results through CYPHER_QA_PROMPT..."]);
         
@@ -355,7 +338,6 @@ LIMIT 5`;
         setExecutionSteps(prev => [...prev, "Query completed successfully"]);
         toast.success('Query executed successfully (demo mode)');
       } else {
-        // Make a real API call to our serverless function
         const { url, username, password } = credentialsForm.getValues();
         
         setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
@@ -385,7 +367,6 @@ LIMIT 5`;
             const errorText = await response.text();
             console.error('Query error response:', response.status, errorText);
             
-            //Check if response is HTML (indicating a routing issue)
             if (errorText.includes('<!DOCTYPE html>')) {
               throw new Error(`API endpoint not found or not accessible. Please check the endpoint configuration.`);
             }
@@ -429,7 +410,6 @@ LIMIT 5`;
             setExecutionSteps(prev => [...prev, "Connection timeout - falling back to demo mode"]);
             toast.info('Serverless function unreachable, falling back to demo mode');
             setUseDummyResponse(true);
-            // Retry with dummy mode immediately
             await new Promise(resolve => setTimeout(resolve, 500));
             handleQuerySubmit(e);
             return;
@@ -530,7 +510,6 @@ LIMIT 5`;
   const handleUseCorsProxyChange = (checked: boolean) => {
     setUseCorsProxy(checked);
     setExecutionSteps([]);
-    // Reset connection state when changing CORS settings
     if (isConnected) {
       handleDisconnect();
     }
@@ -559,28 +538,18 @@ import os
 from langchain.vectorstores.neo4j_vector import Neo4jVector
 from langchain.embeddings.openai import OpenAIEmbeddings
 
-#Initialize a Neo4jVector object and assigns it to the variable vector_index. It leverages the from_existing_graph method, indicating that it's working with an already populated Neo4j graph
 vector_index = Neo4jVector.from_existing_graph(
-    #This part specifies that the index will utilize OpenAI's embeddings.
     OpenAIEmbeddings(),
-    #These parameters provide the connection details for the Neo4j database. url points to the database's address, while username and password are used for authentication.
     url=url,
     username=username,
     password=password,
-    #This sets the name of the vector index to 'incometax'. This name will be used to refer to the index within Neo4j.
     index_name='incometax',
-    #This indicates that the vector index should be built on nodes with the label "__Entity__" in the graph. In Neo4j, labels categorize nodes with similar characteristics.
     node_label="__Entity__",
-    #Use the values stored in the 'name', 'entity', and 'zipcode' properties of each node to generate embeddings."
     text_node_properties=['name', 'entity', 'zipcode'],
-    embedding_node_property='embedding',
+    embedding_node_property='embedding'
 )`,
     promptTemplates: `
 from langchain.prompts import PromptTemplate
-#This template provides clear instructions to the LLM, emphasizing that it should only use the schema provided and strictly focus on generating a Cypher query.
-#Placeholders below
-#{schema}: This will be replaced with the actual schema of the database.
-#{question}: This will be replaced with the user's question.
 CYPHER_GENERATION_TEMPLATE = """Task:Generate Cypher statement to query a graph database.
 Instructions:
 Use only the provided relationship types and properties in the schema. However, always exclude the schema's \`embedding\` property from the Cypher statement.
@@ -597,9 +566,6 @@ The question is:
 Cypher Query:
 """
 
-#This template guides the LLM to format the answer nicely and instructs it to rely solely on the provided context (results from the Cypher query) without using its own knowledge.
-#It includes placeholders: {context}: This will be replaced with the data retrieved from the database.
-#{question}: This will be replaced with the original user question.
 CYPHER_QA_TEMPLATE = """You are an AI assistant that helps to form nice and human understandable answers.
 The information part contains the provided information that you must use to construct an answer.
 The provided information is authoritative, you must never doubt it or try to use your internal knowledge to correct it.
@@ -618,13 +584,9 @@ Information:
 
 Question: {question}
 Helpful Answer:"""
-#This prompt is designed to instruct the LLM to generate a Cypher query (Neo4j's query language) based on a user's question and a provided schema of the graph database.
-#create the CYPHER_GENERATION_PROMPT object using the PromptTemplate class.
 CYPHER_GENERATION_PROMPT = PromptTemplate(
-    #Use the CYPHER_GENERATION_TEMPLATE as the base structure.
     input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
 )
-#This prompt is used to instruct the LLM to generate a human-readable answer based on the results returned from the Cypher query.
 CYPHER_QA_PROMPT = PromptTemplate(
     input_variables=["context", "question"], template=CYPHER_QA_TEMPLATE
 )`,
@@ -638,7 +600,6 @@ graph = Neo4jGraph(
     password=password,
     enhanced_schema=True
 )
-#refresh the schema to latest
 graph.refresh_schema()
 
 cypher_chain = GraphCypherQAChain.from_llm(
@@ -651,7 +612,6 @@ cypher_chain = GraphCypherQAChain.from_llm(
 )`
   };
 
-  // Update the settings tab content to include Azure Function options
   const renderSettingsTabContent = () => {
     return (
       <Card className="mb-6">
@@ -816,3 +776,123 @@ cypher_chain = GraphCypherQAChain.from_llm(
           </Alert>
           
           <Alert variant={isServerlessFunctionAvailable ? "default" : "destructive"}>
+            {isServerlessFunctionAvailable ? (
+              <Info className="h-4 w-4" />
+            ) : (
+              <AlertTriangle className="h-4 w-4" />
+            )}
+            <AlertTitle>
+              {isServerlessFunctionAvailable 
+                ? "Serverless Function Available" 
+                : "Serverless Function Unavailable"
+              }
+            </AlertTitle>
+            <AlertDescription>
+              {isServerlessFunctionAvailable
+                ? "The serverless function is accessible and responding correctly."
+                : "The serverless function is not responding or returned an error. The application will use demo mode with sample data."}
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <motion.div className="flex flex-col">
+      <div className="flex flex-col space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Tools Service</h1>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveTab('query')}
+              className={activeTab === 'query' ? 'bg-blue-500 text-white' : ''}
+            >
+              Query
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveTab('settings')}
+              className={activeTab === 'settings' ? 'bg-blue-500 text-white' : ''}
+            >
+              Settings
+            </Button>
+          </div>
+        </div>
+        
+        {activeTab === 'query' && (
+          <div className="flex flex-col space-y-4">
+            <Form>
+              <FormField
+                control={credentialsForm.control}
+                name="url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Neo4j URL</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="neo4j+s://4e3ae988.databases.neo4j.io" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={credentialsForm.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Neo4j Username</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="neo4j" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={credentialsForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Neo4j Password</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" placeholder="IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" disabled={isLoading}>
+                Connect
+              </Button>
+            </Form>
+            
+            <div className="flex flex-col space-y-4 mt-4">
+              <Form>
+                <FormField
+                  control={credentialsForm.control}
+                  name="query"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Query</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter your query here" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" onClick={handleQuerySubmit} disabled={isLoading}>
+                  Execute
+                </Button>
+              </Form>
+            </div>
+          </div>
+        )}
+        
+        {activeTab === 'settings' && renderSettingsTabContent()}
+      </div>
+    </motion.div>
+  );
+};
+
+export default ToolsServicePage;
