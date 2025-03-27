@@ -59,13 +59,20 @@ const useFormField = () => {
       formItemId: "",
       formDescriptionId: "",
       formMessageId: "",
-      error: undefined,  // Add error property to match the expected shape
-      invalid: false,
+      error: undefined,
+      invalid: false
     }
   }
 
-  const { getFieldState, formState } = formContext
-  const fieldState = getFieldState(fieldContext.name, formState)
+  const { formState } = formContext
+  
+  // Instead of trying to access getFieldState, use formState.errors directly
+  const fieldState = {
+    invalid: !!formState.errors[fieldContext.name],
+    isDirty: !!formState.dirtyFields[fieldContext.name],
+    isTouched: !!formState.touchedFields[fieldContext.name],
+    error: formState.errors[fieldContext.name]
+  }
 
   const { id } = itemContext
 

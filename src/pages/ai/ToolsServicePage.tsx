@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Database, Send, Code, Terminal, Info, AlertTriangle, RefreshCw, Globe, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import {
   Accordion,
@@ -17,6 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 
 type Neo4jCredentials = {
   url: string;
@@ -56,6 +57,12 @@ const ToolsServicePage = () => {
       username: 'neo4j',
       password: 'IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8',
     },
+  });
+
+  const queryForm = useForm({
+    defaultValues: {
+      queryText: '',
+    }
   });
 
   const databaseSchema = `
@@ -652,9 +659,10 @@ cypher_chain = GraphCypherQAChain.from_llm(
           </div>
           
           <div className="space-y-2">
-            <FormLabel>{isAzureFunction ? "Azure Function Endpoint" : "Netlify Function Endpoint"}</FormLabel>
+            <FormLabel htmlFor="endpoint">{isAzureFunction ? "Azure Function Endpoint" : "Netlify Function Endpoint"}</FormLabel>
             <div className="flex gap-2">
               <Input 
+                id="endpoint"
                 value={isAzureFunction ? azureFunctionEndpoint : serverlessEndpoint} 
                 onChange={(e) => {
                   if (isAzureFunction) {
@@ -702,10 +710,11 @@ cypher_chain = GraphCypherQAChain.from_llm(
             
             <div className="flex items-center justify-between mb-4">
               <div className="space-y-0.5">
-                <FormLabel>Use CORS Proxy</FormLabel>
+                <FormLabel htmlFor="use-cors">Use CORS Proxy</FormLabel>
                 <p className="text-xs text-muted-foreground">Routes API requests through a CORS proxy to avoid CORS restrictions</p>
               </div>
               <Switch 
+                id="use-cors"
                 checked={useCorsProxy} 
                 onCheckedChange={handleUseCorsProxyChange}
               />
@@ -740,9 +749,10 @@ cypher_chain = GraphCypherQAChain.from_llm(
                 </div>
                 
                 <div className="space-y-2 mt-4">
-                  <FormLabel>Custom CORS Proxy URL (Advanced)</FormLabel>
+                  <FormLabel htmlFor="custom-proxy">Custom CORS Proxy URL (Advanced)</FormLabel>
                   <div className="flex gap-2">
                     <Input 
+                      id="custom-proxy"
                       value={corsProxyUrl} 
                       onChange={(e) => setCorsProxyUrl(e.target.value)} 
                       placeholder="e.g., https://corsproxy.io/?"
@@ -825,66 +835,78 @@ cypher_chain = GraphCypherQAChain.from_llm(
         
         {activeTab === 'query' && (
           <div className="flex flex-col space-y-4">
-            <Form>
-              <FormField
-                control={credentialsForm.control}
-                name="url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Neo4j URL</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="neo4j+s://4e3ae988.databases.neo4j.io" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={credentialsForm.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Neo4j Username</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="neo4j" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={credentialsForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Neo4j Password</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="password" placeholder="IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={isLoading}>
-                Connect
-              </Button>
-            </Form>
-            
-            <div className="flex flex-col space-y-4 mt-4">
-              <Form>
+            <form onSubmit={credentialsForm.handleSubmit(handleCredentialsSubmit)}>
+              <div className="space-y-4">
                 <FormField
                   control={credentialsForm.control}
-                  name="query"
+                  name="url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Query</FormLabel>
+                      <FormLabel>Neo4j URL</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter your query here" />
+                        <Input {...field} placeholder="neo4j+s://4e3ae988.databases.neo4j.io" />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" onClick={handleQuerySubmit} disabled={isLoading}>
-                  Execute
+                <FormField
+                  control={credentialsForm.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Neo4j Username</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="neo4j" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={credentialsForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Neo4j Password</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="password" placeholder="IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isLoading}>
+                  Connect
                 </Button>
-              </Form>
+              </div>
+            </form>
+            
+            <div className="flex flex-col space-y-4 mt-4">
+              <form onSubmit={handleQuerySubmit}>
+                <div className="space-y-4">
+                  <div>
+                    <FormLabel htmlFor="query">Query</FormLabel>
+                    <div className="flex space-x-2">
+                      <Input 
+                        id="query"
+                        value={query} 
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Enter your query here" 
+                        className="flex-grow"
+                      />
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Send className="h-4 w-4 mr-2" />
+                        )}
+                        Execute
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
         )}
