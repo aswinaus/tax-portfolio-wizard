@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -167,17 +168,17 @@ const Neo4jVectorSearchTool = ({
 
   return (
     <>
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Bot className="mr-2 h-5 w-5" />
+      <Card className="shadow-sm border-2 border-primary/10 overflow-hidden">
+        <CardHeader className="bg-muted/50">
+          <CardTitle className="flex items-center text-xl">
+            <Bot className="mr-2 h-5 w-5 text-primary" />
             Neo4j Tax Vector Search
           </CardTitle>
           <CardDescription>
             Query your Neo4j tax database with natural language
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {!isConnected ? (
             <div className="bg-amber-50 p-4 rounded-md border border-amber-200 text-amber-800 mb-4">
               <p className="font-medium">Database connection required</p>
@@ -212,7 +213,7 @@ const Neo4jVectorSearchTool = ({
           <form onSubmit={handleSearch} className="space-y-4 mt-4">
             <div className="space-y-2">
               <FormLabel htmlFor="search">Natural Language Query</FormLabel>
-              <div className="flex space-x-2">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                 <Input
                   id="search"
                   value={searchQuery}
@@ -224,6 +225,7 @@ const Neo4jVectorSearchTool = ({
                 <Button
                   type="submit"
                   disabled={!isConnected || !apiKey || isSearching || !searchQuery.trim()}
+                  className="bg-primary hover:bg-primary/90"
                 >
                   {isSearching ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -239,16 +241,16 @@ const Neo4jVectorSearchTool = ({
       </Card>
 
       {(searchResult || cypherQuery || executionSteps.length > 0) && (
-        <div className="space-y-6">
+        <div className="space-y-6 mt-6">
           {searchResult && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Bot className="mr-2 h-5 w-5" />
+            <Card className="shadow-sm border-primary/10">
+              <CardHeader className="bg-muted/50 pb-2">
+                <CardTitle className="flex items-center text-lg font-medium">
+                  <Bot className="mr-2 h-5 w-5 text-primary" />
                   Answer
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <div className="bg-muted p-4 rounded-md">
                   {searchResult}
                 </div>
@@ -257,15 +259,15 @@ const Neo4jVectorSearchTool = ({
           )}
 
           {cypherQuery && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Code className="mr-2 h-5 w-5" />
+            <Card className="shadow-sm border-primary/10">
+              <CardHeader className="bg-muted/50 pb-2">
+                <CardTitle className="flex items-center text-lg font-medium">
+                  <Code className="mr-2 h-5 w-5 text-primary" />
                   Generated Cypher Query
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm">
+              <CardContent className="p-0">
+                <pre className="bg-muted p-4 rounded-b-md overflow-x-auto text-xs sm:text-sm">
                   <code>{cypherQuery}</code>
                 </pre>
               </CardContent>
@@ -273,15 +275,15 @@ const Neo4jVectorSearchTool = ({
           )}
 
           {rawResults && rawResults.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Database className="mr-2 h-5 w-5" />
+            <Card className="shadow-sm border-primary/10">
+              <CardHeader className="bg-muted/50 pb-2">
+                <CardTitle className="flex items-center text-lg font-medium">
+                  <Database className="mr-2 h-5 w-5 text-primary" />
                   Raw Results
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm">
+              <CardContent className="p-0">
+                <pre className="bg-muted p-4 rounded-b-md overflow-x-auto text-xs sm:text-sm">
                   <code>{JSON.stringify(rawResults, null, 2)}</code>
                 </pre>
               </CardContent>
@@ -289,10 +291,10 @@ const Neo4jVectorSearchTool = ({
           )}
 
           {executionSteps.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Terminal className="mr-2 h-5 w-5" />
+            <Card className="shadow-sm">
+              <CardHeader className="bg-muted/50 pb-2">
+                <CardTitle className="flex items-center text-lg font-medium">
+                  <Terminal className="mr-2 h-5 w-5 text-primary" />
                   Execution Log
                 </CardTitle>
               </CardHeader>

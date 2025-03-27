@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { lazy, Suspense } from "react";
-import './App.css'; // Make sure we load the App.css
+import './App.css';
 
 // Layouts
 import MainLayout from "./layouts/MainLayout";
