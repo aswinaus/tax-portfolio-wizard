@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,9 +11,10 @@ import { Database, Server, Settings, Terminal, Code, Send, Loader2 } from "lucid
 import * as z from "zod";
 import neo4j from 'neo4j-driver';
 import { toast } from "@/components/ui/use-toast";
+import Neo4jVectorSearchTool from "@/components/ai/Neo4jVectorSearchTool";
 
 const ToolsServicePage = () => {
-  const [activeTab, setActiveTab] = useState<'neo4j' | 'settings'>('neo4j');
+  const [activeTab, setActiveTab] = useState<'neo4j' | 'vector-search' | 'settings'>('neo4j');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [query, setQuery] = useState('');
@@ -20,6 +22,11 @@ const ToolsServicePage = () => {
   const [cypherQuery, setCypherQuery] = useState<string | null>(null);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
   const driverRef = useRef<neo4j.Driver | null>(null);
+  const [connectionDetails, setConnectionDetails] = useState({
+    url: "neo4j+s://demo.neo4jlabs.com:7687",
+    username: "movies",
+    password: "",
+  });
   
   // Form schema for Neo4j credentials
   const formSchema = z.object({
@@ -76,6 +83,7 @@ const ToolsServicePage = () => {
         await session.run('RETURN 1 AS result');
         driverRef.current = driver;
         setIsConnected(true);
+        setConnectionDetails(values);
         
         // Add success message to execution steps
         setExecutionSteps(prev => [
@@ -392,11 +400,15 @@ LIMIT 5`;
       <div className="flex flex-col space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Tools Service</h1>
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'neo4j' | 'settings')}>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'neo4j' | 'vector-search' | 'settings')}>
             <TabsList>
               <TabsTrigger value="neo4j" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Neo4j
+              </TabsTrigger>
+              <TabsTrigger value="vector-search" className="flex items-center">
+                <Bot className="h-4 w-4 mr-2" />
+                Vector Search
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center">
                 <Settings className="h-4 w-4 mr-2" />
@@ -567,6 +579,16 @@ LIMIT 5`;
               )}
             </div>
           </div>
+        )}
+        
+        {activeTab === 'vector-search' && (
+          <Neo4jVectorSearchTool
+            neo4jUrl={connectionDetails.url}
+            neo4jUsername={connectionDetails.username}
+            neo4jPassword={connectionDetails.password}
+            isConnected={isConnected}
+            driver={driverRef.current}
+          />
         )}
         
         {activeTab === 'settings' && renderSettingsTabContent()}
