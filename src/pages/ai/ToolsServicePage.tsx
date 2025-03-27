@@ -10,7 +10,6 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Database, Server, Settings, Terminal, Code, Send, Loader2 } from "lucide-react";
 import * as z from "zod";
 
-// Replace the removed motion.div with a regular div
 const ToolsServicePage = () => {
   const [activeTab, setActiveTab] = useState<'neo4j' | 'settings'>('neo4j');
   const [isConnected, setIsConnected] = useState(false);
@@ -263,52 +262,54 @@ Movie                  | Actor
               </CardContent>
             </Card>
             
-            <form onSubmit={credentialsForm.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={credentialsForm.control}
-                  name="url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Neo4j URL</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="neo4j+s://demo.neo4jlabs.com:7687" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={credentialsForm.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Neo4j Username</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="neo4j" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={credentialsForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Neo4j Password</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="password" placeholder="IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={isLoading}>
-                  Connect
-                </Button>
-              </div>
-            </form>
+            <Form {...credentialsForm}>
+              <form onSubmit={credentialsForm.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={credentialsForm.control}
+                    name="url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Neo4j URL</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="neo4j+s://demo.neo4jlabs.com:7687" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={credentialsForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Neo4j Username</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="neo4j" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={credentialsForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Neo4j Password</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="password" placeholder="IW-f8cEGGxYRnVZHHpksq3j7-pkSl_cae27zXSt8eb8" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" disabled={isLoading}>
+                    Connect
+                  </Button>
+                </div>
+              </form>
+            </Form>
             
             <div className="flex flex-col space-y-4 mt-4">
               <form onSubmit={handleQuerySubmit}>
