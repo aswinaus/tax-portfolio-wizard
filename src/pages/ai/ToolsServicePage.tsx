@@ -8,16 +8,13 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Database, Server, Settings, Terminal, Code, Send, Loader2, Bot } from "lucide-react";
 import * as z from "zod";
-import neo4j, { Driver } from 'neo4j-driver';
+import neo4j, { Driver, QueryResult, Record as Neo4jRecord } from 'neo4j-driver';
 import { toast } from "@/components/ui/use-toast";
 import Neo4jVectorSearchTool from "@/components/ai/Neo4jVectorSearchTool";
 
-type Neo4jQueryResult = {
-  records: {
-    keys: string[];
-    get: (key: string) => any;
-  }[];
-};
+interface Neo4jQueryResult {
+  records: Neo4jRecord[];
+}
 
 const ToolsServicePage = () => {
   const [activeTab, setActiveTab] = useState<'neo4j' | 'vector-search' | 'settings'>('neo4j');
@@ -147,7 +144,7 @@ const ToolsServicePage = () => {
       
       const session = driverRef.current.session();
       try {
-        const queryResult = await session.run(generatedCypher);
+        const queryResult: QueryResult = await session.run(generatedCypher);
         
         const formattedResult = formatNeo4jResults(queryResult);
         setResult(formattedResult);
@@ -202,13 +199,13 @@ RETURN p.name AS Name, p.born AS Born
 LIMIT 5`;
     } else {
       return `MATCH (n)
-WHERE toString(n) CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
-RETURN labels(n) AS Labels, n.name AS Name
+WHERE n.name CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}' OR n.title CONTAINS '${naturalLanguage.replace(/'/g, "\\'")}'
+RETURN labels(n) AS Labels, COALESCE(n.name, n.title) AS Name
 LIMIT 5`;
     }
   };
 
-  const formatNeo4jResults = (queryResult: Neo4jQueryResult): string => {
+  const formatNeo4jResults = (queryResult: QueryResult): string => {
     if (queryResult.records.length === 0) {
       return "No results found.";
     }

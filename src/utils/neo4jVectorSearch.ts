@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { Driver } from 'neo4j-driver';
+import { Driver, Record as Neo4jRecord, Session } from 'neo4j-driver';
 
 // Neo4j Vector Search utility
 export interface Neo4jVectorSearchConfig {
@@ -193,14 +193,20 @@ Helpful Answer:`;
       const cypherQuery = await this.generateCypherQuery(question);
       
       // Execute the Cypher query
-      const session = this.driver!.session();
+      if (!this.driver) {
+        throw new Error('Neo4j driver not initialized. Call connect() first.');
+      }
+      
+      const session: Session = this.driver.session();
       try {
         const result = await session.run(cypherQuery);
         const records = result.records.map(record => {
           const obj: Record<string, any> = {};
-          record.keys.forEach(key => {
-            obj[key] = this.convertNeo4jValueToJS(record.get(key));
-          });
+          for (const key of record.keys) {
+            if (typeof key === 'string') {
+              obj[key] = this.convertNeo4jValueToJS(record.get(key));
+            }
+          }
           return obj;
         });
         
