@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 
 export interface GitHubRepo {
@@ -58,20 +57,45 @@ export interface GitHubDocument {
 
 export const fetchGitHubRepos = async (username: string = 'aswinaus'): Promise<GitHubRepo[]> => {
   try {
-    const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`);
+    console.log(`Fetching GitHub repositories for user: ${username}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch GitHub repositories: ${response.status}`);
+      // Check for specific error codes
+      if (response.status === 403) {
+        console.error('GitHub API rate limit exceeded');
+        throw new Error('GitHub API rate limit exceeded. Please try again later.');
+      } else if (response.status === 404) {
+        console.error('GitHub username not found');
+        throw new Error(`GitHub user '${username}' not found or profile is private.`);
+      } else {
+        console.error(`GitHub API error: ${response.status} ${response.statusText}`);
+        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+      }
     }
     
     const repos = await response.json();
+    console.log(`Successfully fetched ${repos.length} repositories`);
     return repos as GitHubRepo[];
   } catch (error) {
-    console.error('Error fetching GitHub repositories:', error);
-    toast.error('Failed to load GitHub repositories');
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      console.error('GitHub API request timed out');
+      throw new Error('GitHub API request timed out. Please check your network connection.');
+    }
     
-    // Return empty array on error
-    return [];
+    console.error('Error fetching GitHub repositories:', error);
+    // Re-throw the error to be handled by the component
+    throw error;
   }
 };
 
