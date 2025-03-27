@@ -50,7 +50,7 @@ const ToolsServicePage = () => {
   const [corsProxyUrl, setCorsProxyUrl] = useState(CORS_PROXIES[0].url);
   const [selectedProxy, setSelectedProxy] = useState(0);
   const [isAzureFunction, setIsAzureFunction] = useState(true); // Set default to Azure
-  const [azureFunctionEndpoint, setAzureFunctionEndpoint] = useState('taxaiagents.azurewebsites.net');
+  const [azureFunctionEndpoint, setAzureFunctionEndpoint] = useState('https://taxaiagents.azurewebsites.net');
   
   const credentialsForm = useForm<Neo4jCredentials>({
     defaultValues: {
@@ -72,10 +72,19 @@ Relationship types:
 
   // Update the serverless endpoint based on service type
   const getServerlessEndpoint = () => {
-    if (isAzureFunction) {
-      return azureFunctionEndpoint;
+    let endpoint = isAzureFunction ? azureFunctionEndpoint : serverlessEndpoint;
+    
+    // Ensure the endpoint has a protocol prefix
+    if (isAzureFunction && !endpoint.startsWith('http')) {
+      endpoint = `https://${endpoint}`;
     }
-    return serverlessEndpoint;
+    
+    // Remove trailing slash if present
+    if (endpoint.endsWith('/')) {
+      endpoint = endpoint.slice(0, -1);
+    }
+    
+    return endpoint;
   };
 
   // Utility function to handle CORS proxy
@@ -121,9 +130,10 @@ Relationship types:
   useEffect(() => {
     const checkServerlessAvailability = async () => {
       try {
+        const baseEndpoint = getServerlessEndpoint();
         const endpoint = isAzureFunction 
-          ? `${azureFunctionEndpoint}/api/ping` 
-          : `${serverlessEndpoint}/ping`;
+          ? `${baseEndpoint}/api/ping` 
+          : `${baseEndpoint}/ping`;
           
         console.log(`Checking serverless function availability at: ${endpoint}`);
         console.log(`Using CORS proxy: ${useCorsProxy ? corsProxyUrl : 'No proxy'}`);
@@ -143,20 +153,24 @@ Relationship types:
           const responseData = await response.text();
           console.log('Ping response:', response.status, responseData);
           
-          setIsServerlessFunctionAvailable(response.ok);
+          // Check if the response is actually a success or if it's the HTML fallback page
+          const isSuccessResponse = response.ok && !responseData.includes('<!DOCTYPE html>');
+          
+          setIsServerlessFunctionAvailable(isSuccessResponse);
           setDebugInfo({
             status: response.status,
             statusText: response.statusText,
             headers: Object.fromEntries([...response.headers]),
-            data: responseData,
+            data: responseData.substring(0, 500), // Truncate long responses
             usingProxy: useCorsProxy,
             proxyUrl: corsProxyUrl,
-            isAzure: isAzureFunction
+            isAzure: isAzureFunction,
+            baseUrl: baseEndpoint
           });
           
-          if (!response.ok) {
-            console.warn('Serverless function is not available:', response.status, response.statusText);
-            setExecutionSteps(prev => [...prev, `Server responded with status ${response.status}: ${response.statusText}`]);
+          if (!isSuccessResponse) {
+            console.warn('Serverless function is not available: Response contains HTML or has error status');
+            setExecutionSteps(prev => [...prev, `Server responded but with invalid format or error status: ${response.status}`]);
             setUseDummyResponse(true);
           } else {
             setExecutionSteps(prev => [...prev, `Server is available! Response: ${responseData}`]);
@@ -176,7 +190,8 @@ Relationship types:
           stack: error instanceof Error ? error.stack : undefined,
           usingProxy: useCorsProxy,
           proxyUrl: corsProxyUrl,
-          isAzure: isAzureFunction
+          isAzure: isAzureFunction,
+          endpoint: getServerlessEndpoint()
         });
         setIsServerlessFunctionAvailable(false);
         setUseDummyResponse(true);
@@ -344,9 +359,10 @@ LIMIT 5`;
         setExecutionSteps(prev => [...prev, "Generating Cypher query from natural language..."]);
         
         try {
+          const baseEndpoint = getServerlessEndpoint();
           const executeQueryEndpoint = isAzureFunction 
-            ? `${azureFunctionEndpoint}/api/executeQuery` 
-            : `${serverlessEndpoint}/executeQuery`;
+            ? `${baseEndpoint}/api/executeQuery` 
+            : `${baseEndpoint}/executeQuery`;
           console.log(`Executing query at: ${executeQueryEndpoint}`);
           
           const response = await safeFetch(executeQueryEndpoint, {
@@ -366,6 +382,11 @@ LIMIT 5`;
           if (!response.ok) {
             const errorText = await response.text();
             console.error('Query error response:', response.status, errorText);
+            
+            //Check if response is HTML (indicating a routing issue)
+            if (errorText.includes('<!DOCTYPE html>')) {
+              throw new Error(`API endpoint not found or not accessible. Please check the endpoint configuration.`);
+            }
             
             try {
               const errorData = JSON.parse(errorText);
