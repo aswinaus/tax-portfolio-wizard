@@ -1,3 +1,4 @@
+
 import OpenAI from 'openai';
 import { Driver, Record as Neo4jRecord, Session } from 'neo4j-driver';
 
@@ -35,6 +36,7 @@ export class Neo4jVectorSearch {
     
     this.config = config;
     
+    // This template mirrors the Python CYPHER_GENERATION_TEMPLATE
     this.cypherGenerationTemplate = `Task: Generate Cypher statement to query a graph database.
 Instructions:
 Use only the provided relationship types and properties in the schema. However, always exclude the schema's \`embedding\` property from the Cypher statement.
@@ -50,6 +52,7 @@ The question is:
 
 Cypher Query:`;
 
+    // This template mirrors the Python CYPHER_QA_TEMPLATE
     this.cypherQATemplate = `You are an AI assistant that helps to form nice and human understandable answers.
 The information part contains the provided information that you must use to construct an answer.
 The provided information is authoritative, you must never doubt it or try to use your internal knowledge to correct it.
@@ -92,6 +95,14 @@ Helpful Answer:`;
 
     const session = this.driver.session();
     try {
+      // Sample specific query based on the Python code example
+      const sampleQuery = `
+        MATCH (s:STATE)-[:Size_of_adjusted_gross_income]->(n:No_of_returns)
+        WHERE n.name > 10000
+        RETURN COUNT(s)
+      `;
+      console.log("Sample schema query:", sampleQuery);
+      
       // Get node labels
       const labelsResult = await session.run(`
         CALL db.labels() YIELD label
@@ -183,6 +194,10 @@ Helpful Answer:`;
     return response.choices[0].message.content || '';
   }
 
+  // This method will:
+  // 1. Generate a Cypher query from a natural language question
+  // 2. Execute the query against Neo4j
+  // 3. Format the results into a human-readable answer
   async query(question: string, options: QueryOptions = {}): Promise<{
     answer: string;
     cypher?: string;

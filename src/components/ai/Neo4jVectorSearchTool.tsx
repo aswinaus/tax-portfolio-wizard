@@ -7,11 +7,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Bot, Database, Loader2, Send, Code, Terminal } from "lucide-react";
+import { Bot, Database, Loader2, Send, Code, Terminal, BookOpen } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Neo4jVectorSearch } from "@/utils/neo4jVectorSearch";
 import { Driver } from "neo4j-driver";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const apiKeySchema = z.object({
   apiKey: z.string().min(1, "OpenAI API key is required"),
@@ -42,6 +43,7 @@ const Neo4jVectorSearchTool = ({
   const [rawResults, setRawResults] = useState<any[] | null>(null);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [schemaInfo, setSchemaInfo] = useState<string | null>(null);
 
   const apiKeyForm = useForm<z.infer<typeof apiKeySchema>>({
     resolver: zodResolver(apiKeySchema),
@@ -49,6 +51,15 @@ const Neo4jVectorSearchTool = ({
       apiKey: "",
     },
   });
+
+  // Example questions based on the domain model
+  const exampleQuestions = [
+    "Can you compare No of returns, No of single returns, No of joint returns and No of head of household returns for States GA and CA in all the income range?",
+    "Which state has the maximum number of returns filed?",
+    "Show me tax returns from California with income over $100,000",
+    "What's the average income for taxpayers in New York versus Texas?",
+    "How many joint returns were filed in Florida last year?"
+  ];
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem('openai_api_key');
@@ -76,20 +87,28 @@ const Neo4jVectorSearchTool = ({
       console.log("Creating Neo4jVectorSearch instance with config:", {
         url: neo4jUrl,
         username: neo4jUsername,
-        indexName: "taxdata"
+        indexName: "incometax" // Changed to match Python example
       });
       
       const search = new Neo4jVectorSearch(key, {
         url: neo4jUrl,
         username: neo4jUsername,
         password: neo4jPassword,
-        indexName: "taxdata",
-        nodeLabel: "TaxEntity",
-        textNodeProperties: ["name", "ein", "zipcode"],
+        indexName: "incometax", // Changed to match Python example
+        nodeLabel: "__Entity__", // Changed to match Python example
+        textNodeProperties: ["name", "entity", "zipcode"], // Changed to match Python example
         embeddingNodeProperty: "embedding"
       });
       
       await search.connect(driver);
+      
+      // Get and store schema info for display
+      try {
+        const schema = await search.getSchema();
+        setSchemaInfo(schema);
+      } catch (error) {
+        console.error("Error fetching schema:", error);
+      }
       
       setVectorSearch(search);
       setExecutionSteps(prev => [...prev, "Vector search initialized successfully"]);
@@ -166,6 +185,10 @@ const Neo4jVectorSearchTool = ({
     }
   };
 
+  const useExampleQuestion = (question: string) => {
+    setSearchQuery(question);
+  };
+
   return (
     <>
       <Card className="shadow-sm border-2 border-primary/10 overflow-hidden">
@@ -237,6 +260,48 @@ const Neo4jVectorSearchTool = ({
               </div>
             </div>
           </form>
+          
+          <div className="mt-4">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="examples">
+                <AccordionTrigger className="text-sm">
+                  <div className="flex items-center">
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Example Questions
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2">
+                    {exampleQuestions.map((question, index) => (
+                      <div 
+                        key={index}
+                        onClick={() => useExampleQuestion(question)}
+                        className="text-xs sm:text-sm p-2 bg-muted rounded-md cursor-pointer hover:bg-muted/80"
+                      >
+                        {question}
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+              
+              {schemaInfo && (
+                <AccordionItem value="schema">
+                  <AccordionTrigger className="text-sm">
+                    <div className="flex items-center">
+                      <Database className="h-4 w-4 mr-2" />
+                      Database Schema
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <pre className="text-xs bg-muted p-2 rounded-md overflow-x-auto whitespace-pre-wrap">
+                      {schemaInfo}
+                    </pre>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+            </Accordion>
+          </div>
         </CardContent>
       </Card>
 

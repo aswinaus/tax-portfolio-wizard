@@ -1,6 +1,5 @@
-
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, UserCircle2, Loader2, AlertTriangle } from 'lucide-react';
+import { Send, Bot, UserCircle2, Loader2, AlertTriangle, Code } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface Message {
   content: string;
@@ -40,25 +40,26 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
   const API_TIMEOUT = 8000; // 8 seconds
   const AZURE_ENDPOINT = "https://taxaiagents.azurewebsites.net";
 
+  const sampleCypherQuery = `
+    MATCH (s:STATE)-[:Size_of_adjusted_gross_income]->(n:No_of_returns)
+    WHERE n.name > 10000
+    RETURN COUNT(s)
+  `;
+
   useEffect(() => {
-    // Scroll to bottom whenever messages change
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Reset connection error when the component remounts
   useEffect(() => {
     setConnectionError(null);
   }, []);
 
-  // Check if API is available
   useEffect(() => {
     const checkApiAvailability = async () => {
       try {
-        // Add a simple ping to check if the API is reachable
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
         
-        // Use direct connection to Azure Function
         const pingUrl = `${AZURE_ENDPOINT}/api/ping`;
         console.log(`Checking API availability at: ${pingUrl}`);
         
@@ -77,13 +78,11 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
           setConnectionError('Unable to connect to the Azure Function service');
           console.warn('Azure Function returned an error status:', response.status);
           
-          // Only fall back to demo mode after multiple retries
           if (retryCount >= MAX_RETRIES) {
             setIsApiAvailable(false);
             console.warn('Max retries exceeded, falling back to demo mode');
           } else {
             setRetryCount(prev => prev + 1);
-            // Try again after delay
             setTimeout(checkApiAvailability, 2000);
           }
         }
@@ -91,13 +90,11 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
         console.error('Error checking API availability:', error);
         setConnectionError(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         
-        // Only fall back to demo mode after multiple retries
         if (retryCount >= MAX_RETRIES) {
           setIsApiAvailable(false);
           console.warn('Max retries exceeded, falling back to demo mode');
         } else {
           setRetryCount(prev => prev + 1);
-          // Try again after delay
           setTimeout(checkApiAvailability, 2000);
         }
       }
@@ -108,21 +105,17 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
 
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
-      // If API is not available, use fallback mode with demo responses
       if (!isApiAvailable) {
         console.log('Using fallback mode for Lyzr API');
-        
-        // Simple fallback responses for demo purposes
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
         
         const demoResponses: Record<string, string> = {
           default: "I can help you with Form 990 filing information. What would you like to know?",
           deadline: "Form 990 is generally due by the 15th day of the 5th month after the organization's accounting period ends. For calendar-year filers, this is May 15.",
           extension: "You can request an automatic 6-month extension by filing Form 8868 before the due date.",
           requirements: "Organizations with gross receipts ≥ $200,000 or total assets ≥ $500,000 must file Form 990. Smaller organizations may file Form 990-EZ or 990-N (e-Postcard).",
+          cypher: `I can provide information about Neo4j queries. Here's a sample Cypher query for tax data:\n\n${sampleCypherQuery}`,
         };
         
-        // Simple keyword matching
         let response = demoResponses.default;
         const lowercaseMsg = userMessage.toLowerCase();
         
@@ -132,12 +125,13 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
           response = demoResponses.extension;
         } else if (lowercaseMsg.includes('requirement') || lowercaseMsg.includes('who needs')) {
           response = demoResponses.requirements;
+        } else if (lowercaseMsg.includes('cypher') || lowercaseMsg.includes('query') || lowercaseMsg.includes('neo4j')) {
+          response = demoResponses.cypher;
         }
         
         return { response, conversation_id: 'demo-mode' };
       }
       
-      // Regular API call implementation
       const apiUrl = `${AZURE_ENDPOINT}/api/chat`;
       
       const headers = {
@@ -148,7 +142,7 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
       const payload = {
         message: userMessage,
         conversation_id: conversationId,
-        agent_id: '67d85a7eb0001308323789d0', // Your agent ID from the URL
+        agent_id: '67d85a7eb0001308323789d0',
         metadata: {
           source: 'form990_assistant'
         }
@@ -174,14 +168,12 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
     } catch (error) {
       console.error('Error calling Lyzr API:', error);
       
-      // Only switch to fallback mode if we've already tried multiple times
       if (retryCount >= MAX_RETRIES) {
         setIsApiAvailable(false);
       } else {
         setRetryCount(prev => prev + 1);
       }
       
-      // Return a friendly error message
       return { 
         response: "I'm experiencing connection issues. Let me try to reconnect to my knowledge base. Please try again in a moment.",
         conversation_id: 'error-retry'
@@ -241,10 +233,8 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
     setIsLoading(true);
     
     try {
-      // Call the Lyzr API with the user's message
       const lyzrResponse = await callLyzrAPI(userMessage.content);
       
-      // Save conversation ID for continued conversation
       if (lyzrResponse.conversation_id) {
         setConversationId(lyzrResponse.conversation_id);
       }
@@ -263,7 +253,7 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <Card className="h-[500px] md:h-[600px] flex flex-col">
       <CardHeader className="pb-3 pt-5">
@@ -307,6 +297,27 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
                   </Button>
                 </div>
               )}
+
+              <div className="mt-6">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="sample-query">
+                    <AccordionTrigger className="text-sm text-left">
+                      <div className="flex items-center">
+                        <Code className="h-4 w-4 mr-2" />
+                        Sample Neo4j Tax Query
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <pre className="text-xs bg-muted p-2 rounded-md overflow-x-auto text-left">
+                        <code>{sampleCypherQuery}</code>
+                      </pre>
+                      <p className="text-xs mt-2 text-left">
+                        This query finds states with more than 10,000 tax returns and counts them.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
             </div>
           ) : (
             messages.map((msg, index) => (
