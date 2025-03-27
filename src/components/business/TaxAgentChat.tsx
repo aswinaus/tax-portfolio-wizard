@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Message {
   content: string;
@@ -33,6 +34,7 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const MAX_RETRIES = 3;
   const API_TIMEOUT = 8000; // 8 seconds
@@ -263,7 +265,7 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
   };
   
   return (
-    <Card className="h-[500px] flex flex-col">
+    <Card className="h-[500px] md:h-[600px] flex flex-col">
       <CardHeader className="pb-3 pt-5">
         <CardTitle className="text-lg flex items-center gap-2">
           <Bot className="h-5 w-5 text-primary" />
@@ -274,7 +276,7 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
         {connectionError && (
           <Alert variant="destructive" className="mb-4">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="flex justify-between items-center">
+            <AlertDescription className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <span>{connectionError}</span>
               <Button size="sm" variant="outline" onClick={retryConnection}>
                 Retry Connection
@@ -316,7 +318,7 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div 
-                  className={`flex gap-3 max-w-[80%] ${
+                  className={`flex gap-3 max-w-[95%] sm:max-w-[80%] ${
                     msg.role === 'user' 
                       ? 'bg-primary text-primary-foreground' 
                       : 'bg-muted'
@@ -326,7 +328,7 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
                     <Bot className="h-5 w-5 mt-1 flex-shrink-0" />
                   )}
                   <div>
-                    <p className="text-sm">{msg.content}</p>
+                    <p className="text-sm break-words">{msg.content}</p>
                     <span className="text-xs opacity-70 block mt-1">
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
@@ -362,7 +364,7 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about Form 990 requirements, deadlines, etc."
+            placeholder={isMobile ? "Ask about Form 990..." : "Ask about Form 990 requirements, deadlines, etc."}
             disabled={isLoading}
             className="flex-grow"
           />

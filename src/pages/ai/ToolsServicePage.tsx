@@ -9,9 +9,11 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Database, Server, Settings, Terminal, Code, Send, Loader2, Bot } from "lucide-react";
 import * as z from "zod";
-import neo4j, { Driver, QueryResult, Record as Neo4jRecord } from 'neo4j-driver';
+import { Driver, QueryResult, Record as Neo4jRecord } from 'neo4j-driver';
+import neo4j from 'neo4j-driver';
 import { toast } from "@/components/ui/use-toast";
 import Neo4jVectorSearchTool from "@/components/ai/Neo4jVectorSearchTool";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Neo4jQueryResult {
   records: Neo4jRecord[];
@@ -26,6 +28,7 @@ const ToolsServicePage = () => {
   const [cypherQuery, setCypherQuery] = useState<string | null>(null);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
   const driverRef = useRef<Driver | null>(null);
+  const isMobile = useIsMobile();
   const [connectionDetails, setConnectionDetails] = useState({
     url: "neo4j+s://demo.neo4jlabs.com:7687",
     username: "movies",
@@ -376,21 +379,28 @@ LIMIT 10`;
   return (
     <div className="flex flex-col">
       <div className="flex flex-col space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-2xl font-bold">Tax Data Tools</h1>
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'neo4j' | 'vector-search' | 'settings')}>
-            <TabsList>
+          <Tabs 
+            value={activeTab} 
+            onValueChange={(value) => setActiveTab(value as 'neo4j' | 'vector-search' | 'settings')}
+            className="w-full sm:w-auto"
+          >
+            <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex">
               <TabsTrigger value="neo4j" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
-                Neo4j
+                <span className="hidden sm:inline">Neo4j</span>
+                <span className="sm:hidden">DB</span>
               </TabsTrigger>
               <TabsTrigger value="vector-search" className="flex items-center">
                 <Bot className="h-4 w-4 mr-2" />
-                Vector Search
+                <span className="hidden sm:inline">Vector Search</span>
+                <span className="sm:hidden">Search</span>
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center">
                 <Settings className="h-4 w-4 mr-2" />
-                Settings
+                <span className="hidden sm:inline">Settings</span>
+                <span className="sm:hidden">Config</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -428,7 +438,7 @@ LIMIT 10`;
                       <FormItem>
                         <FormLabel>Neo4j URL</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="neo4j+s://demo.neo4jlabs.com:7687" />
+                          <Input {...field} placeholder="neo4j+s://your-tax-db.neo4j.io:7687" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -447,29 +457,33 @@ LIMIT 10`;
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={credentialsForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Neo4j Password</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="password" placeholder="your-password-here" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Connecting...
-                      </>
-                    ) : (
-                      "Connect"
-                    )}
-                  </Button>
+                  <div className="md:col-span-2 lg:col-span-1">
+                    <FormField
+                      control={credentialsForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Neo4j Password</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="password" placeholder="your-password-here" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="flex justify-start md:justify-end md:items-end md:self-end">
+                    <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Connecting...
+                        </>
+                      ) : (
+                        "Connect"
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </form>
             </Form>
@@ -479,7 +493,7 @@ LIMIT 10`;
                 <div className="space-y-4">
                   <div>
                     <FormLabel htmlFor="query">Query</FormLabel>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Input 
                         id="query"
                         value={query} 
@@ -487,7 +501,11 @@ LIMIT 10`;
                         placeholder="Enter your query here (e.g., 'Show me tax returns from California')" 
                         className="flex-grow"
                       />
-                      <Button type="submit" disabled={isLoading || !isConnected}>
+                      <Button 
+                        type="submit" 
+                        disabled={isLoading || !isConnected}
+                        className="w-full sm:w-auto"
+                      >
                         {isLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         ) : (
@@ -525,15 +543,17 @@ LIMIT 10`;
                   {cypherQuery && (
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center">
+                        <CardTitle className="flex items-center text-base sm:text-lg">
                           <Code className="mr-2 h-5 w-5" />
                           Generated Cypher Query
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm">
-                          <code>{cypherQuery}</code>
-                        </pre>
+                        <div className="overflow-x-auto">
+                          <pre className="bg-muted p-4 rounded-md text-xs sm:text-sm whitespace-pre-wrap sm:whitespace-pre">
+                            <code>{cypherQuery}</code>
+                          </pre>
+                        </div>
                       </CardContent>
                     </Card>
                   )}
@@ -547,8 +567,10 @@ LIMIT 10`;
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="whitespace-pre-line bg-muted p-4 rounded-md font-mono text-sm overflow-x-auto">
-                          {result}
+                        <div className="overflow-x-auto">
+                          <div className="whitespace-pre font-mono text-xs sm:text-sm bg-muted p-4 rounded-md">
+                            {result}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
