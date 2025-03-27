@@ -261,7 +261,7 @@ const BlogHeader = () => {
       toast.success("LLM Evals blog post created successfully!");
       navigate(`/portfolio/blogs/${newBlog.id}`);
     } else if (template === 'tax-agent-neo4j') {
-      // Create the Tax Agent Neo4j blog post
+      // Create the Tax Agent Neo4j GraphDB blog post
       const taxAgentContent = `
 <h2>Building a Tax Agent with Neo4j Graph Database Integration</h2>
 <p>A comprehensive guide to creating an intelligent Tax Agent that leverages Neo4j graph database

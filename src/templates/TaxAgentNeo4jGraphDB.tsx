@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Database, Bot, Workflow, MessagesSquare, Sparkles } from 'lucide-react';
+import { Database, Bot, Workflow, MessagesSquare, Sparkles, Code, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -53,7 +53,7 @@ const TaxAgentNeo4jGraphDB = () => {
           
           <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
             <Database className="h-6 w-6 text-primary" />
-            Connecting to the Neo4J GraphDB
+            Step 1: Connecting to the Neo4J GraphDB
           </h2>
           
           <p>
@@ -84,7 +84,7 @@ const neo4jGraph = new Neo4jGraphDB({
           
           <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
             <Bot className="h-6 w-6 text-primary" />
-            Setting Up Vector Indexing for Neo4J
+            Step 2: Setting Up Vector Indexing for Neo4J
           </h2>
           
           <p>
@@ -130,8 +130,59 @@ const vectorStore = new Neo4jVectorStore(
           </ul>
           
           <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
+            <Code className="h-6 w-6 text-primary" />
+            Step 3: Setting Up the Vector Store Retriever
+          </h2>
+          
+          <p>
+            After setting up the vector store, we need to create a retriever that can search for relevant documents based on queries.
+          </p>
+          
+          <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-md overflow-x-auto my-6">
+            <pre className="text-sm">
+{`// Create a retriever from the vector store
+const retriever = vectorStore.asRetriever({
+  k: 5, // Number of documents to retrieve
+  searchType: "hybrid", // Use both vector similarity and keyword search
+  scoreThreshold: 0.7, // Minimum relevance score
+});
+
+// Function to perform a search
+const searchTaxDocuments = async (query) => {
+  try {
+    console.log("Searching for:", query);
+    const results = await retriever.getRelevantDocuments(query);
+    return results.map(doc => ({
+      title: doc.metadata.title || "Untitled Document",
+      content: doc.pageContent,
+      score: doc.metadata.score || null,
+    }));
+  } catch (error) {
+    console.error("Error searching documents:", error);
+    return [];
+  }
+};`}
+            </pre>
+          </div>
+          
+          <p>
+            The retriever configuration includes important parameters:
+          </p>
+          
+          <ul>
+            <li><strong>k</strong>: The number of most relevant documents to retrieve (5 in this case)</li>
+            <li><strong>searchType</strong>: Using "hybrid" to combine vector similarity with traditional keyword search</li>
+            <li><strong>scoreThreshold</strong>: Only returning documents with a relevance score of at least 0.7</li>
+          </ul>
+          
+          <p>
+            We've also created a utility function <code>searchTaxDocuments</code> that wraps the retriever's functionality
+            and formats the results in a more user-friendly way.
+          </p>
+          
+          <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
             <Workflow className="h-6 w-6 text-primary" />
-            Creating the Cypher Query Template
+            Step 4: Creating the Cypher Query Template
           </h2>
           
           <p>
@@ -180,8 +231,79 @@ const cypherPrompt = PromptTemplate.fromTemplate(
           </ul>
           
           <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
+            <Search className="h-6 w-6 text-primary" />
+            Step 5: Setting Up the Retrieval-Augmented Generation (RAG) Chain
+          </h2>
+          
+          <p>
+            To enhance our Tax Agent with document retrieval capabilities, we'll set up a Retrieval-Augmented Generation (RAG) chain.
+            This will allow our agent to pull relevant information from the document database before answering questions.
+          </p>
+          
+          <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-md overflow-x-auto my-6">
+            <pre className="text-sm">
+{`import { createRetrievalChain } from "langchain/chains/retrieval";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { ChatPromptTemplate } from "langchain/prompts";
+
+// Create a prompt template for the RAG chain
+const ragPrompt = ChatPromptTemplate.fromTemplate(\`
+You are a tax expert assistant. Use the following retrieved documents to answer the user's question.
+If you don't know the answer based on the documents, say that you don't know but provide general tax advice.
+
+Retrieved documents:
+{context}
+
+User question: {input}
+\`);
+
+// Create a document chain that combines retrieved documents
+const documentChain = await createStuffDocumentsChain({
+  llm: new ChatOpenAI({ temperature: 0, modelName: "gpt-4" }),
+  prompt: ragPrompt,
+});
+
+// Create the retrieval chain
+const retrievalChain = await createRetrievalChain({
+  retriever,
+  combineDocsChain: documentChain,
+});
+
+// Function to query the RAG system
+const queryRagSystem = async (question) => {
+  try {
+    const response = await retrievalChain.invoke({
+      input: question,
+    });
+    return {
+      answer: response.answer,
+      sourceDocuments: response.context,
+    };
+  } catch (error) {
+    console.error("Error querying RAG system:", error);
+    return {
+      answer: "I encountered an error processing your query. Please try again.",
+      sourceDocuments: [],
+    };
+  }
+};`}
+            </pre>
+          </div>
+          
+          <p>
+            This code sets up a Retrieval-Augmented Generation (RAG) chain with these key components:
+          </p>
+          
+          <ul>
+            <li>A chat prompt template that instructs the model to use retrieved documents to answer questions</li>
+            <li>A document chain that uses the "stuff" method to combine retrieved documents (putting all retrieved content into a single prompt)</li>
+            <li>A retrieval chain that connects the retriever with the document chain</li>
+            <li>A utility function <code>queryRagSystem</code> that invokes the chain and returns both the answer and source documents</li>
+          </ul>
+          
+          <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
             <MessagesSquare className="h-6 w-6 text-primary" />
-            Converting User Prompts to Cypher Queries
+            Step 6: Converting User Prompts to Cypher Queries
           </h2>
           
           <p>
@@ -221,7 +343,7 @@ const cypherChain = GraphCypherQAChain.fromLLM({
           
           <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
             <Sparkles className="h-6 w-6 text-primary" />
-            Integrating Tools into the Tax Agent
+            Step 7: Integrating Tools into the Tax Agent
           </h2>
           
           <p>
@@ -251,25 +373,46 @@ const tools = [
       }
     },
   }),
+  new Tool({
+    name: "TaxDocumentSearch",
+    description: \`Useful for finding information in tax documents and publications.
+    Use this for questions about tax law, regulations, and procedures.\`,
+    func: async (input) => {
+      try {
+        const result = await queryRagSystem(input);
+        return result.answer;
+      } catch (error) {
+        console.error("Error searching tax documents:", error);
+        return "I encountered an error searching tax documents. Please try rephrasing your question.";
+      }
+    },
+  }),
 ];`}
             </pre>
           </div>
           
           <p>
-            This code creates a tool called "GraphSearch" that will be used by our agent. The tool:
+            This code creates two complementary tools for our agent:
           </p>
           
           <ul>
-            <li>Takes a natural language question as input</li>
-            <li>Passes the question to our cypherChain, which converts it to a Cypher query and executes it against Neo4J</li>
-            <li>Logs the generated Cypher query for debugging purposes</li>
-            <li>Returns the text result from the database query</li>
-            <li>Includes error handling to provide a friendly message if the query fails</li>
+            <li><strong>GraphSearch</strong>: For querying structured tax data in the Neo4J database using Cypher</li>
+            <li><strong>TaxDocumentSearch</strong>: For retrieving information from unstructured tax documents using our RAG system</li>
+          </ul>
+          
+          <p>
+            Each tool includes:
+          </p>
+          
+          <ul>
+            <li>A descriptive name and usage instructions</li>
+            <li>A function that processes input and returns results</li>
+            <li>Error handling to provide a friendly message if queries fail</li>
           </ul>
           
           <h2 className="flex items-center gap-2 text-2xl font-semibold mt-10 mb-6">
             <Bot className="h-6 w-6 text-primary" />
-            Creating and Initializing the Tax Agent
+            Step 8: Creating and Initializing the Tax Agent
           </h2>
           
           <p>
@@ -321,9 +464,10 @@ const runAgent = async (query) => {
           </p>
           
           <ol>
-            <li>Analyze the question to determine if the GraphSearch tool is needed</li>
-            <li>If so, it will pass the question to the tool, which will convert it to a Cypher query</li>
+            <li>Analyze the question to determine if the GraphSearch or TaxDocumentSearch tool is needed</li>
+            <li>If GraphSearch is needed, it will pass the question to the tool, which will convert it to a Cypher query</li>
             <li>Execute the Cypher query against the Neo4J database</li>
+            <li>If TaxDocumentSearch is needed, it will retrieve relevant documents using vector search</li>
             <li>Process the results and formulate a natural language response for the user</li>
           </ol>
         </div>
@@ -353,6 +497,13 @@ tools = [
         Always have complete questions as input.
         """,
     ),
+    Tool(
+        name="TaxDocumentSearch",
+        func=retrieval_chain.run,
+        description="""Useful for finding information in tax documents and publications.
+        Use this for questions about tax law, regulations, and procedures.
+        """,
+    )
 ]
 
 TaxAgent = initialize_agent(
@@ -397,32 +548,47 @@ TaxAgent = initialize_agent(
   try {
     // In production, this would make an API call to the backend
     // where the TaxAgent is running
-    // For demo purposes, we simulate the steps
+    const response = await fetch('/api/tax-agent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: userMessage.content,
+        apiKey: openaiApiKey,
+      }),
+    });
     
-    const simulatedSteps = [
-      "I need to answer a question about tax data.",
-      "I'll use the GraphSearch tool to query the Neo4j database.",
-      \`Executing Cypher query to find information related to: "\${userMessage.content}"\`,
-      "Processing results and formulating a response..."
-    ];
-    
-    for (const step of simulatedSteps) {
-      console.log(step);
-      await new Promise(resolve => setTimeout(resolve, 500));
+    if (!response.ok) {
+      throw new Error('Failed to get response from the tax agent');
     }
     
-    const simulatedResponse = \`Based on the tax data in our graph database, I found that \${userMessage.content.includes('organization') ? 'organizations' : 'taxpayers'} in this category typically report an average of 15% higher deductions compared to the national average. The data shows significant regional variations, with California, New York, and Texas showing the highest volumes of such transactions.\`;
+    const data = await response.json();
     
     const assistantMessage: Message = {
-      content: simulatedResponse,
+      content: data.response,
       role: 'assistant',
-      timestamp: new Date()
+      timestamp: new Date(),
+      metadata: {
+        usedTool: data.tool,
+        cypherQuery: data.cypherQuery,
+        sourceDocuments: data.sourceDocuments,
+      }
     };
     
     setMessages(prev => [...prev, assistantMessage]);
   } catch (error) {
     console.error('Error processing query:', error);
     toast.error('Failed to process your query. Please try again.');
+    
+    const errorMessage: Message = {
+      content: "I'm sorry, I encountered an error processing your query. Please try again.",
+      role: 'assistant',
+      timestamp: new Date(),
+      isError: true
+    };
+    
+    setMessages(prev => [...prev, errorMessage]);
   } finally {
     setIsLoading(false);
   }
@@ -435,7 +601,7 @@ TaxAgent = initialize_agent(
         <div className="mt-10 space-y-4">
           <h2 className="text-2xl font-semibold">Conclusion</h2>
           <p className="text-lg">
-            By integrating Neo4J's graph database capabilities with the power of large language models, we've created 
+            By integrating Neo4J's GraphDB capabilities with the power of large language models, we've created 
             a specialized Tax Agent that can understand and answer complex questions about Form 990 filings and tax data.
             This approach allows for more nuanced and accurate responses by leveraging the structured relationships within 
             the tax domain.
