@@ -382,7 +382,7 @@ LIMIT 10`;
         <header className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Tax Data Tools</h1>
           <p className="text-muted-foreground">
-            Professional tools for analyzing and querying tax data with Neo4j database
+            Professional tools for analyzing and querying tax data with Neo4 GraphDB
           </p>
         </header>
 
