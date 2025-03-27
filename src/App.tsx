@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { lazy, Suspense } from "react";
+import './App.css'; // Make sure we load the App.css
 
 // Layouts
 import MainLayout from "./layouts/MainLayout";
@@ -40,40 +41,47 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <SidebarProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter basename="/">
-            <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading...</div>}>
-              <Routes>
-                <Route path="/" element={<MainLayout />}>
-                  {/* Redirect base path to portfolio */}
-                  <Route index element={<Portfolio />} />
-                  
-                  {/* Portfolio Routes */}
-                  <Route path="portfolio" element={<Portfolio />} />
-                  <Route path="portfolio/blogs" element={<Blogs />} />
-                  <Route path="portfolio/blogs/:id" element={<BlogPost />} />
-                  <Route path="portfolio/blogs/create" element={<CreateBlog />} />
-                  
-                  {/* Business Routes */}
-                  <Route path="business/form990" element={<Form990 />} />
-                  <Route path="business/transfer-pricing" element={<TransferPricing />} />
-                  <Route path="documents" element={<DocumentRepositoryPage />} />
-                  
-                  {/* AI Routes */}
-                  <Route path="ai/agent" element={<AgentServicePage />} />
-                  <Route path="ai/tools" element={<ToolsServicePage />} />
-                  <Route path="ai/applications" element={<ApplicationsPage />} />
-                  
-                  {/* Template Routes */}
-                  <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jBlog />} />
-                  
-                  {/* Catch-all route */}
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
+          <div className="min-h-screen bg-background text-foreground">
+            <Toaster />
+            <Sonner />
+            <BrowserRouter basename="/">
+              <Suspense fallback={
+                <div className="w-full h-screen flex items-center justify-center bg-white text-black">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <span className="ml-2">Loading...</span>
+                </div>
+              }>
+                <Routes>
+                  <Route path="/" element={<MainLayout />}>
+                    {/* Redirect base path to portfolio */}
+                    <Route index element={<Portfolio />} />
+                    
+                    {/* Portfolio Routes */}
+                    <Route path="portfolio" element={<Portfolio />} />
+                    <Route path="portfolio/blogs" element={<Blogs />} />
+                    <Route path="portfolio/blogs/:id" element={<BlogPost />} />
+                    <Route path="portfolio/blogs/create" element={<CreateBlog />} />
+                    
+                    {/* Business Routes */}
+                    <Route path="business/form990" element={<Form990 />} />
+                    <Route path="business/transfer-pricing" element={<TransferPricing />} />
+                    <Route path="documents" element={<DocumentRepositoryPage />} />
+                    
+                    {/* AI Routes */}
+                    <Route path="ai/agent" element={<AgentServicePage />} />
+                    <Route path="ai/tools" element={<ToolsServicePage />} />
+                    <Route path="ai/applications" element={<ApplicationsPage />} />
+                    
+                    {/* Template Routes */}
+                    <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jBlog />} />
+                    
+                    {/* Catch-all route */}
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </div>
         </SidebarProvider>
       </TooltipProvider>
     </QueryClientProvider>

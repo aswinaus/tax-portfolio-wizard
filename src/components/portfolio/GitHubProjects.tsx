@@ -36,6 +36,7 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
   useEffect(() => {
     const loadGitHubRepos = async () => {
       try {
+        console.log('Fetching GitHub repos, attempt:', retryCount + 1);
         setLoading(true);
         const fetchedRepos = await fetchGitHubRepos();
         
@@ -47,6 +48,7 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
         setRepos(fetchedRepos);
         setFilteredRepos(fetchedRepos);
         setError(null);
+        console.log('Fetched repos successfully:', fetchedRepos.length);
       } catch (err) {
         console.error('Error in GitHub component:', err);
         
@@ -112,21 +114,22 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
   // Get unique languages for filter
   const languages = ['all', ...Array.from(new Set(repos.map(repo => repo.language).filter(Boolean)))];
 
-  return (
-    <section className="space-y-6" id={id} ref={githubRef}>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl font-display font-semibold">GitHub Projects</h2>
-        <a 
-          href="https://github.com/aswinaus" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="flex items-center text-sm text-primary hover:underline"
-        >
-          View GitHub Profile <ExternalLink className="ml-1 h-3 w-3" />
-        </a>
-      </div>
-      
-      {error ? (
+  // Let's add a fallback component for empty/error state
+  if (error) {
+    return (
+      <section className="space-y-6 bg-background text-foreground" id={id} ref={githubRef}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 className="text-2xl font-display font-semibold">GitHub Projects</h2>
+          <a 
+            href="https://github.com/aswinaus" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center text-sm text-primary hover:underline"
+          >
+            View GitHub Profile <ExternalLink className="ml-1 h-3 w-3" />
+          </a>
+        </div>
+        
         <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Repository Access Error</AlertTitle>
@@ -149,11 +152,38 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
             </div>
           </AlertDescription>
         </Alert>
-      ) : loading ? (
+      </section>
+    );
+  }
+
+  if (loading) {
+    return (
+      <section className="space-y-6 bg-background text-foreground" id={id} ref={githubRef}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 className="text-2xl font-display font-semibold">GitHub Projects</h2>
+        </div>
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      ) : repos.length === 0 ? (
+      </section>
+    );
+  }
+
+  return (
+    <section className="space-y-6 bg-background text-foreground" id={id} ref={githubRef}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-2xl font-display font-semibold">GitHub Projects</h2>
+        <a 
+          href="https://github.com/aswinaus" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center text-sm text-primary hover:underline"
+        >
+          View GitHub Profile <ExternalLink className="ml-1 h-3 w-3" />
+        </a>
+      </div>
+      
+      {repos.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-muted-foreground">No repositories found</p>
         </div>
