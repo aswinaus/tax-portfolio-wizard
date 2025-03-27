@@ -10,7 +10,7 @@ import { Bot, Database, Loader2, Send, Code, Terminal } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Neo4jVectorSearch } from "@/utils/neo4jVectorSearch";
-import neo4j from "neo4j-driver";
+import { Driver } from "neo4j-driver";
 
 const apiKeySchema = z.object({
   apiKey: z.string().min(1, "OpenAI API key is required"),
@@ -21,7 +21,7 @@ interface Neo4jVectorSearchToolProps {
   neo4jUsername: string;
   neo4jPassword: string;
   isConnected: boolean;
-  driver: neo4j.Driver | null;
+  driver: Driver | null;
 }
 
 const Neo4jVectorSearchTool = ({

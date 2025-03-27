@@ -1,5 +1,5 @@
-
 import OpenAI from 'openai';
+import { Driver } from 'neo4j-driver';
 
 // Neo4j Vector Search utility
 export interface Neo4jVectorSearchConfig {
@@ -20,7 +20,7 @@ export interface QueryOptions {
 export class Neo4jVectorSearch {
   private openai: OpenAI;
   private config: Neo4jVectorSearchConfig;
-  private driver: any; // neo4j.Driver
+  private driver: Driver | null = null;
   private cypherGenerationTemplate: string;
   private cypherQATemplate: string;
 
@@ -70,7 +70,7 @@ Question: {question}
 Helpful Answer:`;
   }
 
-  async connect(neo4jDriver: any) {
+  async connect(neo4jDriver: Driver) {
     this.driver = neo4jDriver;
     // Test connection
     const session = this.driver.session();
@@ -193,7 +193,7 @@ Helpful Answer:`;
       const cypherQuery = await this.generateCypherQuery(question);
       
       // Execute the Cypher query
-      const session = this.driver.session();
+      const session = this.driver!.session();
       try {
         const result = await session.run(cypherQuery);
         const records = result.records.map(record => {

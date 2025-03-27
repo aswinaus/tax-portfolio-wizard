@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Database, Server, Settings, Terminal, Code, Send, Loader2, Bot } from "lucide-react";
 import * as z from "zod";
-import neo4j from 'neo4j-driver';
+import neo4j, { Driver } from 'neo4j-driver';
 import { toast } from "@/components/ui/use-toast";
 import Neo4jVectorSearchTool from "@/components/ai/Neo4jVectorSearchTool";
 
@@ -27,7 +27,7 @@ const ToolsServicePage = () => {
   const [result, setResult] = useState<string | null>(null);
   const [cypherQuery, setCypherQuery] = useState<string | null>(null);
   const [executionSteps, setExecutionSteps] = useState<string[]>([]);
-  const driverRef = useRef<neo4j.Driver | null>(null);
+  const driverRef = useRef<Driver | null>(null);
   const [connectionDetails, setConnectionDetails] = useState({
     url: "neo4j+s://demo.neo4jlabs.com:7687",
     username: "movies",
