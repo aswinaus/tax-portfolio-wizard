@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { ChevronLeft, PlusCircle, Presentation } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -491,11 +492,11 @@ prompt templates with domain-specific knowledge.</p>
 `;
 
       const newBlog = createBlogPost({
-        title: "Building a Tax Agent with Neo4j Graph Database Integration",
-        excerpt: "A comprehensive guide to creating an intelligent Tax Agent that leverages Neo4j graph database for answering tax-related queries with code examples for implementation.",
+        title: "Building a Tax Agent with Neo4J GraphDB Integration",
+        excerpt: "A comprehensive guide to creating an intelligent Tax Agent that leverages Neo4J GraphDB for answering tax-related queries with code examples for implementation.",
         content: taxAgentContent,
         author: "Aswin Bhaskaran",
-        tags: ["Neo4j", "Graph Database", "Tax", "LangChain", "OpenAI"],
+        tags: ["Neo4J", "GraphDB", "Tax", "LangChain", "OpenAI"],
         image: "https://images.unsplash.com/photo-1616077168087-712f9c233d07?q=80&w=1280",
         category: "technology"
       });
@@ -504,7 +505,7 @@ prompt templates with domain-specific knowledge.</p>
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
       
       // Navigate to the newly created blog post
-      toast.success("Tax Agent Neo4j blog post created successfully!");
+      toast.success("Tax Agent Neo4J GraphDB blog post created successfully!");
       navigate(`/portfolio/blogs/${newBlog.id}`);
     }
   };
