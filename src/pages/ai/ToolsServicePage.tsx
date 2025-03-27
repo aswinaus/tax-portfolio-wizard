@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -46,7 +45,8 @@ const ToolsServicePage = () => {
   const [serverlessEndpoint, setServerlessEndpoint] = useState('https://aswin-langchain-neo4j.netlify.app/.netlify/functions');
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('query');
-  const [useCorsProxy, setUseCorsProxy] = useState(false); // Default to false (no proxy)
+  // Set useCorsProxy to false by default as requested
+  const [useCorsProxy, setUseCorsProxy] = useState(false); 
   const [corsProxyUrl, setCorsProxyUrl] = useState(CORS_PROXIES[0].url);
   const [selectedProxy, setSelectedProxy] = useState(0);
   const [isAzureFunction, setIsAzureFunction] = useState(true); // Set default to Azure
@@ -87,8 +87,9 @@ Relationship types:
     return endpoint;
   };
 
-  // Utility function to handle CORS proxy
+  // Utility function to handle CORS proxy - Updated to NOT use proxy by default
   const getFetchUrl = (url: string) => {
+    // Return the original URL directly if we're not using a proxy
     if (!useCorsProxy) return url;
     
     // Make sure the URL is properly encoded
@@ -111,6 +112,7 @@ Relationship types:
       
       const fetchUrl = getFetchUrl(url);
       console.log(`Fetching URL: ${fetchUrl}`);
+      console.log(`Using CORS proxy: ${useCorsProxy ? 'Yes' : 'No'}`);
       
       const response = await fetch(fetchUrl, {
         ...options,
@@ -805,324 +807,12 @@ cypher_chain = GraphCypherQAChain.from_llm(
             )}
           </div>
           
-          <Alert variant={isServerlessFunctionAvailable ? "default" : "destructive"}>
-            <AlertTitle>Connection Status</AlertTitle>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Direct Connection Active</AlertTitle>
             <AlertDescription>
-              {isServerlessFunctionAvailable 
-                ? `${isAzureFunction ? "Azure" : "Netlify"} function is reachable and responding properly.` 
-                : `${isAzureFunction ? "Azure" : "Netlify"} function is not responding. Check the URL and network configuration.`}
+              <p>Your application is configured to connect directly to the serverless function without using a CORS proxy.</p>
             </AlertDescription>
           </Alert>
           
-          {isAzureFunction && (
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertTitle>Azure Function Configuration</AlertTitle>
-              <AlertDescription>
-                <p className="mb-2">For Azure Functions to work correctly:</p>
-                <ol className="list-decimal list-inside text-sm space-y-1">
-                  <li>Make sure your Azure Function has CORS properly configured</li>
-                  <li>Ensure route templates are set with /api prefix in host.json</li>
-                  <li>Your functions should return proper headers for CORS</li>
-                </ol>
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <div className="p-3 bg-muted rounded-md">
-            <h3 className="text-sm font-medium mb-2">Troubleshooting Steps</h3>
-            <ol className="list-decimal list-inside space-y-1 text-sm">
-              <li>Verify that the serverless function is deployed and running</li>
-              <li>Try different CORS proxy options from the list above</li>
-              <li>Check for CORS issues - the server must allow requests from your domain</li>
-              <li>Use browser developer tools to inspect network requests for more details</li>
-            </ol>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  return (
-    <div className="container mx-auto py-8 px-4 space-y-6 max-w-7xl">
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tight">Neo4j Graph Tools</h1>
-        <p className="text-muted-foreground">Query your Neo4j graph database using natural language</p>
-      </div>
-      
-      <Tabs defaultValue="query" className="w-full" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto mb-4">
-          <TabsTrigger value="query">Query</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-          <TabsTrigger value="code">Code Samples</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="query" className="space-y-4">
-          {/* Neo4j Credentials Form */}
-          {!isConnected ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  Neo4j Database Connection
-                </CardTitle>
-                <CardDescription>
-                  Connect to your Neo4j database to query it using natural language
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  handleCredentialsSubmit(credentialsForm.getValues());
-                }} className="space-y-4">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <FormLabel>Database URL</FormLabel>
-                      <Input
-                        id="url"
-                        placeholder="neo4j+s://your-instance.databases.neo4j.io"
-                        {...credentialsForm.register('url')}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Format: neo4j+s://instance.databases.neo4j.io for Neo4j Aura or bolt://localhost:7687 for local
-                      </p>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <FormLabel>Username</FormLabel>
-                      <Input
-                        id="username"
-                        placeholder="neo4j"
-                        {...credentialsForm.register('username')}
-                      />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <FormLabel>Password</FormLabel>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="Your Neo4j password"
-                        {...credentialsForm.register('password')}
-                      />
-                    </div>
-                  </div>
-                </form>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => setUseDummyResponse(!useDummyResponse)}
-                >
-                  {useDummyResponse ? "Use Real Connection" : "Use Demo Mode"}
-                </Button>
-                <Button
-                  onClick={() => handleCredentialsSubmit(credentialsForm.getValues())}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Connecting...
-                    </>
-                  ) : (
-                    "Connect"
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : (
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  Connected to Neo4j
-                </Badge>
-                {useDummyResponse && (
-                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                    Demo Mode
-                  </Badge>
-                )}
-              </div>
-              <Button variant="outline" size="sm" onClick={handleDisconnect}>
-                Disconnect
-              </Button>
-            </div>
-          )}
-          
-          {/* Query Input */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Terminal className="h-5 w-5" />
-                Natural Language Query
-              </CardTitle>
-              <CardDescription>
-                Ask a question about your Neo4j graph data in plain English
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleQuerySubmit} className="space-y-4">
-                <div className="grid gap-2">
-                  <div className="flex gap-2">
-                    <Input
-                      id="query"
-                      placeholder="e.g., Find all non-profit organizations in California"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      disabled={!isConnected || isLoading}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="submit"
-                      disabled={!isConnected || isLoading || !query.trim()}
-                      className="shrink-0"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Try: "What non-profit organizations are in California?", "Find all 501(c)(3) organizations in zip code 95814"
-                  </p>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-          
-          {/* Connection Error */}
-          {connectionError && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Connection Error</AlertTitle>
-              <AlertDescription>{connectionError}</AlertDescription>
-            </Alert>
-          )}
-          
-          {/* Execution Steps */}
-          {executionSteps.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Execution Steps</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ol className="space-y-1 text-sm list-decimal list-inside pl-2">
-                  {executionSteps.map((step, index) => (
-                    <li key={index} className="text-muted-foreground">
-                      {index === executionSteps.length - 1 && isLoading ? (
-                        <span className="flex items-center">
-                          <Loader2 className="h-3 w-3 animate-spin mr-2" />
-                          {step}
-                        </span>
-                      ) : (
-                        step
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Cypher Query Result */}
-          {cypherQuery && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Code className="h-4 w-4" /> Generated Cypher Query
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-muted p-3 rounded-md font-mono text-sm overflow-x-auto">
-                  {cypherQuery}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Query Result */}
-          {result && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Result</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose dark:prose-invert max-w-none">
-                  <p className="whitespace-pre-line">{result}</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="settings">
-          {renderSettingsTabContent()}
-          
-          {/* Debug Information Card */}
-          {debugInfo && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Debug Information</CardTitle>
-                <CardDescription>Technical details about the serverless function connection</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-muted p-3 rounded-md overflow-auto max-h-60">
-                  <pre className="text-xs">{JSON.stringify(debugInfo, null, 2)}</pre>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="code">
-          <Card>
-            <CardHeader>
-              <CardTitle>Code Samples</CardTitle>
-              <CardDescription>
-                Python code samples for setting up Neo4j with LangChain
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="vector-index">
-                  <AccordionTrigger className="text-left font-medium">
-                    Setting up Neo4j Vector Index
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="bg-muted p-3 rounded-md font-mono text-sm overflow-x-auto whitespace-pre">
-                      {codeBlocks.vectorIndex}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="prompt-templates">
-                  <AccordionTrigger className="text-left font-medium">
-                    Creating Prompt Templates
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="bg-muted p-3 rounded-md font-mono text-sm overflow-x-auto whitespace-pre">
-                      {codeBlocks.promptTemplates}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="graph-chain">
-                  <AccordionTrigger className="text-left font-medium">
-                    Setting up GraphCypherQAChain
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="bg-muted p-3 rounded-md font-mono text-sm overflow-x-auto whitespace-pre">
-                      {codeBlocks.graphChain}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
-
-export default ToolsServicePage;
+          <Alert variant={isServerlessFunctionAvailable ? "default" : "destructive"}>
