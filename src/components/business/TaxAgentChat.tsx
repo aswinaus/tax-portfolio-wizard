@@ -15,7 +15,6 @@ interface Message {
   timestamp: Date;
 }
 
-// Lyzr API response structure
 interface LyzrResponse {
   response: string;
   conversation_id?: string;
@@ -45,6 +44,12 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
     WHERE n.name > 10000
     RETURN COUNT(s)
   `;
+
+  const sampleResults = [
+    { 'STATE': 'CA', 'No_of_return': '5506120' },
+    { 'STATE': 'TX', 'No_of_return': '4011241' },
+    { 'STATE': 'NY', 'No_of_return': '3625364' }
+  ];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -114,6 +119,7 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
           extension: "You can request an automatic 6-month extension by filing Form 8868 before the due date.",
           requirements: "Organizations with gross receipts ≥ $200,000 or total assets ≥ $500,000 must file Form 990. Smaller organizations may file Form 990-EZ or 990-N (e-Postcard).",
           cypher: `I can provide information about Neo4j queries. Here's a sample Cypher query for tax data:\n\n${sampleCypherQuery}`,
+          returns: `The state CA has the maximum number of returns with 5506120 returns, followed by TX with 4011241 returns, and NY with 3625364 returns.`,
         };
         
         let response = demoResponses.default;
@@ -127,6 +133,8 @@ const TaxAgentChat = ({ useDirectConnection = false }: TaxAgentChatProps) => {
           response = demoResponses.requirements;
         } else if (lowercaseMsg.includes('cypher') || lowercaseMsg.includes('query') || lowercaseMsg.includes('neo4j')) {
           response = demoResponses.cypher;
+        } else if (lowercaseMsg.includes('maximum') || lowercaseMsg.includes('returns') || lowercaseMsg.includes('which state')) {
+          response = demoResponses.returns;
         }
         
         return { response, conversation_id: 'demo-mode' };

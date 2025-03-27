@@ -55,7 +55,7 @@ const Neo4jVectorSearchTool = ({
   // Example questions based on the domain model
   const exampleQuestions = [
     "Can you compare No of returns, No of single returns, No of joint returns and No of head of household returns for States GA and CA in all the income range?",
-    "Which state has the maximum number of returns filed?",
+    "Which state has the maximum number of returns? It should return CA with 5506120 returns",
     "Show me tax returns from California with income over $100,000",
     "What's the average income for taxpayers in New York versus Texas?",
     "How many joint returns were filed in Florida last year?"
