@@ -30,8 +30,8 @@ const ToolsServicePage = () => {
   const driverRef = useRef<Driver | null>(null);
   const isMobile = useIsMobile();
   const [connectionDetails, setConnectionDetails] = useState({
-    url: "neo4j+s://demo.neo4jlabs.com:7687",
-    username: "taxdata",
+    url: "neo4j+s://4e3ae988.databases.neo4j.io",
+    username: "neo4j",
     password: "",
   });
   
