@@ -75,16 +75,16 @@ const Neo4jVectorSearchTool = ({
       console.log("Creating Neo4jVectorSearch instance with config:", {
         url: neo4jUrl,
         username: neo4jUsername,
-        indexName: "incometax"
+        indexName: "taxdata"
       });
       
       const search = new Neo4jVectorSearch(key, {
         url: neo4jUrl,
         username: neo4jUsername,
         password: neo4jPassword,
-        indexName: "incometax",
-        nodeLabel: "__Entity__",
-        textNodeProperties: ["name", "entity", "zipcode"],
+        indexName: "taxdata",
+        nodeLabel: "TaxEntity",
+        textNodeProperties: ["name", "ein", "zipcode"],
         embeddingNodeProperty: "embedding"
       });
       
@@ -171,17 +171,17 @@ const Neo4jVectorSearchTool = ({
         <CardHeader>
           <CardTitle className="flex items-center">
             <Bot className="mr-2 h-5 w-5" />
-            Neo4j Vector Search
+            Neo4j Tax Vector Search
           </CardTitle>
           <CardDescription>
-            Query your Neo4j graph database with natural language
+            Query your Neo4j tax database with natural language
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!isConnected ? (
             <div className="bg-amber-50 p-4 rounded-md border border-amber-200 text-amber-800 mb-4">
               <p className="font-medium">Database connection required</p>
-              <p className="text-sm mt-1">Connect to your Neo4j database first</p>
+              <p className="text-sm mt-1">Connect to your Neo4j tax database first</p>
             </div>
           ) : !apiKey ? (
             <div className="bg-amber-50 p-4 rounded-md border border-amber-200 text-amber-800 mb-4">
@@ -201,7 +201,7 @@ const Neo4jVectorSearchTool = ({
             <div className="bg-green-50 p-4 rounded-md border border-green-200 text-green-800 mb-4">
               <p className="font-medium">Ready to search</p>
               <p className="text-sm mt-1">
-                Neo4j Vector Search is configured and ready to use
+                Neo4j Tax Vector Search is configured and ready to use
               </p>
               <div className="mt-2 text-xs">
                 Connected to: {neo4jUrl} as {neo4jUsername}
@@ -217,7 +217,7 @@ const Neo4jVectorSearchTool = ({
                   id="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Ask a question about your data..."
+                  placeholder="Ask a question about your tax data..."
                   className="flex-grow"
                   disabled={!isConnected || !apiKey || isSearching}
                 />

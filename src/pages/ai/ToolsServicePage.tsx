@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +30,7 @@ const ToolsServicePage = () => {
   const isMobile = useIsMobile();
   const [connectionDetails, setConnectionDetails] = useState({
     url: "neo4j+s://demo.neo4jlabs.com:7687",
-    username: "movies",
+    username: "taxdata",
     password: "",
   });
   
@@ -451,7 +450,7 @@ LIMIT 10`;
                       <FormItem>
                         <FormLabel>Neo4j Username</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="neo4j" />
+                          <Input {...field} placeholder="taxdata" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
