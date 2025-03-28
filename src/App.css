@@ -1,8 +1,8 @@
 
 #root {
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  /* Removing padding to fix layout issues */
   /* Removing text-align: center to fix alignment issues */
 }
 
