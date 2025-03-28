@@ -23,7 +23,8 @@ import {
   RefreshCw,
   ArrowUp,
   ArrowDown,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Bot
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -557,6 +558,45 @@ const DocumentRepository = () => {
               Securely store, organize, and manage all your important documents. Use the repository to store Form 990 submissions, 
               financial data, and other critical business documents.
             </p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mb-6">
+        <div className="flex items-center mb-4">
+          <Bot className="h-5 w-5 text-primary mr-2" />
+          <h3 className="font-medium">Tax Agent Assistant</h3>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TaxAgentChat useDirectConnection={false} />
+          <div className="bg-muted/50 rounded-lg p-6 border flex flex-col justify-center">
+            <h4 className="font-medium mb-3">What can Tax Agent help you with?</h4>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start">
+                <div className="rounded-full bg-primary/10 p-1 mr-2 mt-0.5">
+                  <CheckSquare className="h-3 w-3 text-primary" />
+                </div>
+                <span>Form 990 filing requirements and deadlines</span>
+              </li>
+              <li className="flex items-start">
+                <div className="rounded-full bg-primary/10 p-1 mr-2 mt-0.5">
+                  <CheckSquare className="h-3 w-3 text-primary" />
+                </div>
+                <span>Tax code interpretations for non-profit documents</span>
+              </li>
+              <li className="flex items-start">
+                <div className="rounded-full bg-primary/10 p-1 mr-2 mt-0.5">
+                  <CheckSquare className="h-3 w-3 text-primary" />
+                </div>
+                <span>Document classification and organization recommendations</span>
+              </li>
+              <li className="flex items-start">
+                <div className="rounded-full bg-primary/10 p-1 mr-2 mt-0.5">
+                  <CheckSquare className="h-3 w-3 text-primary" />
+                </div>
+                <span>Neo4j queries for tax-related document information</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
