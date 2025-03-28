@@ -302,7 +302,6 @@ const DocumentUpload = ({ onUploadComplete, onClose }: DocumentUploadProps) => {
         <input 
           type="file" 
           id="file-upload" 
-          data-testid="file-upload"
           multiple 
           className="hidden" 
           onChange={handleFileChange}

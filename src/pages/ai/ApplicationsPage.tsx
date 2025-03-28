@@ -1,8 +1,13 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { MoreVertical, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { ApplicationsList } from '@/components/ai/ApplicationsList';
 
 const ApplicationsPage = () => {
@@ -19,11 +24,11 @@ const ApplicationsPage = () => {
               Applications
             </h1>
             <p className="text-muted-foreground">
-              Manage and monitor all your applications
+              Manage and monitor all your application requests
             </p>
           </div>
           <Button className="bg-yellow-400 hover:bg-yellow-500 text-black">
-            <Plus className="mr-2 h-4 w-4" /> Add Application
+            <Plus className="mr-2 h-4 w-4" /> Add Product
           </Button>
         </div>
         

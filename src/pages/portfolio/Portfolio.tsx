@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Import the components
+// Import the newly created components
 import Biography from '@/components/portfolio/Biography';
 import Skills from '@/components/portfolio/Skills';
 import GitHubProjects from '@/components/portfolio/GitHubProjects';
@@ -18,17 +18,10 @@ const Portfolio = () => {
   const githubRef = useRef<HTMLDivElement>(null);
   const certificationsRef = useRef<HTMLDivElement>(null);
   
-  // Set default active tab
-  const [activeTab, setActiveTab] = useState(location.hash === '#achievements' ? 'achievements' : 'about');
+  // Determine active tab based on URL hash
+  const activeTab = location.hash === '#achievements' ? 'achievements' : 'about';
 
-  // Handle hash changes
   useEffect(() => {
-    if (location.hash === '#achievements') {
-      setActiveTab('achievements');
-    } else if (location.hash === '#about' || location.hash === '') {
-      setActiveTab('about');
-    }
-    
     if (location.hash === '#github' && githubRef.current) {
       githubRef.current.scrollIntoView({ behavior: 'smooth' });
     } else if (location.hash === '#certifications' && certificationsRef.current) {
@@ -58,7 +51,7 @@ const Portfolio = () => {
       </motion.div>
 
       {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs defaultValue={activeTab} className="w-full">
         <TabsList className="mb-8 w-full md:w-auto">
           <TabsTrigger value="about" className="text-sm">About Me</TabsTrigger>
           <TabsTrigger value="achievements" className="text-sm">Achievements</TabsTrigger>
