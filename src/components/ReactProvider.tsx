@@ -20,29 +20,18 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
       
       try {
         // Create a complete copy of React on window regardless of existing state
-        // @ts-ignore - This is a necessary workaround
         window.React = { ...React };
         
         // Directly assign critical methods
-        // @ts-ignore - Deliberate assignment for compatibility
         window.React.forwardRef = React.forwardRef;
-        // @ts-ignore
         window.React.createElement = React.createElement;
-        // @ts-ignore
         window.React.Fragment = React.Fragment;
-        // @ts-ignore
         window.React.createContext = React.createContext;
-        // @ts-ignore
         window.React.useState = React.useState;
-        // @ts-ignore
         window.React.useEffect = React.useEffect;
-        // @ts-ignore
         window.React.useRef = React.useRef;
-        // @ts-ignore
         window.React.memo = React.memo;
-        // @ts-ignore
         window.React.Suspense = React.Suspense;
-        // @ts-ignore
         window.React.lazy = React.lazy;
         
         // Verify critical methods
