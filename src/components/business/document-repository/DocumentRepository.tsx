@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, FileText, Filter, Search, Tag, Upload, Settings, BarChart2, History, Archive, Plus, X, Check, ChevronRight, Clock, MoreHorizontal, DownloadCloud, RefreshCw, File, Folder, Grid, List, CheckSquare } from 'lucide-react';
@@ -16,8 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import DocumentUpload from './DocumentUpload';
 import LyzrDocumentAgentChat from './LyzrDocumentAgentChat';
-
-// Remove any imports or references to TaxAgentChat here
 
 // Types
 type Document = {
@@ -173,7 +170,7 @@ const DocumentRepository: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>(documentData);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>(documentData);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode<'grid' | 'list'>('grid');
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<DocumentFilter>({
@@ -863,151 +860,4 @@ const DocumentRepository: React.FC = () => {
                           }
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {['2 hours ago', '5 hours ago', 'Yesterday', '2 days ago', '3 days ago'][i % 5]}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div>
-          <div className="flex items-center mb-4">
-            <Archive className="h-5 w-5 text-primary mr-2" />
-            <h3 className="font-medium">Archival Management</h3>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <h4 className="font-medium mb-3">Document Retention Policy</h4>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Configure how long documents should be retained before being archived or deleted permanently.
-                </p>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium">Tax Documents</p>
-                      <p className="text-xs text-muted-foreground">Form 990, tax returns, etc.</p>
-                    </div>
-                    <Select defaultValue="7years">
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select a duration" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="3years">3 Years</SelectItem>
-                        <SelectItem value="5years">5 Years</SelectItem>
-                        <SelectItem value="7years">7 Years</SelectItem>
-                        <SelectItem value="indefinite">Indefinite</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium">Financial Records</p>
-                      <p className="text-xs text-muted-foreground">Statements, donation records, etc.</p>
-                    </div>
-                    <Select defaultValue="5years">
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select a duration" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="3years">3 Years</SelectItem>
-                        <SelectItem value="5years">5 Years</SelectItem>
-                        <SelectItem value="7years">7 Years</SelectItem>
-                        <SelectItem value="indefinite">Indefinite</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium">General Documents</p>
-                      <p className="text-xs text-muted-foreground">Meeting minutes, reports, etc.</p>
-                    </div>
-                    <Select defaultValue="3years">
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select a duration" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1year">1 Year</SelectItem>
-                        <SelectItem value="3years">3 Years</SelectItem>
-                        <SelectItem value="5years">5 Years</SelectItem>
-                        <SelectItem value="indefinite">Indefinite</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <h4 className="font-medium mb-3">Repository Overview</h4>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Securely store, organize, and manage all your important documents. Use the repository to store Form 990 submissions, 
-                  financial data, and other critical business documents.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Add the missing Database and Files components needed for the Document Analytics section
-const Database = (props: any) => {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-    </svg>
-  );
-};
-
-const Files = (props: any) => {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z" />
-      <path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8" />
-      <path d="M15 2v5h5" />
-    </svg>
-  );
-};
-
-export default DocumentRepository;
+                          {['2 hours ago', '
