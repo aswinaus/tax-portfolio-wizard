@@ -7,12 +7,12 @@ interface ReactProviderProps {
 
 /**
  * ReactProvider ensures React context is properly established
- * This component helps fix forwardRef issues by ensuring React
- * is properly imported and initialized throughout the component tree
+ * This component wraps the entire application to ensure forwardRef works correctly
+ * It provides the React context needed for proper component rendering
  */
 const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
   // Simple wrapper component to ensure React context
-  return <>{children}</>;
+  return <React.Fragment>{children}</React.Fragment>;
 };
 
 export default ReactProvider;

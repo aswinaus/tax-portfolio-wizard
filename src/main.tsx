@@ -3,6 +3,7 @@ import React from 'react' // Explicitly import React to fix forwardRef issue
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import ReactProvider from './components/ReactProvider.tsx'
 
 // Add this to the window object to help with API calls
 declare global {
@@ -45,9 +46,11 @@ if (!rootElement) {
   try {
     console.log("About to render the application");
     root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
+      <ReactProvider>
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      </ReactProvider>
     );
     console.log("Application successfully rendered");
   } catch (error) {

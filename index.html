@@ -12,6 +12,10 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap">
     <!-- Add base path for SPA routing -->
     <base href="/" />
+    <!-- Preload React to ensure it's available before any components -->
+    <script>
+      window.process = { env: { NODE_ENV: 'production' } };
+    </script>
   </head>
 
   <body>
