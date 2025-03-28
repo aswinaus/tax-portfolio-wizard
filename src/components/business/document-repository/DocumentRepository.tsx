@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, ChevronUp, FileText, Filter, Search, Tag, Upload, Settings, BarChart2, History, Archive, Plus, X, Check, ChevronRight, Clock, MoreHorizontal, DownloadCloud, RefreshCw, File, Folder, Grid, List, CheckSquare, Database, Files, LayoutGrid } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileText, Filter, Search, Tag, Upload, Settings, BarChart2, History, Archive, Plus, X, Check, ChevronRight, Clock, MoreHorizontal, DownloadCloud, RefreshCw, File, Folder, List, CheckSquare, Database, Files, LayoutGrid } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -289,31 +289,37 @@ const DocumentRepository: React.FC = () => {
   };
   
   // Handle document upload
-  const handleUpload = (files: File[]) => {
-    console.log('Files uploaded:', files);
-    // In a real application, this would involve API calls to upload the documents
-    // For now, we'll just simulate adding them to our local state
-    
-    const newDocuments = files.map((file, index) => ({
-      id: `new-${Date.now()}-${index}`,
-      name: file.name,
-      type: file.name.split('.').pop()?.toUpperCase() || 'UNKNOWN',
-      size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-      uploadDate: new Date().toISOString().split('T')[0],
-      lastModified: new Date().toISOString().split('T')[0],
+  const handleUpload = (fileDetails: {
+    name: string;
+    type: string;
+    size: string;
+    uploadedBy: string;
+    uploadDate: string;
+    metadata: any;
+    githubUrl?: string;
+  }) => {
+    console.log('Files uploaded:', fileDetails);
+    // Simulate adding the file to our documents list
+    const newDocument: Document = {
+      id: `new-${Date.now()}`,
+      name: fileDetails.name,
+      type: fileDetails.type,
+      size: fileDetails.size,
+      uploadDate: fileDetails.uploadDate,
+      lastModified: fileDetails.uploadDate,
       status: 'processing' as const,
       tags: [],
       owner: {
-        name: 'Current User',
+        name: fileDetails.uploadedBy,
         avatar: '',
       },
       meta: {
         year: new Date().getFullYear().toString(),
         organization: 'ABC Nonprofit',
       },
-    }));
+    };
     
-    setDocuments(prev => [...newDocuments, ...prev]);
+    setDocuments(prev => [newDocument, ...prev]);
     setShowUploadModal(false);
   };
   
