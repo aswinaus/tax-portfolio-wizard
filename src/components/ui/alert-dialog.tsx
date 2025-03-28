@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
@@ -7,9 +8,11 @@ import { buttonVariants } from "@/components/ui/button"
 // Instead of trying to modify React.forwardRef, create a fallback function
 const forwardRefFallback = React.forwardRef || function(render) {
   console.error("React.forwardRef is not available in alert-dialog.tsx, using fallback");
-  return function(props) {
+  const FallbackComponent = function(props) {
     return render(props, null);
   };
+  // Make the fallback component capable of receiving a displayName
+  return FallbackComponent;
 };
 
 const AlertDialog = AlertDialogPrimitive.Root
@@ -101,8 +104,7 @@ const AlertDialogDescription = forwardRefFallback<
     {...props}
   />
 ))
-AlertDialogDescription.displayName =
-  AlertDialogPrimitive.Description.displayName
+AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName
 
 const AlertDialogAction = forwardRefFallback<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,

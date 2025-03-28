@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils"
 // Instead of trying to modify React.forwardRef, create a fallback function
 const forwardRefFallback = React.forwardRef || function(render) {
   console.error("React.forwardRef is not available in label.tsx, using fallback");
-  return function(props) {
+  const FallbackComponent = function(props) {
     return render(props, null);
   };
+  // Make the fallback component capable of receiving a displayName
+  return FallbackComponent;
 };
 
 const labelVariants = cva(

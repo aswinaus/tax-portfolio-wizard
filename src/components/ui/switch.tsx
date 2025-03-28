@@ -1,9 +1,20 @@
+
 import * as React from "react"
 import * as SwitchPrimitives from "@radix-ui/react-switch"
 
 import { cn } from "@/lib/utils"
 
-const Switch = React.forwardRef<
+// Create a fallback function for forwardRef to ensure the component works
+const forwardRefFallback = React.forwardRef || function(render) {
+  console.error("React.forwardRef is not available in switch.tsx, using fallback");
+  const FallbackComponent = function(props) {
+    return render(props, null);
+  };
+  // Make the fallback component capable of receiving a displayName
+  return FallbackComponent;
+};
+
+const Switch = forwardRefFallback<
   React.ElementRef<typeof SwitchPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
 >(({ className, ...props }, ref) => (
