@@ -1,3 +1,4 @@
+
 import { FC, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -22,6 +23,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
+// Sidebar item interface
 interface SidebarItemProps {
   icon: React.ElementType;
   label: string;
@@ -32,6 +34,7 @@ interface SidebarItemProps {
   children?: React.ReactNode;
 }
 
+// Sidebar section interface
 interface SidebarSectionProps {
   title: string;
   children: React.ReactNode;
@@ -216,8 +219,8 @@ export const MainSidebar: FC = () => {
           <SidebarItem 
             icon={Folder} 
             label="My Documents Repository" 
-            to="/documents" 
-            isActive={pathname === "/documents"} 
+            to="/" 
+            isActive={pathname === "/"} 
           />
           <SidebarItem 
             icon={FileText} 
@@ -233,6 +236,7 @@ export const MainSidebar: FC = () => {
           />
         </SidebarSection>
         
+        {/* New AI Section */}
         <SidebarSection title="AI" collapsible={true}>
           <SidebarItem 
             icon={Bot} 

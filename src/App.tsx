@@ -11,6 +11,7 @@ import { lazy, Suspense } from "react";
 import MainLayout from "./layouts/MainLayout";
 
 // Pages
+import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 // Lazy loaded pages for better performance
@@ -22,7 +23,7 @@ const Form990 = lazy(() => import("./pages/business/Form990"));
 const TransferPricing = lazy(() => import("./pages/business/TransferPricing"));
 const DocumentRepositoryPage = lazy(() => import("./pages/documents/DocumentRepositoryPage"));
 
-// AI Pages
+// New AI Pages
 const AgentServicePage = lazy(() => import("./pages/ai/AgentServicePage"));
 const ToolsServicePage = lazy(() => import("./pages/ai/ToolsServicePage"));
 

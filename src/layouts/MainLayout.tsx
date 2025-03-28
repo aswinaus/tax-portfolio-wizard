@@ -32,6 +32,18 @@ const MainLayout = () => {
     }
   }, [location.pathname, isMobile]);
 
+  // Add a meta tag to hide the "Edit with Lovable" button
+  useEffect(() => {
+    const meta = document.createElement('meta');
+    meta.name = 'lovable:editor';
+    meta.content = 'hidden';
+    document.head.appendChild(meta);
+    
+    return () => {
+      document.head.removeChild(meta);
+    };
+  }, []);
+
   return (
     <div className="flex min-h-screen w-full bg-background overflow-hidden">
       {/* Sidebar */}
