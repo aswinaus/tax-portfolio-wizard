@@ -1,1263 +1,1012 @@
-import { useState, useEffect } from 'react';
-import { 
-  Folder, 
-  Upload, 
-  Download, 
-  Archive, 
-  Lock,
-  File,
-  FileText,
-  Trash2,
-  CheckSquare,
-  Square,
-  Search,
-  Filter,
-  FolderOpen,
-  Copy,
-  Flag,
-  List,
-  Box,
-  User,
-  Move,
-  Settings,
-  RefreshCw,
-  ArrowUp,
-  ArrowDown,
-  SlidersHorizontal
-} from 'lucide-react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronDown, ChevronUp, FileText, Filter, Search, Tag, Upload, Settings, BarChart2, History, Archive, Plus, X, Check, ChevronRight, Clock, MoreHorizontal, DownloadCloud, RefreshCw, File, Folder, Grid, List, CheckSquare } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import DocumentUpload from './DocumentUpload';
 import LyzrDocumentAgentChat from './LyzrDocumentAgentChat';
-import { GitHubDocument, fetchDocumentsFromGitHub } from '@/services/githubService';
 
-interface Document {
+// Remove any imports or references to TaxAgentChat here
+
+// Types
+type Document = {
   id: string;
   name: string;
   type: string;
   size: string;
-  uploadedBy: string;
   uploadDate: string;
-  isArchived: boolean;
-  category: 'form990' | 'financial' | 'tax' | 'other';
-  jurisdiction: string;
-  serviceLine: string;
-  recordType: string;
-  entity: string;
-  clientApproved: boolean;
-  clientContact: string;
-  client: string;
-  url?: string;
-  downloadUrl?: string;
-}
+  lastModified: string;
+  status: 'processing' | 'completed' | 'error';
+  tags: string[];
+  owner: {
+    name: string;
+    avatar: string;
+  };
+  meta: {
+    pages?: number;
+    form?: string;
+    year?: string;
+    organization?: string;
+  };
+};
 
-interface Permission {
-  id: string;
-  name: string;
-  email: string;
-  role: 'viewer' | 'editor' | 'admin';
-  dateAdded: string;
-}
+type DocumentFilter = {
+  status: string[];
+  tags: string[];
+  types: string[];
+  dateRange: [Date | null, Date | null];
+  searchQuery: string;
+};
 
-type SortField = 'name' | 'type' | 'size' | 'uploadDate' | 'jurisdiction' | 'serviceLine' | 'recordType' | 'entity' | 'client' | 'uploadedBy';
-type SortDirection = 'asc' | 'desc';
-
-interface FilterState {
-  fileTypes: string[];
-  clientApproved: boolean | null;
-  jurisdictions: string[];
-  serviceLines: string[];
-  recordTypes: string[];
-  entities: string[];
-}
-
-const samplePermissions: Permission[] = [
+// Dummy data for demonstration
+const documentData: Document[] = [
   {
-    id: 'perm-1',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    role: 'viewer',
-    dateAdded: '2023-11-15T10:30:00Z'
+    id: '1',
+    name: 'Form_990_2023_Draft.pdf',
+    type: 'PDF',
+    size: '2.4 MB',
+    uploadDate: '2023-10-15',
+    lastModified: '2023-10-20',
+    status: 'completed',
+    tags: ['Form 990', 'Draft', 'Tax'],
+    owner: {
+      name: 'Alex Johnson',
+      avatar: '',
+    },
+    meta: {
+      pages: 45,
+      form: '990',
+      year: '2023',
+      organization: 'ABC Nonprofit',
+    },
   },
   {
-    id: 'perm-2',
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    role: 'editor',
-    dateAdded: '2023-11-20T14:45:00Z'
+    id: '2',
+    name: 'Financial_Statement_Q3_2023.xlsx',
+    type: 'XLSX',
+    size: '1.8 MB',
+    uploadDate: '2023-09-30',
+    lastModified: '2023-10-05',
+    status: 'completed',
+    tags: ['Financial', 'Q3', 'Statement'],
+    owner: {
+      name: 'Sarah Williams',
+      avatar: '',
+    },
+    meta: {
+      pages: 12,
+      year: '2023',
+      organization: 'ABC Nonprofit',
+    },
   },
   {
-    id: 'perm-3',
-    name: 'Mike Johnson',
-    email: 'mike.johnson@example.com',
-    role: 'admin',
-    dateAdded: '2023-10-05T09:15:00Z'
-  }
+    id: '3',
+    name: 'Board_Meeting_Minutes_Sept.docx',
+    type: 'DOCX',
+    size: '568 KB',
+    uploadDate: '2023-09-15',
+    lastModified: '2023-09-15',
+    status: 'completed',
+    tags: ['Board', 'Minutes', 'Meeting', 'Governance'],
+    owner: {
+      name: 'Michael Chen',
+      avatar: '',
+    },
+    meta: {
+      pages: 8,
+      year: '2023',
+      organization: 'ABC Nonprofit',
+    },
+  },
+  {
+    id: '4',
+    name: 'Donation_Records_2023.csv',
+    type: 'CSV',
+    size: '3.2 MB',
+    uploadDate: '2023-10-01',
+    lastModified: '2023-10-10',
+    status: 'processing',
+    tags: ['Donations', 'Records', 'Financial'],
+    owner: {
+      name: 'Alex Johnson',
+      avatar: '',
+    },
+    meta: {
+      year: '2023',
+      organization: 'ABC Nonprofit',
+    },
+  },
+  {
+    id: '5',
+    name: 'Annual_Report_2022.pdf',
+    type: 'PDF',
+    size: '5.7 MB',
+    uploadDate: '2023-08-12',
+    lastModified: '2023-08-15',
+    status: 'completed',
+    tags: ['Annual', 'Report', 'Public'],
+    owner: {
+      name: 'Sarah Williams',
+      avatar: '',
+    },
+    meta: {
+      pages: 32,
+      year: '2022',
+      organization: 'ABC Nonprofit',
+    },
+  },
+  {
+    id: '6',
+    name: 'IRS_Correspondence_Sept15.pdf',
+    type: 'PDF',
+    size: '1.2 MB',
+    uploadDate: '2023-09-16',
+    lastModified: '2023-09-16',
+    status: 'error',
+    tags: ['IRS', 'Correspondence', 'Important'],
+    owner: {
+      name: 'Michael Chen',
+      avatar: '',
+    },
+    meta: {
+      pages: 3,
+      year: '2023',
+      organization: 'ABC Nonprofit',
+    },
+  },
 ];
 
-const DocumentRepository = () => {
+// Main component
+const DocumentRepository: React.FC = () => {
+  // State management
+  const [documents, setDocuments] = useState<Document[]>(documentData);
+  const [filteredDocuments, setFilteredDocuments] = useState<Document[]>(documentData);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
-  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
-  const [githubToken, setGithubToken] = useState('');
-  const { toast } = useToast();
-  
-  const [sortConfig, setSortConfig] = useState<{field: SortField, direction: SortDirection}>({
-    field: 'uploadDate',
-    direction: 'desc'
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<DocumentFilter>({
+    status: [],
+    tags: [],
+    types: [],
+    dateRange: [null, null],
+    searchQuery: '',
   });
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    fileTypes: [],
-    clientApproved: null,
-    jurisdictions: [],
-    serviceLines: [],
-    recordTypes: [],
-    entities: []
-  });
+  const [showUploadModal, setShowUploadModal] = useState(false);
   
-  const [filterOptions, setFilterOptions] = useState<{
-    fileTypes: string[];
-    jurisdictions: string[];
-    serviceLines: string[];
-    recordTypes: string[];
-    entities: string[];
-  }>({
-    fileTypes: [],
-    jurisdictions: [],
-    serviceLines: [],
-    recordTypes: [],
-    entities: []
-  });
-  
+  // Effect to filter documents based on search query and filters
   useEffect(() => {
-    fetchDocuments();
+    if (!documents) return;
     
-    const token = localStorage.getItem('github_token');
-    if (token) {
-      setGithubToken(token);
+    let filtered = [...documents];
+    
+    // Apply search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(doc => 
+        doc.name.toLowerCase().includes(query) || 
+        doc.tags.some(tag => tag.toLowerCase().includes(query)) ||
+        doc.type.toLowerCase().includes(query) ||
+        (doc.meta.organization && doc.meta.organization.toLowerCase().includes(query))
+      );
     }
-  }, []);
-  
-  useEffect(() => {
-    if (documents.length > 0) {
-      setFilterOptions({
-        fileTypes: [...new Set(documents.map(doc => doc.type))],
-        jurisdictions: [...new Set(documents.map(doc => doc.jurisdiction))],
-        serviceLines: [...new Set(documents.map(doc => doc.serviceLine))],
-        recordTypes: [...new Set(documents.map(doc => doc.recordType))],
-        entities: [...new Set(documents.map(doc => doc.entity))]
-      });
+    
+    // Apply status filters
+    if (filters.status.length > 0) {
+      filtered = filtered.filter(doc => filters.status.includes(doc.status));
     }
-  }, [documents]);
-  
-  const fetchDocuments = async () => {
-    setIsLoadingDocuments(true);
-    try {
-      const githubDocs = await fetchDocumentsFromGitHub();
-      console.log(`Total documents loaded: ${githubDocs.length}`);
-      setDocuments(githubDocs);
-      if (githubDocs.length > 0) {
-        toast({
-          title: "Documents loaded",
-          description: `${githubDocs.length} documents loaded from GitHub repository`,
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-      toast({
-        title: "Error loading documents",
-        description: "Failed to load documents from GitHub repository",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingDocuments(false);
+    
+    // Apply tag filters
+    if (filters.tags.length > 0) {
+      filtered = filtered.filter(doc => 
+        doc.tags.some(tag => filters.tags.includes(tag))
+      );
     }
-  };
+    
+    // Apply type filters
+    if (filters.types.length > 0) {
+      filtered = filtered.filter(doc => filters.types.includes(doc.type));
+    }
+    
+    // Apply date range filters if needed
+    // This would go here
+    
+    setFilteredDocuments(filtered);
+  }, [documents, searchQuery, filters]);
   
-  const handleRefresh = () => {
-    fetchDocuments();
-  };
-  
-  const saveGitHubToken = () => {
-    localStorage.setItem('github_token', githubToken);
-    toast({
-      title: "Token saved",
-      description: "Your GitHub token has been saved.",
-    });
-    setIsSettingsDialogOpen(false);
-    fetchDocuments();
-  };
-  
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
-  };
-  
+  // Toggle document selection
   const toggleDocumentSelection = (docId: string) => {
-    if (selectedDocuments.includes(docId)) {
-      setSelectedDocuments(selectedDocuments.filter(id => id !== docId));
-    } else {
-      setSelectedDocuments([...selectedDocuments, docId]);
-    }
+    setSelectedDocuments(prev => {
+      if (prev.includes(docId)) {
+        return prev.filter(id => id !== docId);
+      } else {
+        return [...prev, docId];
+      }
+    });
   };
   
-  const selectAllDocuments = () => {
-    if (selectedDocuments.length === getFilteredDocuments().length) {
+  // Check if all documents are selected
+  const areAllSelected = filteredDocuments.length > 0 && selectedDocuments.length === filteredDocuments.length;
+  
+  // Toggle selection of all visible documents
+  const toggleSelectAll = () => {
+    if (areAllSelected) {
       setSelectedDocuments([]);
     } else {
-      setSelectedDocuments(getFilteredDocuments().map(doc => doc.id));
+      setSelectedDocuments(filteredDocuments.map(doc => doc.id));
     }
   };
   
-  const handleSort = (field: SortField) => {
-    setSortConfig(prevConfig => ({
-      field,
-      direction: prevConfig.field === field && prevConfig.direction === 'asc' ? 'desc' : 'asc'
-    }));
-  };
-  
-  const sortDocuments = (docs: Document[]) => {
-    return [...docs].sort((a, b) => {
-      if (sortConfig.field === 'uploadDate') {
-        const dateA = new Date(a[sortConfig.field]).getTime();
-        const dateB = new Date(b[sortConfig.field]).getTime();
-        return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
-      }
-      
-      if (sortConfig.field === 'size') {
-        const sizeA = parseFileSize(a.size);
-        const sizeB = parseFileSize(b.size);
-        return sortConfig.direction === 'asc' ? sizeA - sizeB : sizeB - sizeA;
-      }
-      
-      const valueA = a[sortConfig.field]?.toString().toLowerCase() || '';
-      const valueB = b[sortConfig.field]?.toString().toLowerCase() || '';
-      
-      if (valueA < valueB) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (valueA > valueB) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
+  // Function to get all available tags from documents
+  const getAllTags = () => {
+    const tagsSet = new Set<string>();
+    documents.forEach(doc => {
+      doc.tags.forEach(tag => tagsSet.add(tag));
     });
+    return Array.from(tagsSet);
   };
   
-  const parseFileSize = (sizeStr: string): number => {
-    const match = sizeStr.match(/^(\d+(?:\.\d+)?)\s*(KB|MB)$/i);
-    if (!match) return 0;
-    
-    const [, size, unit] = match;
-    const numSize = parseFloat(size);
-    
-    return unit.toUpperCase() === 'MB' ? numSize * 1024 * 1024 : numSize * 1024;
-  };
-  
-  const applyFilters = (docs: Document[]) => {
-    return docs.filter(doc => {
-      if (filters.fileTypes.length > 0 && !filters.fileTypes.includes(doc.type)) {
-        return false;
-      }
-      
-      if (filters.clientApproved !== null && doc.clientApproved !== filters.clientApproved) {
-        return false;
-      }
-      
-      if (filters.jurisdictions.length > 0 && !filters.jurisdictions.includes(doc.jurisdiction)) {
-        return false;
-      }
-      
-      if (filters.serviceLines.length > 0 && !filters.serviceLines.includes(doc.serviceLine)) {
-        return false;
-      }
-      
-      if (filters.recordTypes.length > 0 && !filters.recordTypes.includes(doc.recordType)) {
-        return false;
-      }
-      
-      if (filters.entities.length > 0 && !filters.entities.includes(doc.entity)) {
-        return false;
-      }
-      
-      return true;
+  // Function to get all available document types
+  const getAllTypes = () => {
+    const typesSet = new Set<string>();
+    documents.forEach(doc => {
+      typesSet.add(doc.type);
     });
+    return Array.from(typesSet);
   };
   
-  const resetFilters = () => {
-    setFilters({
-      fileTypes: [],
-      clientApproved: null,
-      jurisdictions: [],
-      serviceLines: [],
-      recordTypes: [],
-      entities: []
-    });
-    
-    toast({
-      title: "Filters reset",
-      description: "All document filters have been cleared",
-    });
-    
-    setIsFilterOpen(false);
-  };
-  
-  const toggleFilter = (filterType: keyof FilterState, value: any) => {
+  // Function to toggle a filter value
+  const toggleFilter = (filterType: keyof DocumentFilter, value: string) => {
     setFilters(prev => {
-      if (filterType === 'clientApproved') {
-        return { ...prev, [filterType]: prev[filterType] === value ? null : value };
-      }
-      
       const currentValues = prev[filterType] as string[];
       return {
         ...prev,
         [filterType]: currentValues.includes(value)
           ? currentValues.filter(v => v !== value)
-          : [...currentValues, value]
+          : [...currentValues, value],
       };
     });
   };
   
-  const getFilteredDocuments = () => {
-    let filteredDocs = documents;
+  // Function to clear all filters
+  const clearFilters = () => {
+    setFilters({
+      status: [],
+      tags: [],
+      types: [],
+      dateRange: [null, null],
+      searchQuery: '',
+    });
+    setSearchQuery('');
+  };
+  
+  // Handle document upload
+  const handleUpload = (files: File[]) => {
+    console.log('Files uploaded:', files);
+    // In a real application, this would involve API calls to upload the documents
+    // For now, we'll just simulate adding them to our local state
     
-    if (activeTab === 'archived') {
-      filteredDocs = filteredDocs.filter(doc => doc.isArchived);
-    } else if (activeTab === 'active') {
-      filteredDocs = filteredDocs.filter(doc => !doc.isArchived);
-    } else if (activeTab !== 'all') {
-      filteredDocs = filteredDocs.filter(doc => doc.category === activeTab);
-    }
+    const newDocuments = files.map((file, index) => ({
+      id: `new-${Date.now()}-${index}`,
+      name: file.name,
+      type: file.name.split('.').pop()?.toUpperCase() || 'UNKNOWN',
+      size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      uploadDate: new Date().toISOString().split('T')[0],
+      lastModified: new Date().toISOString().split('T')[0],
+      status: 'processing' as const,
+      tags: [],
+      owner: {
+        name: 'Current User',
+        avatar: '',
+      },
+      meta: {
+        year: new Date().getFullYear().toString(),
+        organization: 'ABC Nonprofit',
+      },
+    }));
     
-    if (searchTerm) {
-      filteredDocs = filteredDocs.filter(doc => 
-        doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.entity?.toLowerCase().includes(searchTerm.toLowerCase())
+    setDocuments(prev => [...newDocuments, ...prev]);
+    setShowUploadModal(false);
+  };
+  
+  // Render document items based on view mode
+  const renderDocumentItems = () => {
+    if (filteredDocuments.length === 0) {
+      return (
+        <div className="col-span-full py-12 text-center">
+          <div className="mx-auto w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
+            <File className="h-12 w-12 text-muted-foreground/50" />
+          </div>
+          <h3 className="font-medium text-lg mb-2">No documents found</h3>
+          <p className="text-muted-foreground mb-4">
+            {searchQuery || Object.values(filters).some(f => Array.isArray(f) && f.length > 0)
+              ? 'Try adjusting your search or filters'
+              : 'Upload some documents to get started'}
+          </p>
+          <Button onClick={() => setShowUploadModal(true)}>
+            <Upload className="mr-2 h-4 w-4" /> Upload Documents
+          </Button>
+        </div>
       );
     }
     
-    filteredDocs = applyFilters(filteredDocs);
-    
-    filteredDocs = sortDocuments(filteredDocs);
-    
-    return filteredDocs;
-  };
-  
-  const downloadSelectedDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select documents to download",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const docsToDownload = documents.filter(doc => 
-      selectedDocuments.includes(doc.id) && doc.downloadUrl
-    );
-    
-    docsToDownload.forEach(doc => {
-      if (doc.downloadUrl) {
-        window.open(doc.downloadUrl, '_blank');
-      }
-    });
-    
-    if (docsToDownload.length > 0) {
-      toast({
-        title: "Download started",
-        description: `Started downloading ${docsToDownload.length} document(s)`,
-      });
+    if (viewMode === 'grid') {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredDocuments.map(doc => (
+            <Card 
+              key={doc.id} 
+              className={`overflow-hidden transition-all ${
+                selectedDocuments.includes(doc.id) ? 'ring-2 ring-primary bg-primary/5' : ''
+              }`}
+            >
+              <CardHeader className="pb-2 flex flex-row items-start justify-between">
+                <div className="flex items-start space-x-4">
+                  <Checkbox
+                    checked={selectedDocuments.includes(doc.id)}
+                    onCheckedChange={() => toggleDocumentSelection(doc.id)}
+                    className="mt-1"
+                  />
+                  <div>
+                    <div className="font-medium truncate max-w-[220px]" title={doc.name}>
+                      {doc.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {doc.type} • {doc.size}
+                    </div>
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>
+                      <DownloadCloud className="mr-2 h-4 w-4" />
+                      <span>Download</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      <span>Reprocess</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Tag className="mr-2 h-4 w-4" />
+                      <span>Manage Tags</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardHeader>
+              
+              <CardContent className="pb-2">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Badge 
+                    variant={
+                      doc.status === 'completed' ? 'success' : 
+                      doc.status === 'processing' ? 'default' : 'destructive'
+                    }
+                    className="capitalize"
+                  >
+                    {doc.status}
+                  </Badge>
+                  <div className="text-xs text-muted-foreground flex items-center">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {doc.uploadDate}
+                  </div>
+                </div>
+                
+                {doc.status === 'processing' && (
+                  <div className="mb-2">
+                    <Progress value={68} className="h-1" />
+                  </div>
+                )}
+                
+                <div className="flex flex-wrap gap-1">
+                  {doc.tags.map(tag => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
     } else {
-      toast({
-        title: "Download failed",
-        description: "No download URLs available for selected documents",
-        variant: "destructive",
-      });
+      return (
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto">
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="px-2 py-3 text-left">
+                  <Checkbox
+                    checked={areAllSelected}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </th>
+                <th className="px-2 py-3 text-left">Document</th>
+                <th className="px-2 py-3 text-left">Type</th>
+                <th className="px-2 py-3 text-left">Status</th>
+                <th className="px-2 py-3 text-left">Tags</th>
+                <th className="px-2 py-3 text-left">Uploaded</th>
+                <th className="px-2 py-3 text-left">Size</th>
+                <th className="px-2 py-3 text-left"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredDocuments.map(doc => (
+                <tr 
+                  key={doc.id}
+                  className={`border-b hover:bg-muted/30 ${
+                    selectedDocuments.includes(doc.id) ? 'bg-primary/5' : ''
+                  }`}
+                >
+                  <td className="px-2 py-3">
+                    <Checkbox
+                      checked={selectedDocuments.includes(doc.id)}
+                      onCheckedChange={() => toggleDocumentSelection(doc.id)}
+                    />
+                  </td>
+                  <td className="px-2 py-3 font-medium">{doc.name}</td>
+                  <td className="px-2 py-3">{doc.type}</td>
+                  <td className="px-2 py-3">
+                    <Badge 
+                      variant={
+                        doc.status === 'completed' ? 'success' : 
+                        doc.status === 'processing' ? 'default' : 'destructive'
+                      }
+                    >
+                      {doc.status}
+                    </Badge>
+                  </td>
+                  <td className="px-2 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {doc.tags.slice(0, 2).map(tag => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {doc.tags.length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{doc.tags.length - 2}
+                        </Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-2 py-3 text-sm">{doc.uploadDate}</td>
+                  <td className="px-2 py-3 text-sm">{doc.size}</td>
+                  <td className="px-2 py-3">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <DownloadCloud className="mr-2 h-4 w-4" />
+                          <span>Download</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          <span>Reprocess</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Tag className="mr-2 h-4 w-4" />
+                          <span>Manage Tags</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
     }
-  };
-  
-  const archiveSelectedDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select documents to archive",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const updatedDocs = documents.map(doc => {
-      if (selectedDocuments.includes(doc.id)) {
-        return { ...doc, isArchived: true };
-      }
-      return doc;
-    });
-    
-    setDocuments(updatedDocs);
-    
-    toast({
-      title: "Documents archived",
-      description: `${selectedDocuments.length} document(s) archived successfully`,
-    });
-    
-    setSelectedDocuments([]);
-  };
-
-  const copySelectedDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select documents to copy",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    toast({
-      title: "Documents copied",
-      description: `${selectedDocuments.length} document(s) copied successfully`,
-    });
-  };
-
-  const moveSelectedDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select documents to move",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsMoveDialogOpen(true);
-  };
-
-  const handleMoveDocuments = (destination: string) => {
-    toast({
-      title: "Documents moved",
-      description: `${selectedDocuments.length} document(s) moved to ${destination}`,
-    });
-    setIsMoveDialogOpen(false);
-    setSelectedDocuments([]);
-  };
-
-  const handleUploadComplete = (fileDetails: {
-    name: string;
-    type: string;
-    size: string;
-    uploadedBy: string;
-    uploadDate: string;
-    url?: string;
-  }) => {
-    fetchDocuments();
-    
-    toast({
-      title: "Upload complete",
-      description: `${fileDetails.name} uploaded successfully`,
-    });
-  };
-
-  const handleDeleteDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select documents to delete",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const updatedDocs = documents.filter(doc => !selectedDocuments.includes(doc.id));
-    setDocuments(updatedDocs);
-    
-    toast({
-      title: "Documents deleted",
-      description: `${selectedDocuments.length} document(s) deleted`,
-    });
-    
-    setSelectedDocuments([]);
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortConfig.field !== field) {
-      return null;
-    }
-    
-    return sortConfig.direction === 'asc' ? 
-      <ArrowUp className="h-3 w-3 inline ml-1" /> : 
-      <ArrowDown className="h-3 w-3 inline ml-1" />;
-  };
-
-  const getActiveFilterCount = () => {
-    return (
-      filters.fileTypes.length +
-      filters.jurisdictions.length +
-      filters.serviceLines.length +
-      filters.recordTypes.length +
-      filters.entities.length +
-      (filters.clientApproved !== null ? 1 : 0)
-    );
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <FolderOpen className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-medium text-base mb-1">My Documents Repository</h3>
-            <p className="text-muted-foreground text-sm">
-              Securely store, organize, and manage all your important documents. Use the repository to store Form 990 submissions, 
-              financial data, and other critical business documents.
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex flex-1 max-w-sm relative">
-          <Input
-            placeholder="Search documents..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pr-8"
-          />
-          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Documents
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Upload Documents</DialogTitle>
-                <DialogDescription>
-                  Add files to your document repository. Supported formats: PDF, DOCX, XLSX, JPG, PNG.
-                </DialogDescription>
-              </DialogHeader>
-              <DocumentUpload 
-                onUploadComplete={handleUploadComplete}
-                onClose={() => setIsUploadDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
-          
-          <Button 
-            variant="outline" 
-            onClick={handleRefresh}
-            disabled={isLoadingDocuments}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingDocuments ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={() => setIsSettingsDialogOpen(true)}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={copySelectedDocuments}
-          >
-            <Copy className="h-4 w-4 mr-2" />
-            Copy
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={moveSelectedDocuments}
-          >
-            <Move className="h-4 w-4 mr-2" />
-            Move
-          </Button>
-          
-          {selectedDocuments.length > 0 && (
-            <>
-              <Button 
-                variant="outline" 
-                onClick={downloadSelectedDocuments}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download ({selectedDocuments.length})
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={archiveSelectedDocuments}
-              >
-                <Archive className="h-4 w-4 mr-2" />
-                Archive
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={handleDeleteDocuments}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
-            </>
-          )}
-          
-          <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-            <PopoverTrigger asChild>
-              <Button 
-                variant={getActiveFilterCount() > 0 ? "default" : "outline"} 
-                className={getActiveFilterCount() > 0 ? "bg-primary" : ""}
-              >
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Filters {getActiveFilterCount() > 0 ? `(${getActiveFilterCount()})` : ''}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
-              <div className="p-4 border-b">
-                <h3 className="font-medium text-sm">Filter Documents</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Use multiple filters to narrow down results
-                </p>
-              </div>
-              <div className="p-4 max-h-96 overflow-y-auto space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">File Type</h4>
-                  <div className="space-y-2">
-                    {filterOptions.fileTypes.map(type => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-type-${type}`} 
-                          checked={filters.fileTypes.includes(type)}
-                          onCheckedChange={() => toggleFilter('fileTypes', type)}
-                        />
-                        <label 
-                          htmlFor={`filter-type-${type}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {type}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Client Approved</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="filter-approved-yes" 
-                        checked={filters.clientApproved === true}
-                        onCheckedChange={() => toggleFilter('clientApproved', true)}
-                      />
-                      <label 
-                        htmlFor="filter-approved-yes" 
-                        className="text-sm cursor-pointer"
-                      >
-                        Approved
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="filter-approved-no" 
-                        checked={filters.clientApproved === false}
-                        onCheckedChange={() => toggleFilter('clientApproved', false)}
-                      />
-                      <label 
-                        htmlFor="filter-approved-no" 
-                        className="text-sm cursor-pointer"
-                      >
-                        Not Approved
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Jurisdiction</h4>
-                  <div className="space-y-2">
-                    {filterOptions.jurisdictions.map(jurisdiction => (
-                      <div key={jurisdiction} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-jurisdiction-${jurisdiction}`} 
-                          checked={filters.jurisdictions.includes(jurisdiction)}
-                          onCheckedChange={() => toggleFilter('jurisdictions', jurisdiction)}
-                        />
-                        <label 
-                          htmlFor={`filter-jurisdiction-${jurisdiction}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {jurisdiction}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Service Line</h4>
-                  <div className="space-y-2">
-                    {filterOptions.serviceLines.map(serviceLine => (
-                      <div key={serviceLine} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-service-${serviceLine}`} 
-                          checked={filters.serviceLines.includes(serviceLine)}
-                          onCheckedChange={() => toggleFilter('serviceLines', serviceLine)}
-                        />
-                        <label 
-                          htmlFor={`filter-service-${serviceLine}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {serviceLine}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Record Type</h4>
-                  <div className="space-y-2">
-                    {filterOptions.recordTypes.map(recordType => (
-                      <div key={recordType} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-record-${recordType}`} 
-                          checked={filters.recordTypes.includes(recordType)}
-                          onCheckedChange={() => toggleFilter('recordTypes', recordType)}
-                        />
-                        <label 
-                          htmlFor={`filter-record-${recordType}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {recordType}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Entity</h4>
-                  <div className="space-y-2">
-                    {filterOptions.entities.map(entity => (
-                      <div key={entity} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-entity-${entity}`} 
-                          checked={filters.entities.includes(entity)}
-                          onCheckedChange={() => toggleFilter('entities', entity)}
-                        />
-                        <label 
-                          htmlFor={`filter-entity-${entity}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {entity}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="border-t p-4 flex justify-between">
-                <Button variant="outline" size="sm" onClick={resetFilters}>
-                  Reset Filters
-                </Button>
-                <Button size="sm" onClick={() => setIsFilterOpen(false)}>
-                  Apply Filters
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-      
-      <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Repository Settings</DialogTitle>
-            <DialogDescription>
-              Configure your GitHub integration settings.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">GitHub Personal Access Token</label>
-              <Input
-                type="text"
-                placeholder="Enter your GitHub token"
-                value={githubToken}
-                onChange={(e) => setGithubToken(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Token needs repo permissions. 
-                <a 
-                  href="https://github.com/settings/tokens/new" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary ml-1"
-                >
-                  Generate token
-                </a>
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsSettingsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" onClick={saveGitHubToken}>
-              Save Settings
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isMoveDialogOpen} onOpenChange={setIsMoveDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Move Documents</DialogTitle>
-            <DialogDescription>
-              Select a destination folder to move the selected documents.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Destination Folder</div>
-              <select 
-                className="w-full border rounded-md p-2"
-                defaultValue=""
-                onChange={(e) => e.target.value && handleMoveDocuments(e.target.value)}
-              >
-                <option value="" disabled>Select a folder</option>
-                <option value="Form 990">Form 990</option>
-                <option value="Financial Data">Financial Data</option>
-                <option value="Tax Documents">Tax Documents</option>
-                <option value="Client Documentation">Client Documentation</option>
-                <option value="Archived">Archived</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsMoveDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" onClick={() => handleMoveDocuments('Selected Folder')}>
-              Move Files
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Tabs defaultValue="all" onValueChange={setActiveTab}>
-        <TabsList className="w-full max-w-md grid grid-cols-5">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="form990">Form 990</TabsTrigger>
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="tax">Tax</TabsTrigger>
-          <TabsTrigger value="archived">Archived</TabsTrigger>
+    <div className="w-full">
+      <Tabs defaultValue="repository" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="repository">Document Repository</TabsTrigger>
+          <TabsTrigger value="ai">AI Document Agent</TabsTrigger>
         </TabsList>
         
-        <TabsContent value={activeTab} className="mt-6">
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[40px]">
-                        <div className="flex items-center justify-center" onClick={selectAllDocuments}>
-                          {selectedDocuments.length === getFilteredDocuments().length && getFilteredDocuments().length > 0 ? (
-                            <CheckSquare className="h-4 w-4 cursor-pointer" />
-                          ) : (
-                            <Square className="h-4 w-4 cursor-pointer" />
-                          )}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
-                        <div className="flex items-center">
-                          Name {getSortIcon('name')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('type')}>
-                        <div className="flex items-center">
-                          Type {getSortIcon('type')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('size')}>
-                        <div className="flex items-center">
-                          Size {getSortIcon('size')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('jurisdiction')}>
-                        <div className="flex items-center gap-1">
-                          <Flag className="h-3 w-3" />
-                          <span>Jurisdiction</span>
-                          {getSortIcon('jurisdiction')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('serviceLine')}>
-                        <div className="flex items-center gap-1">
-                          <List className="h-3 w-3" />
-                          <span>Service Line</span>
-                          {getSortIcon('serviceLine')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('recordType')}>
-                        <div className="flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          <span>Record Type</span>
-                          {getSortIcon('recordType')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('entity')}>
-                        <div className="flex items-center gap-1">
-                          <Box className="h-3 w-3" />
-                          <span>Entity</span>
-                          {getSortIcon('entity')}
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        Client Approved
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          <span>Client Contact</span>
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('client')}>
-                        <div className="flex items-center">
-                          Client {getSortIcon('client')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('uploadedBy')}>
-                        <div className="flex items-center">
-                          Uploaded By {getSortIcon('uploadedBy')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('uploadDate')}>
-                        <div className="flex items-center">
-                          Date {getSortIcon('uploadDate')}
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoadingDocuments ? (
-                      <TableRow>
-                        <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
-                          Loading documents...
-                        </TableCell>
-                      </TableRow>
-                    ) : getFilteredDocuments().length > 0 ? (
-                      getFilteredDocuments().map((doc) => (
-                        <TableRow key={doc.id} className={doc.isArchived ? "opacity-70" : ""}>
-                          <TableCell>
-                            <div 
-                              className="flex items-center justify-center" 
-                              onClick={() => toggleDocumentSelection(doc.id)}
+        <TabsContent value="repository" className="space-y-6">
+          {/* Search and filter bar */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="w-full sm:w-auto flex-1 max-w-md relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search documents..." 
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                className={showFilters ? 'bg-secondary' : ''}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Filter
+                {Object.values(filters).some(f => Array.isArray(f) && f.length > 0) && (
+                  <Badge variant="secondary" className="ml-2">
+                    {[...filters.status, ...filters.tags, ...filters.types].length}
+                  </Badge>
+                )}
+              </Button>
+              
+              <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}>
+                <ToggleGroupItem value="grid" aria-label="Grid view">
+                  <Grid className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="list" aria-label="List view">
+                  <List className="h-4 w-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+              
+              <Button onClick={() => setShowUploadModal(true)}>
+                <Upload className="mr-2 h-4 w-4" /> Upload
+              </Button>
+            </div>
+          </div>
+          
+          {/* Filter panel */}
+          {showFilters && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }} 
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Status filter */}
+                    <div>
+                      <h4 className="font-medium mb-3">Status</h4>
+                      <div className="space-y-2">
+                        {['completed', 'processing', 'error'].map(status => (
+                          <div key={status} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`status-${status}`} 
+                              checked={filters.status.includes(status)}
+                              onCheckedChange={() => toggleFilter('status', status)}
+                            />
+                            <label 
+                              htmlFor={`status-${status}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize"
                             >
-                              {selectedDocuments.includes(doc.id) ? (
-                                <CheckSquare className="h-4 w-4 cursor-pointer" />
-                              ) : (
-                                <Square className="h-4 w-4 cursor-pointer" />
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              {doc.type === 'PDF' ? (
-                                <FileText className="h-4 w-4 text-red-500" />
-                              ) : doc.type === 'Excel' ? (
-                                <FileText className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <File className="h-4 w-4" />
-                              )}
-                              <a 
-                                href={doc.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="hover:underline"
-                              >
-                                {doc.name}
-                              </a>
-                              {doc.isArchived && (
-                                <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full ml-1">
-                                  Archived
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{doc.type}</TableCell>
-                          <TableCell>{doc.size}</TableCell>
-                          <TableCell>{doc.jurisdiction}</TableCell>
-                          <TableCell>{doc.serviceLine}</TableCell>
-                          <TableCell>{doc.recordType}</TableCell>
-                          <TableCell>{doc.entity}</TableCell>
-                          <TableCell>
-                            {doc.clientApproved ? (
-                              <CheckSquare className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <Square className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </TableCell>
-                          <TableCell>{doc.clientContact}</TableCell>
-                          <TableCell>{doc.client}</TableCell>
-                          <TableCell>{doc.uploadedBy}</TableCell>
-                          <TableCell>{formatDate(doc.uploadDate)}</TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
-                          No documents found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                              {status}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Tags filter */}
+                    <div>
+                      <h4 className="font-medium mb-3">Tags</h4>
+                      <div className="space-y-2">
+                        {getAllTags().slice(0, 6).map(tag => (
+                          <div key={tag} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`tag-${tag}`} 
+                              checked={filters.tags.includes(tag)}
+                              onCheckedChange={() => toggleFilter('tags', tag)}
+                            />
+                            <label 
+                              htmlFor={`tag-${tag}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {tag}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* File Type filter */}
+                    <div>
+                      <h4 className="font-medium mb-3">File Type</h4>
+                      <div className="space-y-2">
+                        {getAllTypes().map(type => (
+                          <div key={type} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`type-${type}`} 
+                              checked={filters.types.includes(type)}
+                              onCheckedChange={() => toggleFilter('types', type)}
+                            />
+                            <label 
+                              htmlFor={`type-${type}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {type}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 flex justify-between">
+                    <Button variant="outline" size="sm" onClick={clearFilters}>
+                      <X className="mr-2 h-4 w-4" /> Clear Filters
+                    </Button>
+                    <Button size="sm" onClick={() => setShowFilters(false)}>
+                      <Check className="mr-2 h-4 w-4" /> Apply Filters
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+          
+          {/* Selected actions */}
+          {selectedDocuments.length > 0 && (
+            <div className="mb-4 p-3 bg-muted rounded-lg flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">{selectedDocuments.length} documents selected</span>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedDocuments([])}>
+                  Clear
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex items-center space-x-2">
+                <Button size="sm" variant="outline">
+                  <DownloadCloud className="mr-2 h-4 w-4" />
+                  Download All
+                </Button>
+                <Button size="sm" variant="outline">
+                  <Tag className="mr-2 h-4 w-4" />
+                  Add Tags
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          {/* Document list */}
+          {renderDocumentItems()}
+          
+          {/* Document upload modal */}
+          {showUploadModal && (
+            <DocumentUpload 
+              isOpen={showUploadModal} 
+              onClose={() => setShowUploadModal(false)}
+              onUpload={handleUpload}
+            />
+          )}
+        </TabsContent>
+        
+        <TabsContent value="ai" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <LyzrDocumentAgentChat />
+            <div className="bg-muted/50 rounded-lg p-6 border flex flex-col justify-center space-y-6">
+              <div>
+                <h3 className="font-medium mb-3">What can Document Agent help you with?</h3>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start">
+                    <div className="rounded-full bg-primary/10 p-1 mr-2 mt-0.5">
+                      <CheckSquare className="h-3 w-3 text-primary" />
+                    </div>
+                    <span>Analyze document content and extract key information</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="rounded-full bg-primary/10 p-1 mr-2 mt-0.5">
+                      <CheckSquare className="h-3 w-3 text-primary" />
+                    </div>
+                    <span>Compare data across multiple documents</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="rounded-full bg-primary/10 p-1 mr-2 mt-0.5">
+                      <CheckSquare className="h-3 w-3 text-primary" />
+                    </div>
+                    <span>Generate summaries and reports from document data</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="rounded-full bg-primary/10 p-1 mr-2 mt-0.5">
+                      <CheckSquare className="h-3 w-3 text-primary" />
+                    </div>
+                    <span>Answer questions about document content</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h3 className="font-medium mb-3">Popular Document Questions</h3>
+                <div className="space-y-2">
+                  <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2 px-3">
+                    Summarize the key points in my Form 990
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2 px-3">
+                    Compare financial data across quarterly statements
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start text-sm h-auto py-2 px-3">
+                    Extract all donation amounts from my records
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
       
-      <Collapsible className="border rounded-md">
-        <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
-          <div className="flex items-center gap-2">
-            <Archive className="h-5 w-5 text-primary" />
+      <div className="space-y-6 mt-6">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <BarChart2 className="h-5 w-5 text-primary mr-2" />
+              <h3 className="font-medium">Document Analytics</h3>
+            </div>
+            <Button variant="ghost" size="sm">
+              View All
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Documents</p>
+                    <h4 className="text-2xl font-semibold mt-1">42</h4>
+                  </div>
+                  <div className="rounded-full p-2 bg-primary/10">
+                    <FileText className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Progress value={78} className="h-1" />
+                  <p className="text-xs text-muted-foreground mt-2">78% processed</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Storage Used</p>
+                    <h4 className="text-2xl font-semibold mt-1">3.8 GB</h4>
+                  </div>
+                  <div className="rounded-full p-2 bg-primary/10">
+                    <Database className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Progress value={42} className="h-1" />
+                  <p className="text-xs text-muted-foreground mt-2">42% of 10GB limit</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Document Types</p>
+                    <h4 className="text-2xl font-semibold mt-1">5 Types</h4>
+                  </div>
+                  <div className="rounded-full p-2 bg-primary/10">
+                    <Files className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 rounded-full bg-primary"></div>
+                    <span className="text-xs">PDF (58%)</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-xs">XLSX (22%)</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span className="text-xs">Other (20%)</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        
+        <div>
+          <div className="flex items-center mb-4">
+            <History className="h-5 w-5 text-primary mr-2" />
+            <h3 className="font-medium">Recent Activity</h3>
+          </div>
+          
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center justify-between p-4">
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-9 w-9">
+                        <AvatarFallback>{['AJ', 'SW', 'MC', 'AB', 'TK'][i % 5]}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {['Alex Johnson', 'Sarah Williams', 'Michael Chen', 'Alex Brown', 'Terry Kim'][i % 5]} 
+                          {' '}
+                          {i === 1 
+                            ? 'uploaded a new document' 
+                            : i === 2 
+                              ? 'updated tags on Form_990_2023_Draft.pdf'
+                              : i === 3
+                                ? 'downloaded Donation_Records_2023.csv'
+                                : i === 4
+                                  ? 'shared Financial_Statement_Q3_2023.xlsx'
+                                  : 'added comments to Annual_Report_2022.pdf'
+                          }
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {['2 hours ago', '5 hours ago', 'Yesterday', '2 days ago', '3 days ago'][i % 5]}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div>
+          <div className="flex items-center mb-4">
+            <Archive className="h-5 w-5 text-primary mr-2" />
             <h3 className="font-medium">Archival Management</h3>
           </div>
-          <div className="text-muted-foreground text-sm">
-            {documents.filter(doc => doc.isArchived).length} archived items
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="px-4 pb-4">
-          <div className="space-y-6">
-            <p className="text-sm text-muted-foreground">
-              Manage your archived documents. Archived items are not deleted but kept in a separate section for historical reference.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <Card className="border-border/60">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Archive Policies</CardTitle>
-                    <CardDescription>Configure automatic archival policies</CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-sm">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span>Archive documents older than 1 year</span>
-                        <input type="checkbox" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Archive superseded versions</span>
-                        <input type="checkbox" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Archive based on document category</span>
-                        <input type="checkbox" />
-                      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <h4 className="font-medium mb-3">Document Retention Policy</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure how long documents should be retained before being archived or deleted permanently.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium">Tax Documents</p>
+                      <p className="text-xs text-muted-foreground">Form 990, tax returns, etc.</p>
                     </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" size="sm" className="w-full">Save Preferences</Button>
-                  </CardFooter>
-                </Card>
-                
-                <Card className="border-border/60">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Archival Statistics</CardTitle>
-                    <CardDescription>Document archival metrics</CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-sm">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span>Total archived documents:</span>
-                        <span className="font-medium">{documents.filter(doc => doc.isArchived).length}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Archive storage used:</span>
-                        <span className="font-medium">5.4 MB</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Most recent archive:</span>
-                        <span className="font-medium">Nov 15, 2023</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" size="sm" className="w-full">View Full Report</Button>
-                  </CardFooter>
-                </Card>
-              </div>
-              
-              <div className="space-y-4">
-                <Tabs defaultValue="document" className="w-full">
-                  <TabsList className="w-full grid grid-cols-1">
-                    <TabsTrigger value="document">Document Agent</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="document" className="mt-4">
-                    <LyzrDocumentAgentChat />
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-      
-      <Collapsible className="border rounded-md">
-        <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
-          <div className="flex items-center gap-2">
-            <Lock className="h-5 w-5 text-primary" />
-            <h3 className="font-medium">Permission Management</h3>
-          </div>
-          <div className="text-muted-foreground text-sm">
-            {samplePermissions.length} users with access
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="px-4 pb-4">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Manage who can access, view, and modify documents in the repository.
-              </p>
-              <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    Add User
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New User</DialogTitle>
-                    <DialogDescription>
-                      Grant access to documents in the repository.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label className="text-right text-sm font-medium">Name</label>
-                      <Input className="col-span-3" placeholder="Enter user name" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label className="text-right text-sm font-medium">Email</label>
-                      <Input className="col-span-3" placeholder="Enter email address" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label className="text-right text-sm font-medium">Role</label>
-                      <select className="col-span-3 border rounded-md p-2">
-                        <option value="viewer">Viewer (Can only view documents)</option>
-                        <option value="editor">Editor (Can upload and edit documents)</option>
-                        <option value="admin">Admin (Full access)</option>
-                      </select>
-                    </div>
+                    <Select defaultValue="7years">
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select a duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3years">3 Years</SelectItem>
+                        <SelectItem value="5years">5 Years</SelectItem>
+                        <SelectItem value="7years">7 Years</SelectItem>
+                        <SelectItem value="indefinite">Indefinite</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsPermissionDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" onClick={() => setIsPermissionDialogOpen(false)}>
-                      Add User
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium">Financial Records</p>
+                      <p className="text-xs text-muted-foreground">Statements, donation records, etc.</p>
+                    </div>
+                    <Select defaultValue="5years">
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select a duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3years">3 Years</SelectItem>
+                        <SelectItem value="5years">5 Years</SelectItem>
+                        <SelectItem value="7years">7 Years</SelectItem>
+                        <SelectItem value="indefinite">Indefinite</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium">General Documents</p>
+                      <p className="text-xs text-muted-foreground">Meeting minutes, reports, etc.</p>
+                    </div>
+                    <Select defaultValue="3years">
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select a duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1year">1 Year</SelectItem>
+                        <SelectItem value="3years">3 Years</SelectItem>
+                        <SelectItem value="5years">5 Years</SelectItem>
+                        <SelectItem value="indefinite">Indefinite</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Added On</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {samplePermissions.map((perm) => (
-                  <TableRow key={perm.id}>
-                    <TableCell className="font-medium">{perm.name}</TableCell>
-                    <TableCell>{perm.email}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        perm.role === 'admin' 
-                          ? 'bg-primary/10 text-primary' 
-                          : perm.role === 'editor'
-                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                            : 'bg-secondary text-secondary-foreground'
-                      }`}>
-                        {perm.role.charAt(0).toUpperCase() + perm.role.slice(1)}
-                      </span>
-                    </TableCell>
-                    <TableCell>{formatDate(perm.dateAdded)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm">Edit</Button>
-                        <Button variant="outline" size="sm" className="text-destructive">Remove</Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <Card>
+              <CardContent className="p-6">
+                <h4 className="font-medium mb-3">Repository Overview</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Securely store, organize, and manage all your important documents. Use the repository to store Form 990 submissions, 
+                  financial data, and other critical business documents.
+                </p>
+              </CardContent>
+            </Card>
           </div>
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      </div>
     </div>
+  );
+};
+
+// Add the missing Database and Files components needed for the Document Analytics section
+const Database = (props: any) => {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+    </svg>
+  );
+};
+
+const Files = (props: any) => {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z" />
+      <path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8" />
+      <path d="M15 2v5h5" />
+    </svg>
   );
 };
 
