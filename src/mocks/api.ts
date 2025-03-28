@@ -1,6 +1,25 @@
 
-exports.handler = async function(event, context) {
-  // Adding connection debugging information
+/**
+ * Mock API functions to replace Netlify functions
+ */
+
+export const pingAPI = async () => {
+  return {
+    message: "API is alive!",
+    timestamp: new Date().toISOString()
+  };
+};
+
+export const azurePing = async () => {
+  return {
+    message: "Azure Function API is alive!",
+    timestamp: new Date().toISOString(),
+    service: "Azure Functions"
+  };
+};
+
+export const getTools = async () => {
+  // Connection debugging information
   const connectionInfo = {
     message: "If you're seeing this in demo mode, your app is unable to connect to the Azure Function.",
     possibleIssues: [
@@ -53,14 +72,5 @@ exports.handler = async function(event, context) {
     }
   ];
 
-  return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ tools, connectionInfo })
-  };
+  return { tools, connectionInfo };
 };
