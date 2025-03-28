@@ -75,8 +75,8 @@ const App = () => {
               }>
                 <Routes>
                   <Route path="/" element={<MainLayout />}>
-                    {/* Redirect base path to portfolio */}
-                    <Route index element={<Portfolio />} />
+                    {/* Redirect base path to blogs */}
+                    <Route index element={<Blogs />} />
                     
                     {/* Portfolio Routes */}
                     <Route path="portfolio" element={<Portfolio />} />
