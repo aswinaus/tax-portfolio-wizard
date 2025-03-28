@@ -52,6 +52,9 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
         window.React.lazy = React.lazy;
         
         console.log("React fully initialized in ReactProvider, forwardRef exists:", !!window.React.forwardRef);
+        
+        // Mark initialization immediately
+        window.__APP_INITIALIZED__ = true;
         setInitialized(true);
       } catch (err) {
         console.error("Error during React initialization:", err);

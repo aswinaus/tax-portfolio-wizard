@@ -34,10 +34,10 @@ const TaxAgentNeo4jGraphDB = lazy(() => import("./templates/TaxAgentNeo4jGraphDB
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2, // Reduced retry for faster feedback
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
+      retry: 1, // Reduced retry for faster feedback
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 5000),
       refetchOnWindowFocus: false,
-      staleTime: 60000,
+      staleTime: 30000,
     },
   },
 });
@@ -88,16 +88,17 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Mark that the app has been initialized
+    // Mark that the app has been initialized immediately
     if (typeof window !== 'undefined') {
       window.__APP_INITIALIZED__ = true;
+      console.log("App initialized flag set to true");
     }
     
     // Simulate checking environment readiness
     const timeout = setTimeout(() => {
       setIsLoading(false);
       console.log("App initialization complete, loading state removed");
-    }, 300); // Reduced timing for faster loading
+    }, 200); // Reduced timing for faster loading
     
     return () => clearTimeout(timeout);
   }, []);

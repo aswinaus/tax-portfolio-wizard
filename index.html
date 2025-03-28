@@ -74,6 +74,9 @@
         clearTimeout(id);
       };
       
+      // Initialize app flag
+      window.__APP_INITIALIZED__ = false;
+      
       // Disable Lovable badge
       window.LOVABLE_CONFIG = {
         showBadge: false
@@ -131,13 +134,13 @@
         }
       });
       
-      // Safety timeout - if app doesn't load within 8 seconds, force redirect to blogs
+      // Safety timeout - if app doesn't load within 12 seconds, force redirect to blogs
       setTimeout(function() {
         if (!window.__APP_INITIALIZED__ && !window.location.pathname.includes('/portfolio/blogs')) {
           console.log('App initialization timeout, redirecting to blogs');
           window.location.href = '/portfolio/blogs';
         }
-      }, 8000);
+      }, 12000); // Increased from 8000ms to 12000ms to give more time
     </script>
   </body>
 </html>

@@ -11,6 +11,9 @@ const FallbackPage = () => {
 
   const refreshPage = () => {
     console.log("Refreshing page from FallbackPage");
+    // Clear any cached state that might be causing issues
+    localStorage.removeItem('app_state');
+    sessionStorage.clear();
     window.location.reload();
   };
 
@@ -20,11 +23,12 @@ const FallbackPage = () => {
   };
   
   // Force redirect to /portfolio/blogs if we've been on this page too long
+  // But with a longer timeout to give more chance for recovery
   React.useEffect(() => {
     const timer = setTimeout(() => {
       console.log("Auto-redirecting to /portfolio/blogs after timeout");
       window.location.href = "/portfolio/blogs";
-    }, 8000);
+    }, 10000); // Increased from 8000ms to 10000ms
     
     return () => clearTimeout(timer);
   }, []);

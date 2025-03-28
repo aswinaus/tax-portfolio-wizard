@@ -111,10 +111,13 @@ if (!rootElement) {
     console.log("Rendering application...");
     const root = createRoot(rootElement);
     
+    // Mark that the app initialized
+    window.__APP_INITIALIZED__ = true;
+    
     // For preview/staging environments, check if we should render the app or fallback
     const isPreviewEnv = window.location.hostname.includes('preview') || 
-                         window.location.hostname.includes('staging') ||
-                         window.location.hostname.includes('lovableproject');
+                        window.location.hostname.includes('staging') ||
+                        window.location.hostname.includes('lovableproject');
     
     // In preview environments, add a timeout to fall back if app doesn't render quickly
     if (isPreviewEnv) {
@@ -125,7 +128,7 @@ if (!rootElement) {
           console.log("App initialization timeout in preview env, rendering fallback");
           root.render(<FallbackPage />);
         }
-      }, 5000); // 5 second timeout for more reliable loading
+      }, 7000); // 7 second timeout for more reliable loading
     }
     
     root.render(
@@ -134,8 +137,6 @@ if (!rootElement) {
       </React.StrictMode>
     );
     
-    // Mark that the app initialized successfully
-    window.__APP_INITIALIZED__ = true;
     console.log("Application rendered successfully");
   } catch (error) {
     console.error("Error rendering application:", error);
