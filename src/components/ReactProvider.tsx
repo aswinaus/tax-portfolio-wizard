@@ -19,13 +19,14 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
       console.log("Checking React initialization in ReactProvider");
       
       try {
+        // Create window.React if it doesn't exist
         if (!window.React) {
           console.log("Creating new window.React object in ReactProvider");
-          window.React = {};
+          window.React = {} as typeof React;
         }
         
-        // Create a complete copy of React on window regardless of existing state
-        window.React = { ...React };
+        // Create a complete copy of React on window, with proper type casting
+        window.React = Object.assign({}, React) as typeof React;
         
         // Double check that forwardRef is properly assigned
         if (typeof React.forwardRef === 'function' && window.React.forwardRef !== React.forwardRef) {

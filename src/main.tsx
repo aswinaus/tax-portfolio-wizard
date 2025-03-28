@@ -13,11 +13,11 @@ if (typeof window !== 'undefined') {
   try {
     // Ensure window.React exists
     if (!window.React) {
-      window.React = {};
+      window.React = {} as typeof React;
     }
     
-    // Create a fully initialized React object on window
-    window.React = { ...React };
+    // Create a fully initialized React object on window using proper type casting
+    window.React = Object.assign({}, React) as typeof React;
     
     // Explicitly ensure forwardRef is available with the correct value
     if (typeof React.forwardRef === 'function') {

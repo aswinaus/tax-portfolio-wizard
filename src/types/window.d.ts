@@ -1,7 +1,7 @@
 
 interface Window {
   __APP_INITIALIZED__?: boolean;
-  React?: {
+  React?: typeof React & {
     forwardRef?: any;
     createElement?: any;
     Fragment?: any;
