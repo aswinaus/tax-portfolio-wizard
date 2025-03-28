@@ -1,10 +1,10 @@
 
-import * as React from 'react'; // Use namespace import for React
+import * as React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { lazy, Suspense } from "react";
 import './App.css';
@@ -15,49 +15,42 @@ import MainLayout from "./layouts/MainLayout";
 // Pages
 import NotFound from "./pages/NotFound";
 import Portfolio from "./pages/portfolio/Portfolio";
-import Index from "./pages/Index";
 
-// Lazy loaded pages for better performance
-const Blogs = lazy(() => import("./pages/portfolio/Blogs"));
+// Load Blogs component directly (not lazy loaded) since it's our main entry point
+import Blogs from "./pages/portfolio/Blogs";
+
+// Lazy loaded pages
 const BlogPost = lazy(() => import("./pages/portfolio/BlogPost"));
 const CreateBlog = lazy(() => import("./pages/portfolio/CreateBlog"));
 const Form990 = lazy(() => import("./pages/business/Form990"));
 const TransferPricing = lazy(() => import("./pages/business/TransferPricing"));
 const DocumentRepositoryPage = lazy(() => import("./pages/documents/DocumentRepositoryPage"));
-
-// AI Pages
 const AgentServicePage = lazy(() => import("./pages/ai/AgentServicePage"));
 const ToolsServicePage = lazy(() => import("./pages/ai/ToolsServicePage"));
 const ApplicationsPage = lazy(() => import("./pages/ai/ApplicationsPage"));
-
-// Templates
 const TaxAgentNeo4jGraphDB = lazy(() => import("./templates/TaxAgentNeo4jGraphDB"));
 
-// Create a new QueryClient instance with more conservative settings
+// Create a new QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 0, // Disable retries to avoid cascading errors
-      refetchOnWindowFocus: false, // Disable refetch on window focus
-      staleTime: 60000, // 1 minute stale time
+      retry: 0,
+      refetchOnWindowFocus: false,
+      staleTime: 60000,
     },
   },
 });
 
-// Verify React.forwardRef is available before rendering
-if (!React.forwardRef) {
-  console.error("React.forwardRef is not available when App.tsx is evaluated");
-}
+// Simple loading component
+const LoadingFallback = () => (
+  <div className="w-full h-screen flex items-center justify-center bg-white text-black">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <span className="ml-2">Loading...</span>
+  </div>
+);
 
 const App = () => {
   console.log("App component rendering");
-  console.log("React.forwardRef available in App:", !!React.forwardRef);
-  
-  // Extra safety check to ensure React.forwardRef is available
-  React.useEffect(() => {
-    console.log("React in App useEffect:", React);
-    console.log("React.forwardRef in App useEffect:", React.forwardRef);
-  }, []);
   
   return (
     <QueryClientProvider client={queryClient}>
@@ -67,15 +60,10 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter basename="/">
-              <Suspense fallback={
-                <div className="w-full h-screen flex items-center justify-center bg-white text-black">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  <span className="ml-2">Loading...</span>
-                </div>
-              }>
+              <Suspense fallback={<LoadingFallback />}>
                 <Routes>
                   <Route path="/" element={<MainLayout />}>
-                    {/* Redirect base path to blogs */}
+                    {/* Make Blogs the default landing page */}
                     <Route index element={<Blogs />} />
                     
                     {/* Portfolio Routes */}

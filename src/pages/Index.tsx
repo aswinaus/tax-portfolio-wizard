@@ -1,25 +1,21 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
+    // Directly navigate to blogs
+    navigate('/portfolio/blogs', { replace: true });
+  }, [navigate]);
 
-  useEffect(() => {
-    if (mounted) {
-      navigate('/portfolio/blogs', { replace: true });
-    }
-  }, [mounted, navigate]);
-
-  if (!mounted) return null;
-
-  return null;
+  return (
+    <div className="w-full h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <span className="ml-2">Redirecting to Blogs...</span>
+    </div>
+  );
 };
 
 export default Index;

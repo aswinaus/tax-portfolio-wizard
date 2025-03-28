@@ -1,48 +1,25 @@
 
-import * as React from 'react' // Use namespace import for React
+import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import ReactProvider from './components/ReactProvider.tsx'
 
-// Add this to the window object to help with API calls
-declare global {
-  interface Window {
-    isNetlifyDeployment: boolean;
-    isAzureDeployment: boolean;
-    React?: any; // Allow for global React definition
-    ReactDOM?: any; // Allow for global ReactDOM definition
-  }
-}
-
-// Set deployment flag for API calls
-window.isNetlifyDeployment = window.location.hostname.includes("papaya-kleicha-7542d0.netlify.app");
-window.isAzureDeployment = window.location.hostname.includes("aswin.ai") || 
-                          window.location.hostname.includes("taxaiagents.azurewebsites.net");
-
-// Explicitly make React globally available before anything else
-window.React = window.React || React;
+// Ensure React is available globally
+window.React = React;
 
 console.log("=== Initializing Application ===");
 console.log("React version:", React.version);
 console.log("React.forwardRef exists:", !!React.forwardRef);
-console.log("window.React exists:", !!window.React);
-console.log("window.React.forwardRef exists:", !!(window.React && window.React.forwardRef));
 
-// Add global error handler to prevent blank screens
+// Add global error handler
 window.addEventListener('error', (event) => {
   console.error('Global error caught:', event.error);
-  // Log additional details about React
-  console.log("During error: React.forwardRef exists:", !!React.forwardRef);
-  console.log("During error: window.React.forwardRef exists:", !!(window.React && window.React.forwardRef));
-  // Don't let JavaScript errors cause a blank screen
   event.preventDefault();
 });
 
 // Add unhandled promise rejection handler
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled Promise Rejection:', event.reason);
-  // Don't let Promise rejections cause a blank screen
   event.preventDefault();
 });
 
@@ -54,15 +31,13 @@ if (!rootElement) {
   const root = createRoot(rootElement);
   
   try {
-    console.log("About to render the application");
+    console.log("Rendering application...");
     root.render(
-      <ReactProvider>
-        <React.StrictMode>
-          <App />
-        </React.StrictMode>
-      </ReactProvider>
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
     );
-    console.log("Application successfully rendered");
+    console.log("Application rendered successfully");
   } catch (error) {
     console.error("Error rendering application:", error);
     // Provide a fallback UI in case of render errors

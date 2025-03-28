@@ -13,24 +13,9 @@
     <!-- Add base path for SPA routing -->
     <base href="/" />
     
-    <!-- Ensure React is loaded first and properly initialized -->
+    <!-- Simple React initialization -->
     <script>
       window.process = { env: { NODE_ENV: 'production' } };
-      
-      // Create a global React object if it doesn't exist
-      window.React = window.React || {
-        createElement: function() {},
-        Fragment: Symbol('react.fragment'),
-        forwardRef: function(render) {
-          return {
-            $$typeof: Symbol('react.forward_ref'),
-            render: render
-          };
-        }
-      };
-      
-      // Also ensure ReactDOM is defined
-      window.ReactDOM = window.ReactDOM || {};
     </script>
   </head>
 
