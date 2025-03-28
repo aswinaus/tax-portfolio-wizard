@@ -31,12 +31,15 @@
       };
       
       // Create a fully initialized React placeholder with all essential methods
+      // Using a fixed correct implementation of forwardRef that will work with TypeScript
       window.React = window.React || {};
       window.React.forwardRef = function(render) { 
         function Component(props, ref) { 
           return render(props, ref); 
         }
         Component.displayName = render && render.displayName || render && render.name || "";
+        // Add required property for exotic component
+        Component.$$typeof = Symbol.for('react.forward_ref'); 
         return Component;
       };
       window.React.createElement = function() { return null; };
@@ -125,9 +128,9 @@
       
       // Safety timeout - if app doesn't load within 8 seconds, force redirect to blogs
       setTimeout(function() {
-        if (!window.__APP_INITIALIZED__ && window.location.pathname.includes('/portfolio/blogs')) {
-          console.log('App initialization timeout, reloading the page');
-          window.location.reload();
+        if (!window.__APP_INITIALIZED__ && !window.location.pathname.includes('/portfolio/blogs')) {
+          console.log('App initialization timeout, redirecting to blogs');
+          window.location.href = '/portfolio/blogs';
         }
       }, 8000);
     </script>

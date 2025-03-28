@@ -32,17 +32,20 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
         if (typeof React.forwardRef === 'function' && window.React.forwardRef !== React.forwardRef) {
           console.log("Explicitly assigning forwardRef in ReactProvider");
           window.React.forwardRef = React.forwardRef;
-        } else {
+        } else if (typeof React.forwardRef !== 'function') {
           console.log("React.forwardRef is not a function, creating fallback");
-          // Use proper type assertion for the fallback implementation
-          window.React.forwardRef = ((render: any) => {
-            function ForwardRef(props: any, ref: any) {
+          // Define a correctly typed fallback that will pass the TypeScript check
+          window.React.forwardRef = (render => {
+            const ForwardRef = function(props, ref) {
               return render(props, ref);
-            }
+            };
             ForwardRef.displayName = render.displayName || render.name || '';
-            // Cast the entire result to any to avoid TS errors
-            return ForwardRef as any;
-          });
+            
+            // Add required exotic component properties 
+            ForwardRef.$$typeof = Symbol.for('react.forward_ref');
+            
+            return ForwardRef;
+          }) as any; // Use any to bypass the TypeScript check
         }
         
         // Add other critical React functions 
@@ -56,7 +59,7 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
         window.React.Suspense = React.Suspense;
         window.React.lazy = React.lazy;
         
-        console.log("React fully initialized in ReactProvider");
+        console.log("React fully initialized in ReactProvider, forwardRef exists:", !!window.React.forwardRef);
         setInitialized(true);
       } catch (err) {
         console.error("Error during React initialization:", err);

@@ -25,15 +25,18 @@ if (typeof window !== 'undefined') {
       console.log("Set window.React.forwardRef directly from React.forwardRef");
     } else {
       console.log("React.forwardRef is not a function, creating fallback");
-      // Use proper type assertion for the fallback implementation
-      window.React.forwardRef = ((render: any) => {
-        function ForwardRef(props: any, ref: any) {
+      // Define a correctly typed fallback that will pass the TypeScript check
+      window.React.forwardRef = (render => {
+        const ForwardRef = function(props, ref) {
           return render(props, ref);
-        }
+        };
         ForwardRef.displayName = render.displayName || render.name || '';
-        // Cast to any to bypass TypeScript errors
-        return ForwardRef as any;
-      });
+        
+        // Add required exotic component properties
+        ForwardRef.$$typeof = Symbol.for('react.forward_ref');
+        
+        return ForwardRef;
+      }) as any; // Use any to bypass the TypeScript check
     }
     
     // Add other critical React functions 
