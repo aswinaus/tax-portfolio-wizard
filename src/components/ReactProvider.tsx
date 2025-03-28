@@ -16,28 +16,38 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
     if (typeof window !== 'undefined') {
       console.log("Checking React initialization in ReactProvider");
       
-      // Check if React is missing or forwardRef is not available
-      if (!window.React || !window.React.forwardRef) {
-        console.log('Restoring global React in ReactProvider - forwardRef was missing');
-        
-        // Create a complete copy of React on window
-        // @ts-ignore - This is a necessary workaround
-        window.React = { ...React };
-        
-        // Directly assign forwardRef if it's still missing
-        if (!window.React.forwardRef) {
-          console.log('Directly assigning forwardRef in ReactProvider');
-          // @ts-ignore - Deliberate assignment for compatibility
-          window.React.forwardRef = React.forwardRef;
-        }
-        
-        // Verify forwardRef is now available
-        if (!window.React.forwardRef) {
-          console.error("Failed to set forwardRef in ReactProvider");
-        } else {
-          console.log("Successfully restored forwardRef in ReactProvider");
-        }
+      // Create a complete copy of React on window regardless of existing state
+      // @ts-ignore - This is a necessary workaround
+      window.React = { ...React };
+      
+      // Directly assign forwardRef 
+      // @ts-ignore - Deliberate assignment for compatibility
+      window.React.forwardRef = React.forwardRef;
+      
+      // Verify forwardRef is now available
+      if (!window.React.forwardRef) {
+        console.error("Failed to set forwardRef in ReactProvider");
+      } else {
+        console.log("Successfully set forwardRef in ReactProvider");
       }
+      
+      // Add other critical React functions
+      // @ts-ignore
+      window.React.createElement = React.createElement;
+      // @ts-ignore
+      window.React.Fragment = React.Fragment;
+      // @ts-ignore
+      window.React.createContext = React.createContext;
+      // @ts-ignore
+      window.React.useState = React.useState;
+      // @ts-ignore
+      window.React.useEffect = React.useEffect;
+      // @ts-ignore
+      window.React.useRef = React.useRef;
+      // @ts-ignore
+      window.React.memo = React.memo;
+      
+      console.log("React fully initialized in ReactProvider");
     }
   }, []);
   

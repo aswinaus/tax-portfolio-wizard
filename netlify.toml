@@ -14,4 +14,5 @@
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Cache-Control = "public, max-age=3600"
-    Content-Security-Policy = "upgrade-insecure-requests; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co; connect-src 'self' https://*.netlify.app https://*.lovable.app"
+    # Ensure lucide-react can load properly by allowing all scripts and connecting to necessary domains
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://*.netlify.app; connect-src 'self' https://*.netlify.app https://*.lovable.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:;"

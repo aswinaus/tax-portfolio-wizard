@@ -8,24 +8,40 @@ import './index.css'
 if (typeof window !== 'undefined') {
   console.log("Setting global React in main.tsx with forwardRef:", !!React.forwardRef);
   
-  // Create a fully initialized deep copy of React
+  // Create a fully initialized React object on window
   // @ts-ignore - This is a necessary workaround for React initialization
-  window.React = { ...React };
+  window.React = Object.assign({}, React);
   
   // Explicitly ensure forwardRef is available
   if (!window.React.forwardRef) {
-    console.error("forwardRef is not available after initialization");
-    // Use the original React's forwardRef directly as a fallback
+    console.log("forwardRef not found on window.React, manually setting it");
     // @ts-ignore - Deliberate assignment for compatibility
     window.React.forwardRef = React.forwardRef;
-  } else {
-    console.log("forwardRef successfully set on global React");
   }
+  
+  // Add other critical React functions
+  // @ts-ignore
+  window.React.createElement = React.createElement;
+  // @ts-ignore
+  window.React.Fragment = React.Fragment;
+  // @ts-ignore
+  window.React.createContext = React.createContext;
+  // @ts-ignore
+  window.React.useState = React.useState;
+  // @ts-ignore
+  window.React.useEffect = React.useEffect;
+  // @ts-ignore
+  window.React.useRef = React.useRef;
+  // @ts-ignore
+  window.React.memo = React.memo;
+  
+  console.log("React fully initialized in main.tsx, forwardRef is", !!window.React.forwardRef);
 }
 
 console.log("=== Initializing Application ===");
 console.log("React version:", React.version);
 console.log("React.forwardRef exists:", !!React.forwardRef);
+console.log("window.React.forwardRef exists:", typeof window !== 'undefined' ? !!window.React.forwardRef : 'N/A');
 
 // Add error handlers
 window.addEventListener('error', (event) => {
