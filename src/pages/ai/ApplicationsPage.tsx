@@ -1,4 +1,3 @@
-
 import React from 'react'; // Add explicit React import
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -11,7 +10,6 @@ import { MoreVertical, Plus, ChevronDown, ChevronUp, AlertTriangle } from "lucid
 import { Badge } from "@/components/ui/badge";
 import { ApplicationsList } from '@/components/ai/ApplicationsList';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Form } from "@/components/ui/form"; // Import Form component
 
 const ApplicationsPage = () => {
   const [isLoading, setIsLoading] = useState(true);

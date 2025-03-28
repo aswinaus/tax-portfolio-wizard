@@ -17,6 +17,10 @@ window.isNetlifyDeployment = window.location.hostname.includes("papaya-kleicha-7
 window.isAzureDeployment = window.location.hostname.includes("aswin.ai") || 
                           window.location.hostname.includes("taxaiagents.azurewebsites.net");
 
+// Add better error handling to diagnose the forwardRef issue
+console.log("React version:", React.version);
+console.log("React.forwardRef exists:", !!React.forwardRef);
+
 // Add global error handler to prevent blank screens
 window.addEventListener('error', (event) => {
   console.error('Global error caught:', event.error);
@@ -39,6 +43,7 @@ if (!rootElement) {
   const root = createRoot(rootElement);
   
   try {
+    console.log("About to render the application");
     root.render(
       <React.StrictMode>
         <App />
@@ -53,6 +58,10 @@ if (!rootElement) {
         <h1>Something went wrong</h1>
         <p>We're sorry, but there was an error loading the application.</p>
         <button onClick={() => window.location.reload()}>Refresh Page</button>
+        <div>
+          <p>Error details (for debugging):</p>
+          <pre>{error instanceof Error ? error.message : String(error)}</pre>
+        </div>
       </div>
     );
   }

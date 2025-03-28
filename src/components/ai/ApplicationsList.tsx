@@ -1,4 +1,3 @@
-
 import React from 'react'; // Add explicit React import
 import { useState } from 'react';
 import { 
@@ -8,7 +7,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { MoreVertical, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
-import { Form } from "@/components/ui/form"; // Import Form component
 
 // Define application types
 interface Application {
