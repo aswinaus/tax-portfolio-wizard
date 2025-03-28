@@ -687,12 +687,9 @@ const DocumentRepository: React.FC = () => {
           {/* Document upload modal */}
           {showUploadModal && (
             <DocumentUpload 
+              isOpen={showUploadModal} 
               onClose={() => setShowUploadModal(false)}
-              onUploadComplete={(fileDetails) => {
-                console.log('Upload completed:', fileDetails);
-                // You would typically add the file to your documents list here
-                setShowUploadModal(false);
-              }}
+              onUpload={handleUpload}
             />
           )}
         </TabsContent>
