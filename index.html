@@ -19,13 +19,24 @@
     <script>
       window.process = { env: { NODE_ENV: 'production' } };
       
-      // Create a fully initialized React placeholder
+      // Create a fully initialized React placeholder with all essential methods
       window.React = {
-        forwardRef: function() { 
+        forwardRef: function(render) { 
           console.warn("Using temporary forwardRef placeholder - React not fully loaded");
-          return function(component) { return component; };
+          function Component(props, ref) { 
+            return render(props, ref); 
+          }
+          Component.displayName = "";
+          return Component;
         },
-        createElement: function() { return null; }
+        createElement: function() { return null; },
+        Fragment: Symbol('Fragment'),
+        createContext: function() { return { Provider: function() {}, Consumer: function() {} }; },
+        useContext: function() { return {}; },
+        useState: function(initial) { return [initial, function() {}]; },
+        useEffect: function() {},
+        useRef: function(initial) { return { current: initial }; },
+        memo: function(component) { return component; }
       };
       
       // Polyfills for React

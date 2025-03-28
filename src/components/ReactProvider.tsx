@@ -18,17 +18,24 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
       
       // Check if React is missing or forwardRef is not available
       if (!window.React || !window.React.forwardRef) {
-        console.log('Updating global React in ReactProvider - forwardRef was missing');
+        console.log('Restoring global React in ReactProvider - forwardRef was missing');
         
-        // Set the complete React object on window
+        // Create a complete copy of React on window
         // @ts-ignore - This is a necessary workaround
-        window.React = React;
+        window.React = { ...React };
+        
+        // Directly assign forwardRef if it's still missing
+        if (!window.React.forwardRef) {
+          console.log('Directly assigning forwardRef in ReactProvider');
+          // @ts-ignore - Deliberate assignment for compatibility
+          window.React.forwardRef = React.forwardRef;
+        }
         
         // Verify forwardRef is now available
         if (!window.React.forwardRef) {
           console.error("Failed to set forwardRef in ReactProvider");
         } else {
-          console.log("Successfully set forwardRef in ReactProvider");
+          console.log("Successfully restored forwardRef in ReactProvider");
         }
       }
     }

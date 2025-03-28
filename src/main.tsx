@@ -4,17 +4,20 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Set React globally as early as possible and ensure forwardRef is available
+// Create a complete copy of React on the window object before anything else happens
 if (typeof window !== 'undefined') {
   console.log("Setting global React in main.tsx with forwardRef:", !!React.forwardRef);
   
-  // Create a complete copy of React on the window object
+  // Create a fully initialized deep copy of React
   // @ts-ignore - This is a necessary workaround for React initialization
-  window.React = React;
+  window.React = { ...React };
   
-  // Explicitly verify forwardRef is available
+  // Explicitly ensure forwardRef is available
   if (!window.React.forwardRef) {
     console.error("forwardRef is not available after initialization");
+    // Use the original React's forwardRef directly as a fallback
+    // @ts-ignore - Deliberate assignment for compatibility
+    window.React.forwardRef = React.forwardRef;
   } else {
     console.log("forwardRef successfully set on global React");
   }

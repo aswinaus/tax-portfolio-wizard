@@ -5,10 +5,10 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-// Create a fallback function for forwardRef to ensure the component works
+// Create a robust forwardRef fallback with proper displayName support
 const forwardRefFallback = React.forwardRef || function(render) {
   console.log("Using forwardRef fallback in button.tsx");
-  // Create a named function to allow displayName to work properly
+  // Create a proper named function to allow displayName to work properly
   function ButtonComponent(props, ref) {
     return render(props, ref);
   }
