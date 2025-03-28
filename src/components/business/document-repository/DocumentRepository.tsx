@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, ChevronUp, FileText, Filter, Search, Tag, Upload, Settings, BarChart2, History, Archive, Plus, X, Check, ChevronRight, Clock, MoreHorizontal, DownloadCloud, RefreshCw, File, Folder, Grid, List, CheckSquare } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileText, Filter, Search, Tag, Upload, Settings, BarChart2, History, Archive, Plus, X, Check, ChevronRight, Clock, MoreHorizontal, DownloadCloud, RefreshCw, File, Folder, Grid, List, CheckSquare, Database, Files } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -170,7 +171,7 @@ const DocumentRepository: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>(documentData);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>(documentData);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<DocumentFilter>({
@@ -391,8 +392,8 @@ const DocumentRepository: React.FC = () => {
                 <div className="flex items-center space-x-2 mb-2">
                   <Badge 
                     variant={
-                      doc.status === 'completed' ? 'success' : 
-                      doc.status === 'processing' ? 'default' : 'destructive'
+                      doc.status === 'completed' ? 'default' : 
+                      doc.status === 'processing' ? 'secondary' : 'destructive'
                     }
                     className="capitalize"
                   >
@@ -462,8 +463,8 @@ const DocumentRepository: React.FC = () => {
                   <td className="px-2 py-3">
                     <Badge 
                       variant={
-                        doc.status === 'completed' ? 'success' : 
-                        doc.status === 'processing' ? 'default' : 'destructive'
+                        doc.status === 'completed' ? 'default' : 
+                        doc.status === 'processing' ? 'secondary' : 'destructive'
                       }
                     >
                       {doc.status}
@@ -860,4 +861,22 @@ const DocumentRepository: React.FC = () => {
                           }
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {['2 hours ago', '
+                          {['2 hours ago', '3 days ago', '1 week ago', '2 weeks ago', '1 month ago'][i % 5]}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DocumentRepository;
