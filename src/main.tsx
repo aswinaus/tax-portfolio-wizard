@@ -11,15 +11,15 @@ if (typeof window !== 'undefined') {
   console.log("Setting up global React object in main.tsx");
   
   try {
-    // Create new React object - don't use Object.assign which can fail to copy all properties
-    window.React = {} as typeof React;
+    // Create new React object if it doesn't exist
+    window.React = window.React || {} as typeof React;
     
     // Explicitly ensure forwardRef is available before anything else
     if (typeof React.forwardRef === 'function') {
       window.React.forwardRef = React.forwardRef;
       console.log("Assigned React.forwardRef directly to window.React.forwardRef");
     } else {
-      console.log("Creating fallback implementation for forwardRef");
+      console.error("React.forwardRef missing! Creating fallback implementation");
       window.React.forwardRef = function(render) {
         function ForwardRef(props, ref) {
           return render(props, ref);
@@ -58,7 +58,7 @@ window.addEventListener('error', (event) => {
   // Don't show error UI for network errors, which are common in preview environments
   if (!event.error?.message?.includes('Failed to fetch') && 
       !event.error?.message?.includes('Network error')) {
-    renderFallbackUI("An unexpected error occurred. Please try refreshing.");
+    renderFallbackUI("An unexpected error occurred: " + event.error?.message);
   }
 });
 
@@ -67,7 +67,7 @@ window.addEventListener('unhandledrejection', (event) => {
   // Don't show error UI for network errors, which are common in preview environments
   if (!event.reason?.message?.includes('Failed to fetch') && 
       !event.reason?.message?.includes('Network error')) {
-    renderFallbackUI("An unexpected error occurred. Please try refreshing.");
+    renderFallbackUI("An unexpected error occurred: " + event.reason?.message);
   }
 });
 
@@ -125,7 +125,7 @@ if (!rootElement) {
           console.log("App initialization timeout in preview env, rendering fallback");
           root.render(<FallbackPage />);
         }
-      }, 7000); // Increased timeout for more reliable loading
+      }, 5000); // 5 second timeout for more reliable loading
     }
     
     root.render(

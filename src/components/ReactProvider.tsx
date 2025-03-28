@@ -20,14 +20,14 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
       
       try {
         // Always create a fresh React object to avoid reference issues
-        window.React = {} as typeof React;
+        window.React = window.React || {} as typeof React;
         
         // CRITICAL: Define forwardRef first since it's used by many components
         if (typeof React.forwardRef === 'function') {
           window.React.forwardRef = React.forwardRef;
           console.log("Set window.React.forwardRef from React.forwardRef");
         } else {
-          console.log("Creating fallback forwardRef implementation");
+          console.error("React.forwardRef not found! Creating fallback implementation");
           // Define a correctly typed fallback
           window.React.forwardRef = function(render) {
             function ForwardRef(props, ref) {
