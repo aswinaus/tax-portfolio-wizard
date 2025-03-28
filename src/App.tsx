@@ -35,7 +35,7 @@ const TaxAgentNeo4jGraphDB = lazy(() => import("./templates/TaxAgentNeo4jGraphDB
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 0,
+      retry: 1, // Increase retry to 1 for preview environment
       refetchOnWindowFocus: false,
       staleTime: 60000,
     },
@@ -66,7 +66,7 @@ const App = () => {
                   <Routes>
                     <Route path="/" element={<MainLayout />}>
                       {/* Make Blogs the default landing page */}
-                      <Route index element={<Blogs />} />
+                      <Route index element={<Navigate to="/portfolio/blogs" replace />} />
                       
                       {/* Portfolio Routes */}
                       <Route path="portfolio" element={<Portfolio />} />

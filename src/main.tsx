@@ -1,8 +1,8 @@
 
-import * as React from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+import * as React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
 
 // Create a complete copy of React on the window object before anything else happens
 if (typeof window !== 'undefined') {
