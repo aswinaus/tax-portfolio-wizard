@@ -4,10 +4,11 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Ensure React is available globally and properly initialized
-window.React = React;
+// Set React globally as early as possible
+if (typeof window !== 'undefined') {
+  window.React = React;
+}
 
-// Make sure we log if React.forwardRef is available
 console.log("=== Initializing Application ===");
 console.log("React version:", React.version);
 console.log("React.forwardRef exists:", !!React.forwardRef);

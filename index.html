@@ -15,10 +15,14 @@
     <!-- Add base path for SPA routing -->
     <base href="/" />
     
-    <!-- Simple React initialization -->
+    <!-- Setup React environment before any scripts load -->
     <script>
       window.process = { env: { NODE_ENV: 'production' } };
-      // Ensure any polyfills needed for React are available
+      
+      // Pre-initialize React reference to prevent timing issues
+      window.React = null; // Will be populated by React import
+      
+      // Polyfills for React
       window.requestIdleCallback = window.requestIdleCallback || function(cb) {
         return setTimeout(function() {
           var start = Date.now();

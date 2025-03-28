@@ -1,8 +1,14 @@
+
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+
+// Ensure React is properly initialized
+if (!React.forwardRef) {
+  console.error("React.forwardRef is not available in alert-dialog.tsx");
+}
 
 const AlertDialog = AlertDialogPrimitive.Root
 
