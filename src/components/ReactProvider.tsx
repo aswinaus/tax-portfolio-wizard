@@ -19,11 +19,21 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
       console.log("Checking React initialization in ReactProvider");
       
       try {
+        if (!window.React) {
+          console.log("Creating new window.React object in ReactProvider");
+          window.React = {};
+        }
+        
         // Create a complete copy of React on window regardless of existing state
         window.React = { ...React };
         
-        // Directly assign critical methods
-        window.React.forwardRef = React.forwardRef;
+        // Double check that forwardRef is properly assigned
+        if (typeof React.forwardRef === 'function' && window.React.forwardRef !== React.forwardRef) {
+          console.log("Explicitly assigning forwardRef in ReactProvider");
+          window.React.forwardRef = React.forwardRef;
+        }
+        
+        // Explicitly assign critical methods to ensure they're available
         window.React.createElement = React.createElement;
         window.React.Fragment = React.Fragment;
         window.React.createContext = React.createContext;
@@ -36,9 +46,17 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
         
         // Verify critical methods
         if (!window.React.forwardRef) {
-          console.error("Failed to set forwardRef in ReactProvider");
+          console.error("Failed to set forwardRef in ReactProvider, attempting direct assignment");
+          // Last resort - direct function assignment
+          window.React.forwardRef = function(render) {
+            function ForwardRef(props, ref) {
+              return render(props, ref);
+            }
+            ForwardRef.displayName = render.displayName || render.name;
+            return ForwardRef;
+          };
         } else {
-          console.log("Successfully set forwardRef in ReactProvider");
+          console.log("Successfully verified forwardRef in ReactProvider");
         }
         
         console.log("React fully initialized in ReactProvider");

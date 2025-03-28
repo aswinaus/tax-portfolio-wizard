@@ -1,7 +1,19 @@
 
 interface Window {
   __APP_INITIALIZED__?: boolean;
-  React?: any;
+  React?: {
+    forwardRef?: any;
+    createElement?: any;
+    Fragment?: any;
+    createContext?: any;
+    useState?: any;
+    useEffect?: any;
+    useRef?: any;
+    memo?: any;
+    Suspense?: any;
+    lazy?: any;
+    [key: string]: any;
+  };
   process?: {
     env: {
       NODE_ENV: string;

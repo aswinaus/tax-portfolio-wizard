@@ -11,35 +11,39 @@ if (typeof window !== 'undefined') {
   console.log("Setting global React in main.tsx with forwardRef:", !!React.forwardRef);
   
   try {
-    // Create a fully initialized React object on window
-    // @ts-ignore - This is a necessary workaround for React initialization
-    window.React = Object.assign({}, React);
-    
-    // Explicitly ensure forwardRef is available
-    if (!window.React.forwardRef) {
-      console.log("forwardRef not found on window.React, manually setting it");
-      // @ts-ignore - Deliberate assignment for compatibility
-      window.React.forwardRef = React.forwardRef;
+    // Ensure window.React exists
+    if (!window.React) {
+      window.React = {};
     }
     
-    // Add other critical React functions
-    // @ts-ignore
+    // Create a fully initialized React object on window
+    window.React = { ...React };
+    
+    // Explicitly ensure forwardRef is available with the correct value
+    if (typeof React.forwardRef === 'function') {
+      window.React.forwardRef = React.forwardRef;
+      console.log("Set window.React.forwardRef directly from React.forwardRef");
+    } else {
+      console.log("React.forwardRef is not a function, creating fallback");
+      // Create a fallback implementation if necessary
+      window.React.forwardRef = function(render) {
+        function ForwardRef(props, ref) {
+          return render(props, ref);
+        }
+        ForwardRef.displayName = render.displayName || render.name;
+        return ForwardRef;
+      };
+    }
+    
+    // Add other critical React functions 
     window.React.createElement = React.createElement;
-    // @ts-ignore
     window.React.Fragment = React.Fragment;
-    // @ts-ignore
     window.React.createContext = React.createContext;
-    // @ts-ignore
     window.React.useState = React.useState;
-    // @ts-ignore
     window.React.useEffect = React.useEffect;
-    // @ts-ignore
     window.React.useRef = React.useRef;
-    // @ts-ignore
     window.React.memo = React.memo;
-    // @ts-ignore
     window.React.Suspense = React.Suspense;
-    // @ts-ignore
     window.React.lazy = React.lazy;
     
     console.log("React fully initialized in main.tsx, forwardRef is", !!window.React.forwardRef);

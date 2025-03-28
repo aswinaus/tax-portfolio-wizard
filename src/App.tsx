@@ -83,7 +83,7 @@ const App = () => {
     // Simulate checking environment readiness
     const timeout = setTimeout(() => {
       setIsLoading(false);
-    }, 800); // Reduced timing for faster loading
+    }, 500); // Reduced timing for faster loading
     
     return () => clearTimeout(timeout);
   }, []);
