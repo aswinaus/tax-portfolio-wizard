@@ -46,6 +46,18 @@
         return Component;
       };
       
+      // Verify forwardRef is initialized
+      if (!window.React.forwardRef) {
+        console.error("Critical: React.forwardRef failed to initialize");
+        
+        // Last resort emergency fallback
+        window.React.forwardRef = function(render) {
+          return function ForwardRef(props) {
+            return render(props, null);
+          };
+        };
+      }
+      
       // Add all other core React methods
       window.React.createElement = function() { return null; };
       window.React.Fragment = Symbol('Fragment');
@@ -83,7 +95,7 @@
       };
       
       // Log that initialization has completed
-      console.log("Early React initialization complete");
+      console.log("Early React initialization complete, forwardRef available:", !!window.React.forwardRef);
     </script>
   </head>
 

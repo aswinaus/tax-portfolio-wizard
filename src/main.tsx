@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
   
   try {
     // Create new React object if it doesn't exist
-    window.React = window.React || {} as typeof React;
+    window.React = React || {} as typeof React;
     
     // Explicitly ensure forwardRef is available before anything else
     if (typeof React.forwardRef === 'function') {
@@ -27,6 +27,18 @@ if (typeof window !== 'undefined') {
         ForwardRef.displayName = render.displayName || render.name || '';
         ForwardRef.$$typeof = Symbol.for('react.forward_ref');
         return ForwardRef;
+      } as any;
+    }
+    
+    // Verify forwardRef is defined
+    if (!window.React.forwardRef) {
+      console.error("Critical: forwardRef still undefined after initialization attempt");
+      
+      // Emergency fallback - simple implementation
+      window.React.forwardRef = function(render) {
+        return function(props) {
+          return render(props, null);
+        };
       } as any;
     }
     

@@ -20,9 +20,10 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
       
       try {
         // Always create a fresh React object to avoid reference issues
-        window.React = window.React || {} as typeof React;
+        window.React = React || {} as typeof React;
         
         // CRITICAL: Define forwardRef first since it's used by many components
+        // Here's a more robust implementation to ensure it's always available
         if (typeof React.forwardRef === 'function') {
           window.React.forwardRef = React.forwardRef;
           console.log("Set window.React.forwardRef from React.forwardRef");
@@ -37,6 +38,18 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
             // Essential: Add required Symbol property for type checking
             ForwardRef.$$typeof = Symbol.for('react.forward_ref');
             return ForwardRef;
+          } as any;
+        }
+        
+        // Check and confirm forwardRef is properly defined
+        if (!window.React.forwardRef) {
+          console.error("forwardRef still not defined after initialization attempt!");
+          
+          // Last attempt emergency polyfill
+          window.React.forwardRef = function(render) {
+            return function(props) {
+              return render(props, null);
+            };
           } as any;
         }
         
