@@ -8,15 +8,13 @@ import { cn } from "@/lib/utils"
 // Instead of trying to modify React.forwardRef, create a fallback function
 const forwardRefFallback = React.forwardRef || function(render) {
   console.error("React.forwardRef is not available in label.tsx, using fallback");
-  const FallbackComponent = function(props) {
+  // Create a named function to allow displayName to work properly
+  function FallbackComponent(props) {
     return render(props, null);
-  };
-  // Make the fallback component capable of receiving a displayName
-  Object.defineProperty(FallbackComponent, 'displayName', {
-    writable: true,
-    configurable: true,
-    value: ''
-  });
+  }
+  
+  // Ensure displayName can be set on the component
+  FallbackComponent.displayName = '';
   return FallbackComponent;
 };
 
