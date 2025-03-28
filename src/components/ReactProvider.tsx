@@ -32,9 +32,20 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
         if (typeof React.forwardRef === 'function' && window.React.forwardRef !== React.forwardRef) {
           console.log("Explicitly assigning forwardRef in ReactProvider");
           window.React.forwardRef = React.forwardRef;
+        } else {
+          console.log("React.forwardRef is not a function, creating fallback");
+          // Use proper type assertion for the fallback implementation
+          window.React.forwardRef = ((render: any) => {
+            function ForwardRef(props: any, ref: any) {
+              return render(props, ref);
+            }
+            ForwardRef.displayName = render.displayName || render.name || '';
+            // Cast the entire result to any to avoid TS errors
+            return ForwardRef as any;
+          });
         }
         
-        // Explicitly assign critical methods to ensure they're available
+        // Add other critical React functions 
         window.React.createElement = React.createElement;
         window.React.Fragment = React.Fragment;
         window.React.createContext = React.createContext;
@@ -44,23 +55,6 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
         window.React.memo = React.memo;
         window.React.Suspense = React.Suspense;
         window.React.lazy = React.lazy;
-        
-        // Verify critical methods
-        if (!window.React.forwardRef) {
-          console.error("Failed to set forwardRef in ReactProvider, attempting direct assignment");
-          // We can't create a full implementation with $$typeof, so we'll use the original React.forwardRef
-          // or a type assertion to avoid TypeScript errors
-          window.React.forwardRef = React.forwardRef || (((render) => {
-            function ForwardRef(props: any, ref: any) {
-              return render(props, ref);
-            }
-            ForwardRef.displayName = render.displayName || render.name || '';
-            // We need to cast this to avoid TypeScript errors
-            return ForwardRef as any;
-          }) as typeof React.forwardRef);
-        } else {
-          console.log("Successfully verified forwardRef in ReactProvider");
-        }
         
         console.log("React fully initialized in ReactProvider");
         setInitialized(true);
