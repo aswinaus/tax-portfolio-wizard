@@ -39,7 +39,11 @@ if (!rootElement) {
   const root = createRoot(rootElement);
   
   try {
-    root.render(<App />);
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
     console.log("Application successfully rendered");
   } catch (error) {
     console.error("Error rendering application:", error);

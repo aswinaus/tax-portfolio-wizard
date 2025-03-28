@@ -1,4 +1,5 @@
 
+import React from 'react'; // Add explicit React import
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { MainSidebar } from '@/components/sidebar/MainSidebar';

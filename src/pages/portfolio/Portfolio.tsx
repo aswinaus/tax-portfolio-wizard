@@ -1,4 +1,5 @@
 
+import React from 'react'; // Add explicit React import
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
