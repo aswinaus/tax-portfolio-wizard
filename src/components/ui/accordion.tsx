@@ -5,21 +5,17 @@ import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-// Verify React.forwardRef is available and provide fallback if needed
-if (!React.forwardRef) {
-  console.error("React.forwardRef is not available in accordion.tsx");
-  // Temporary workaround - DO NOT use in production
-  // This is just to prevent crashes during initialization
-  React.forwardRef = function(render) {
-    return function(props) {
-      return render(props, null);
-    };
-  } as any;
-}
+// Instead of trying to modify React.forwardRef, create a fallback function
+const forwardRefFallback = React.forwardRef || function(render) {
+  console.error("React.forwardRef is not available in accordion.tsx, using fallback");
+  return function(props) {
+    return render(props, null);
+  };
+};
 
 const Accordion = AccordionPrimitive.Root
 
-const AccordionItem = React.forwardRef<
+const AccordionItem = forwardRefFallback<
   React.ElementRef<typeof AccordionPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
 >(({ className, ...props }, ref) => (
@@ -31,7 +27,7 @@ const AccordionItem = React.forwardRef<
 ))
 AccordionItem.displayName = "AccordionItem"
 
-const AccordionTrigger = React.forwardRef<
+const AccordionTrigger = forwardRefFallback<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
@@ -51,7 +47,7 @@ const AccordionTrigger = React.forwardRef<
 ))
 AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
 
-const AccordionContent = React.forwardRef<
+const AccordionContent = forwardRefFallback<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
 >(({ className, children, ...props }, ref) => (

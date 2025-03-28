@@ -17,8 +17,9 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
       // Check if React is missing or forwardRef is not available
       if (!window.React || !window.React.forwardRef) {
         console.log('Updating global React in ReactProvider - forwardRef was missing');
-        // Replace the entire React object to ensure all methods are available
-        window.React = React;
+        // Make a copy of React to avoid direct assignment to read-only properties
+        // @ts-ignore - This is a necessary workaround for React initialization
+        window.React = Object.assign({}, React);
       }
     }
   }, []);

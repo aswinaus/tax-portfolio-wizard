@@ -1,8 +1,17 @@
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+// Create a fallback function for forwardRef to ensure the component works
+const forwardRefFallback = React.forwardRef || function(render) {
+  console.error("React.forwardRef is not available in input.tsx, using fallback");
+  return function(props) {
+    return render(props, null);
+  };
+};
+
+const Input = forwardRefFallback<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
     return (
       <input

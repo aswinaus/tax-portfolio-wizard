@@ -7,7 +7,9 @@ import './index.css'
 // Set React globally as early as possible and ensure forwardRef is available
 if (typeof window !== 'undefined') {
   console.log("Setting global React in main.tsx with forwardRef:", !!React.forwardRef);
-  window.React = React;
+  // Use Object.assign to properly copy React to the window object
+  // @ts-ignore - This is a necessary workaround for React initialization
+  window.React = Object.assign({}, React);
 }
 
 console.log("=== Initializing Application ===");
