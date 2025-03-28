@@ -1,3 +1,4 @@
 
 # SPA fallback 
 /* /index.html 200
+/assets/* /assets/:splat 200

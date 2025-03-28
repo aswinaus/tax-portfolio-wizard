@@ -11,6 +11,8 @@ interface ReactProviderProps {
  * that React is globally available with all required methods
  */
 const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
+  const [initialized, setInitialized] = React.useState(false);
+  
   // Ensure React and its critical methods are globally available
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -51,11 +53,23 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
         }
         
         console.log("React fully initialized in ReactProvider");
+        setInitialized(true);
       } catch (err) {
         console.error("Error during React initialization:", err);
       }
     }
   }, []);
+  
+  // Only render children once React is initialized to prevent errors
+  if (!initialized && typeof window !== 'undefined') {
+    console.log("Waiting for React initialization before rendering children");
+    return (
+      <div className="flex items-center justify-center w-full h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2">Initializing React...</span>
+      </div>
+    );
+  }
   
   return <>{children}</>;
 };

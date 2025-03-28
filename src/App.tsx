@@ -50,15 +50,40 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Error boundary for Suspense fallbacks
+const SuspenseErrorBoundary = ({ children }) => {
+  const [hasError, setHasError] = useState(false);
+  
+  useEffect(() => {
+    // Reset error state when children change
+    setHasError(false);
+  }, [children]);
+  
+  if (hasError) {
+    return <FallbackPage />;
+  }
+  
+  return (
+    <React.Fragment>
+      {children}
+    </React.Fragment>
+  );
+};
+
 const App = () => {
   console.log("App component rendering");
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
+    // Mark that the app has been initialized
+    if (typeof window !== 'undefined') {
+      window.__APP_INITIALIZED__ = true;
+    }
+    
     // Simulate checking environment readiness
     const timeout = setTimeout(() => {
       setIsLoading(false);
-    }, 1000);
+    }, 800); // Reduced timing for faster loading
     
     return () => clearTimeout(timeout);
   }, []);
@@ -76,36 +101,38 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter basename="/">
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    <Route path="/" element={<MainLayout />}>
-                      {/* Make Blogs the default landing page */}
-                      <Route index element={<Navigate to="/portfolio/blogs" replace />} />
-                      
-                      {/* Portfolio Routes */}
-                      <Route path="portfolio" element={<Portfolio />} />
-                      <Route path="portfolio/blogs" element={<Blogs />} />
-                      <Route path="portfolio/blogs/:id" element={<BlogPost />} />
-                      <Route path="portfolio/blogs/create" element={<CreateBlog />} />
-                      
-                      {/* Business Routes */}
-                      <Route path="business/form990" element={<Form990 />} />
-                      <Route path="business/transfer-pricing" element={<TransferPricing />} />
-                      <Route path="documents" element={<DocumentRepositoryPage />} />
-                      
-                      {/* AI Routes */}
-                      <Route path="ai/agent" element={<AgentServicePage />} />
-                      <Route path="ai/tools" element={<ToolsServicePage />} />
-                      <Route path="ai/applications" element={<ApplicationsPage />} />
-                      
-                      {/* Template Routes */}
-                      <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jGraphDB />} />
-                      
-                      {/* Catch-all route */}
-                      <Route path="*" element={<NotFound />} />
-                    </Route>
-                  </Routes>
-                </Suspense>
+                <SuspenseErrorBoundary>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                      <Route path="/" element={<MainLayout />}>
+                        {/* Make Blogs the default landing page */}
+                        <Route index element={<Navigate to="/portfolio/blogs" replace />} />
+                        
+                        {/* Portfolio Routes */}
+                        <Route path="portfolio" element={<Portfolio />} />
+                        <Route path="portfolio/blogs" element={<Blogs />} />
+                        <Route path="portfolio/blogs/:id" element={<BlogPost />} />
+                        <Route path="portfolio/blogs/create" element={<CreateBlog />} />
+                        
+                        {/* Business Routes */}
+                        <Route path="business/form990" element={<Form990 />} />
+                        <Route path="business/transfer-pricing" element={<TransferPricing />} />
+                        <Route path="documents" element={<DocumentRepositoryPage />} />
+                        
+                        {/* AI Routes */}
+                        <Route path="ai/agent" element={<AgentServicePage />} />
+                        <Route path="ai/tools" element={<ToolsServicePage />} />
+                        <Route path="ai/applications" element={<ApplicationsPage />} />
+                        
+                        {/* Template Routes */}
+                        <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jGraphDB />} />
+                        
+                        {/* Catch-all route */}
+                        <Route path="*" element={<NotFound />} />
+                      </Route>
+                    </Routes>
+                  </Suspense>
+                </SuspenseErrorBoundary>
               </BrowserRouter>
             </div>
           </SidebarProvider>
