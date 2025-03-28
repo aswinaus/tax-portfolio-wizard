@@ -11,14 +11,13 @@ interface ReactProviderProps {
 const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
   // Ensure we have React available in the global scope
   React.useEffect(() => {
-    // Make React globally available
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !window.React) {
       console.log('Setting global React in ReactProvider');
       window.React = React;
     }
   }, []);
   
-  return <React.Fragment>{children}</React.Fragment>;
+  return <>{children}</>;
 };
 
 export default ReactProvider;

@@ -4,23 +4,21 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Ensure React is available globally
+// Ensure React is available globally and properly initialized
 window.React = React;
 
+// Make sure we log if React.forwardRef is available
 console.log("=== Initializing Application ===");
 console.log("React version:", React.version);
 console.log("React.forwardRef exists:", !!React.forwardRef);
 
-// Add global error handler
+// Add error handlers
 window.addEventListener('error', (event) => {
   console.error('Global error caught:', event.error);
-  event.preventDefault();
 });
 
-// Add unhandled promise rejection handler
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled Promise Rejection:', event.reason);
-  event.preventDefault();
 });
 
 const rootElement = document.getElementById("root");
@@ -40,16 +38,13 @@ if (!rootElement) {
     console.log("Application rendered successfully");
   } catch (error) {
     console.error("Error rendering application:", error);
-    // Provide a fallback UI in case of render errors
+    // Provide a fallback UI for render errors
     root.render(
       <div className="api-error-fallback">
         <h1>Something went wrong</h1>
         <p>We're sorry, but there was an error loading the application.</p>
         <button onClick={() => window.location.reload()}>Refresh Page</button>
-        <div>
-          <p>Error details (for debugging):</p>
-          <pre>{error instanceof Error ? error.message : String(error)}</pre>
-        </div>
+        <pre>{error instanceof Error ? error.message : String(error)}</pre>
       </div>
     );
   }
