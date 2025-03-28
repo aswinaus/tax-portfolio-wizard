@@ -33,59 +33,69 @@ const ApplicationsPage = lazy(() => import("./pages/ai/ApplicationsPage"));
 // Templates
 const TaxAgentNeo4jGraphDB = lazy(() => import("./templates/TaxAgentNeo4jGraphDB"));
 
-const queryClient = new QueryClient();
+// Create a new QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1, // Reduce retry attempts 
+      refetchOnWindowFocus: false, // Disable refetch on window focus
+    },
+  },
+});
 
 const App = () => {
   console.log("App component rendering");
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SidebarProvider>
-          <div className="min-h-screen bg-background text-foreground">
-            <Toaster />
-            <Sonner />
-            <BrowserRouter basename="/">
-              <Suspense fallback={
-                <div className="w-full h-screen flex items-center justify-center bg-white text-black">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  <span className="ml-2">Loading...</span>
-                </div>
-              }>
-                <Routes>
-                  <Route path="/" element={<MainLayout />}>
-                    {/* Redirect base path to portfolio */}
-                    <Route index element={<Portfolio />} />
-                    
-                    {/* Portfolio Routes */}
-                    <Route path="portfolio" element={<Portfolio />} />
-                    <Route path="portfolio/blogs" element={<Blogs />} />
-                    <Route path="portfolio/blogs/:id" element={<BlogPost />} />
-                    <Route path="portfolio/blogs/create" element={<CreateBlog />} />
-                    
-                    {/* Business Routes */}
-                    <Route path="business/form990" element={<Form990 />} />
-                    <Route path="business/transfer-pricing" element={<TransferPricing />} />
-                    <Route path="documents" element={<DocumentRepositoryPage />} />
-                    
-                    {/* AI Routes */}
-                    <Route path="ai/agent" element={<AgentServicePage />} />
-                    <Route path="ai/tools" element={<ToolsServicePage />} />
-                    <Route path="ai/applications" element={<ApplicationsPage />} />
-                    
-                    {/* Template Routes */}
-                    <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jGraphDB />} />
-                    
-                    {/* Catch-all route */}
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </div>
-        </SidebarProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <SidebarProvider>
+            <div className="min-h-screen bg-background text-foreground">
+              <Toaster />
+              <Sonner />
+              <BrowserRouter basename="/">
+                <Suspense fallback={
+                  <div className="w-full h-screen flex items-center justify-center bg-white text-black">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span className="ml-2">Loading...</span>
+                  </div>
+                }>
+                  <Routes>
+                    <Route path="/" element={<MainLayout />}>
+                      {/* Redirect base path to portfolio */}
+                      <Route index element={<Portfolio />} />
+                      
+                      {/* Portfolio Routes */}
+                      <Route path="portfolio" element={<Portfolio />} />
+                      <Route path="portfolio/blogs" element={<Blogs />} />
+                      <Route path="portfolio/blogs/:id" element={<BlogPost />} />
+                      <Route path="portfolio/blogs/create" element={<CreateBlog />} />
+                      
+                      {/* Business Routes */}
+                      <Route path="business/form990" element={<Form990 />} />
+                      <Route path="business/transfer-pricing" element={<TransferPricing />} />
+                      <Route path="documents" element={<DocumentRepositoryPage />} />
+                      
+                      {/* AI Routes */}
+                      <Route path="ai/agent" element={<AgentServicePage />} />
+                      <Route path="ai/tools" element={<ToolsServicePage />} />
+                      <Route path="ai/applications" element={<ApplicationsPage />} />
+                      
+                      {/* Template Routes */}
+                      <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jGraphDB />} />
+                      
+                      {/* Catch-all route */}
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </div>
+          </SidebarProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
