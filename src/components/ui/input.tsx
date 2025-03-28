@@ -10,6 +10,11 @@ const forwardRefFallback = React.forwardRef || function(render) {
     return render(props, null);
   };
   // Make the fallback component capable of receiving a displayName
+  Object.defineProperty(FallbackComponent, 'displayName', {
+    writable: true,
+    configurable: true,
+    value: ''
+  });
   return FallbackComponent;
 };
 
