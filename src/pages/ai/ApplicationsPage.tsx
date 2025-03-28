@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { ProductList } from '@/components/ai/ProductList';
+import { ApplicationsList } from '@/components/ai/ApplicationsList';
 
 const ApplicationsPage = () => {
   return (
@@ -16,19 +16,19 @@ const ApplicationsPage = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-semibold tracking-tight mb-2">
-              Product List
+              Applications
             </h1>
             <p className="text-muted-foreground">
-              Manage and monitor all your products
+              Manage and monitor all your applications
             </p>
           </div>
           <Button className="bg-yellow-400 hover:bg-yellow-500 text-black">
-            <Plus className="mr-2 h-4 w-4" /> Add Product
+            <Plus className="mr-2 h-4 w-4" /> Add Application
           </Button>
         </div>
         
         <div className="bg-white rounded-lg border shadow-sm">
-          <ProductList />
+          <ApplicationsList />
         </div>
       </motion.div>
     </div>
