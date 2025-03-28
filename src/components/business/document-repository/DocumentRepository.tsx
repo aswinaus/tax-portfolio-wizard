@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, ChevronUp, FileText, Filter, Search, Tag, Upload, Settings, BarChart2, History, Archive, Plus, X, Check, ChevronRight, Clock, MoreHorizontal, DownloadCloud, RefreshCw, File, Folder, Grid, List, CheckSquare, Database, Files } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileText, Filter, Search, Tag, Upload, Settings, BarChart2, History, Archive, Plus, X, Check, ChevronRight, Clock, MoreHorizontal, DownloadCloud, RefreshCw, File, Folder, Grid, List, CheckSquare, Database, Files, LayoutGrid } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -555,7 +555,7 @@ const DocumentRepository: React.FC = () => {
               
               <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}>
                 <ToggleGroupItem value="grid" aria-label="Grid view">
-                  <Grid className="h-4 w-4" />
+                  <LayoutGrid className="h-4 w-4" />
                 </ToggleGroupItem>
                 <ToggleGroupItem value="list" aria-label="List view">
                   <List className="h-4 w-4" />
@@ -688,11 +688,7 @@ const DocumentRepository: React.FC = () => {
           {showUploadModal && (
             <DocumentUpload 
               onClose={() => setShowUploadModal(false)}
-              onUploadComplete={(fileDetails) => {
-                console.log('Upload completed:', fileDetails);
-                // You would typically add the file to your documents list here
-                setShowUploadModal(false);
-              }}
+              onUploadComplete={handleUpload}
             />
           )}
         </TabsContent>
