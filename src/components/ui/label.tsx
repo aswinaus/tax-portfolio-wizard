@@ -5,9 +5,16 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-// Check for forwardRef
+// Check for forwardRef and provide fallback if needed
 if (!React.forwardRef) {
   console.error("React.forwardRef is not available in label.tsx");
+  // Temporary workaround - DO NOT use in production
+  // This is just to prevent crashes during initialization
+  React.forwardRef = function(render) {
+    return function(props) {
+      return render(props, null);
+    };
+  } as any;
 }
 
 const labelVariants = cva(

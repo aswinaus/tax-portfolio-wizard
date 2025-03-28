@@ -4,8 +4,9 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Set React globally as early as possible
+// Set React globally as early as possible and ensure forwardRef is available
 if (typeof window !== 'undefined') {
+  console.log("Setting global React in main.tsx with forwardRef:", !!React.forwardRef);
   window.React = React;
 }
 

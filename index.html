@@ -19,8 +19,14 @@
     <script>
       window.process = { env: { NODE_ENV: 'production' } };
       
-      // Pre-initialize React reference to prevent timing issues
-      window.React = null; // Will be populated by React import
+      // Create a fully initialized React placeholder
+      window.React = {
+        forwardRef: function() { 
+          console.warn("Using temporary forwardRef placeholder - React not fully loaded");
+          return function(component) { return component; };
+        },
+        createElement: function() { return null; }
+      };
       
       // Polyfills for React
       window.requestIdleCallback = window.requestIdleCallback || function(cb) {

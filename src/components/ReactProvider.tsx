@@ -7,13 +7,19 @@ interface ReactProviderProps {
 
 /**
  * ReactProvider ensures React context is properly established
+ * This component runs early in the application lifecycle to guarantee
+ * that React is globally available with all required methods
  */
 const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
-  // Make absolutely sure React is globally available
+  // Ensure React and its critical methods are globally available
   React.useEffect(() => {
-    if (typeof window !== 'undefined' && (!window.React || !window.React.forwardRef)) {
-      console.log('Updating global React in ReactProvider');
-      window.React = React;
+    if (typeof window !== 'undefined') {
+      // Check if React is missing or forwardRef is not available
+      if (!window.React || !window.React.forwardRef) {
+        console.log('Updating global React in ReactProvider - forwardRef was missing');
+        // Replace the entire React object to ensure all methods are available
+        window.React = React;
+      }
     }
   }, []);
   
