@@ -1,14 +1,9 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { MoreVertical, Plus, ChevronDown, ChevronUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { ApplicationsList } from '@/components/ai/ApplicationsList';
+import { Plus } from "lucide-react";
+import { ProductList } from '@/components/ai/ProductList';
 
 const ApplicationsPage = () => {
   return (
@@ -21,10 +16,10 @@ const ApplicationsPage = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-semibold tracking-tight mb-2">
-              Applications
+              Product List
             </h1>
             <p className="text-muted-foreground">
-              Manage and monitor all your application requests
+              Manage and monitor all your products
             </p>
           </div>
           <Button className="bg-yellow-400 hover:bg-yellow-500 text-black">
@@ -33,7 +28,7 @@ const ApplicationsPage = () => {
         </div>
         
         <div className="bg-white rounded-lg border shadow-sm">
-          <ApplicationsList />
+          <ProductList />
         </div>
       </motion.div>
     </div>
