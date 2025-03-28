@@ -16,25 +16,25 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
   // Ensure React and its critical methods are globally available
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      console.log("Checking React initialization in ReactProvider");
+      console.log("Initializing React in ReactProvider");
       
       try {
-        // Immediately assign React to window.React before anything else
-        window.React = Object.assign({}, React) as typeof React;
+        // Always create a fresh React object to avoid reference issues
+        window.React = {} as typeof React;
         
-        // Important: Create the forwardRef function first as it's often needed early
+        // CRITICAL: Define forwardRef first since it's used by many components
         if (typeof React.forwardRef === 'function') {
-          console.log("Explicitly assigning forwardRef in ReactProvider");
           window.React.forwardRef = React.forwardRef;
+          console.log("Set window.React.forwardRef from React.forwardRef");
         } else {
-          console.log("React.forwardRef is not a function, creating fallback");
-          // Define a correctly typed fallback that will pass runtime checks
+          console.log("Creating fallback forwardRef implementation");
+          // Define a correctly typed fallback
           window.React.forwardRef = function(render) {
             function ForwardRef(props, ref) {
               return render(props, ref);
             }
             ForwardRef.displayName = render.displayName || render.name || '';
-            // Add required exotic component properties
+            // Essential: Add required Symbol property for type checking
             ForwardRef.$$typeof = Symbol.for('react.forward_ref');
             return ForwardRef;
           } as any;
@@ -59,7 +59,7 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
     }
   }, []);
   
-  // Only render children once React is initialized to prevent errors
+  // Show a loading indicator until React is initialized
   if (!initialized && typeof window !== 'undefined') {
     console.log("Waiting for React initialization before rendering children");
     return (

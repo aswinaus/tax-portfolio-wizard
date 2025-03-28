@@ -5,34 +5,32 @@ import App from './App.tsx';
 import './index.css';
 import FallbackPage from './pages/FallbackPage.tsx';
 
-// Setup global error handlers
+// CRITICAL: Initialize React global object immediately
+// This must happen before any imports that might use React.forwardRef
 if (typeof window !== 'undefined') {
-  // Create a complete copy of React on the window object before anything else happens
-  console.log("Setting global React in main.tsx with forwardRef:", !!React.forwardRef);
+  console.log("Setting up global React object in main.tsx");
   
   try {
-    // Directly assign React to window.React - don't check if it exists first to ensure it's set
-    window.React = Object.assign({}, React) as typeof React;
+    // Create new React object - don't use Object.assign which can fail to copy all properties
+    window.React = {} as typeof React;
     
-    // Explicitly ensure forwardRef is available with the correct value
+    // Explicitly ensure forwardRef is available before anything else
     if (typeof React.forwardRef === 'function') {
       window.React.forwardRef = React.forwardRef;
-      console.log("Set window.React.forwardRef directly from React.forwardRef");
+      console.log("Assigned React.forwardRef directly to window.React.forwardRef");
     } else {
-      console.log("React.forwardRef is not a function, creating fallback");
-      // Define a correctly typed fallback that will pass runtime checks
+      console.log("Creating fallback implementation for forwardRef");
       window.React.forwardRef = function(render) {
         function ForwardRef(props, ref) {
           return render(props, ref);
         }
         ForwardRef.displayName = render.displayName || render.name || '';
-        // Add required exotic component properties
         ForwardRef.$$typeof = Symbol.for('react.forward_ref');
         return ForwardRef;
       } as any;
     }
     
-    // Add other critical React functions 
+    // Add remaining critical React methods
     window.React.createElement = React.createElement;
     window.React.Fragment = React.Fragment;
     window.React.createContext = React.createContext;
@@ -43,9 +41,9 @@ if (typeof window !== 'undefined') {
     window.React.Suspense = React.Suspense;
     window.React.lazy = React.lazy;
     
-    console.log("React fully initialized in main.tsx, forwardRef is", !!window.React.forwardRef);
+    console.log("React initialized in main.tsx, forwardRef exists:", !!window.React.forwardRef);
   } catch (err) {
-    console.error("Error during React setup:", err);
+    console.error("Failed to initialize React in main.tsx:", err);
   }
 }
 

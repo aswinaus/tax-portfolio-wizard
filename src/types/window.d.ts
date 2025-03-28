@@ -1,8 +1,8 @@
 
 interface Window {
   __APP_INITIALIZED__?: boolean;
-  React?: typeof React & {
-    forwardRef: any; // Explicitly define as any to avoid type issues 
+  React?: {
+    forwardRef: any; // Use 'any' type to avoid TypeScript issues
     createElement?: typeof React.createElement;
     Fragment?: typeof React.Fragment;
     createContext?: typeof React.createContext;
@@ -12,6 +12,7 @@ interface Window {
     memo?: typeof React.memo;
     Suspense?: typeof React.Suspense;
     lazy?: typeof React.lazy;
+    version?: string;
     [key: string]: any;
   };
   process?: {
