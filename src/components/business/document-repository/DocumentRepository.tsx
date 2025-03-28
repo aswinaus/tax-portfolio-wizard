@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, FileText, Filter, Search, Tag, Upload, Settings, BarChart2, History, Archive, Plus, X, Check, ChevronRight, Clock, MoreHorizontal, DownloadCloud, RefreshCw, File, Folder, Grid, List, CheckSquare, Database, Files } from 'lucide-react';
@@ -688,9 +687,12 @@ const DocumentRepository: React.FC = () => {
           {/* Document upload modal */}
           {showUploadModal && (
             <DocumentUpload 
-              isOpen={showUploadModal} 
               onClose={() => setShowUploadModal(false)}
-              onUpload={handleUpload}
+              onUploadComplete={(fileDetails) => {
+                console.log('Upload completed:', fileDetails);
+                // You would typically add the file to your documents list here
+                setShowUploadModal(false);
+              }}
             />
           )}
         </TabsContent>
