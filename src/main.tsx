@@ -1,5 +1,5 @@
 
-import React from 'react' // Explicitly import React to fix forwardRef issue
+import * as React from 'react' // Use namespace import for React
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'

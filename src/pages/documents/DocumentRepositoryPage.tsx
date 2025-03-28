@@ -1,5 +1,5 @@
 
-import React from 'react' // Add explicit React import
+import * as React from 'react' // Use namespace import for React
 import { motion } from 'framer-motion';
 import DocumentRepository from '@/components/business/document-repository/DocumentRepository';
 
