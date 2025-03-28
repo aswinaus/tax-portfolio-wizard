@@ -52,6 +52,11 @@
       window.cancelIdleCallback = window.cancelIdleCallback || function(id) {
         clearTimeout(id);
       };
+      
+      // Disable Lovable badge
+      window.LOVABLE_CONFIG = {
+        showBadge: false
+      };
     </script>
   </head>
 
