@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Folder, 
   Upload, 
@@ -17,13 +17,7 @@ import {
   Flag,
   List,
   Box,
-  User,
-  Move,
-  Settings,
-  RefreshCw,
-  ArrowUp,
-  ArrowDown,
-  SlidersHorizontal
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +48,15 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -63,11 +66,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import DocumentUpload from './DocumentUpload';
-import LyzrDocumentAgentChat from './LyzrDocumentAgentChat';
-import { GitHubDocument, fetchDocumentsFromGitHub } from '@/services/githubService';
 
 interface Document {
   id: string;
@@ -85,8 +84,6 @@ interface Document {
   clientApproved: boolean;
   clientContact: string;
   client: string;
-  url?: string;
-  downloadUrl?: string;
 }
 
 interface Permission {
@@ -97,17 +94,433 @@ interface Permission {
   dateAdded: string;
 }
 
-type SortField = 'name' | 'type' | 'size' | 'uploadDate' | 'jurisdiction' | 'serviceLine' | 'recordType' | 'entity' | 'client' | 'uploadedBy';
-type SortDirection = 'asc' | 'desc';
-
-interface FilterState {
-  fileTypes: string[];
-  clientApproved: boolean | null;
-  jurisdictions: string[];
-  serviceLines: string[];
-  recordTypes: string[];
-  entities: string[];
-}
+const sampleDocuments: Document[] = [
+  {
+    id: 'doc-1',
+    name: 'Form 990 - 2023.pdf',
+    type: 'PDF',
+    size: '2.4 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-12-10T10:30:00Z',
+    isArchived: false,
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: true,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
+  },
+  {
+    id: 'doc-2',
+    name: 'Financial Statement Q4 2023.xlsx',
+    type: 'Excel',
+    size: '1.7 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-12-15T14:45:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'United States',
+    serviceLine: 'Assurance',
+    recordType: 'Financial reporting',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Michael Chen',
+    client: 'Boeing'
+  },
+  {
+    id: 'doc-3',
+    name: 'Form 990 - 2022.pdf',
+    type: 'PDF',
+    size: '2.2 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2022-12-05T09:15:00Z',
+    isArchived: true,
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: false,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
+  },
+  {
+    id: 'doc-4',
+    name: 'Annual Tax Report 2023.pdf',
+    type: 'PDF',
+    size: '3.1 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-11-28T16:30:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'India',
+    serviceLine: 'Tax',
+    recordType: 'Tax permanent documentation',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Raj Patel',
+    client: 'Air Canada'
+  },
+  {
+    id: 'doc-5',
+    name: 'Budget Projections 2024.xlsx',
+    type: 'Excel',
+    size: '1.5 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-12-20T11:30:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'Canada',
+    serviceLine: 'Advisory',
+    recordType: 'Budget planning',
+    entity: 'Government',
+    clientApproved: false,
+    clientContact: 'Emma Thompson',
+    client: 'Air Canada'
+  },
+  {
+    id: 'doc-6',
+    name: 'Healthcare Compliance Report.docx',
+    type: 'Word',
+    size: '1.8 MB',
+    uploadedBy: 'Kelly Lewis',
+    uploadDate: '2023-11-12T08:45:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'United States',
+    serviceLine: 'Advisory',
+    recordType: 'Compliance documentation',
+    entity: 'Healthcare',
+    clientApproved: true,
+    clientContact: 'David Miller',
+    client: 'Mayo Clinic'
+  },
+  {
+    id: 'doc-7',
+    name: 'Quarterly Financial Review Q3 2023.pdf',
+    type: 'PDF',
+    size: '3.5 MB',
+    uploadedBy: 'Mark Wilson',
+    uploadDate: '2023-10-15T13:20:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'United Kingdom',
+    serviceLine: 'Assurance',
+    recordType: 'Financial reporting',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'James Barnes',
+    client: 'Barclays'
+  },
+  {
+    id: 'doc-8',
+    name: 'Tax Planning Strategy 2024.pptx',
+    type: 'PowerPoint',
+    size: '4.2 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-12-28T09:10:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'Global',
+    serviceLine: 'Tax',
+    recordType: 'Tax planning',
+    entity: 'Multinational',
+    clientApproved: true,
+    clientContact: 'Robert Zhang',
+    client: 'Samsung'
+  },
+  {
+    id: 'doc-9',
+    name: 'Form 990 - 2021.pdf',
+    type: 'PDF',
+    size: '2.1 MB',
+    uploadedBy: 'Jennifer Lopez',
+    uploadDate: '2021-12-10T14:30:00Z',
+    isArchived: true,
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: true,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
+  },
+  {
+    id: 'doc-10',
+    name: 'Merger Due Diligence Report.pdf',
+    type: 'PDF',
+    size: '5.7 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-09-20T15:45:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'United States',
+    serviceLine: 'Advisory',
+    recordType: 'M&A documentation',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Victoria Adams',
+    client: 'Meta'
+  },
+  {
+    id: 'doc-11',
+    name: 'GST Compliance Checklist.xlsx',
+    type: 'Excel',
+    size: '0.9 MB',
+    uploadedBy: 'Rahul Sharma',
+    uploadDate: '2023-11-05T10:20:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'India',
+    serviceLine: 'Tax',
+    recordType: 'Tax compliance',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Amit Patel',
+    client: 'Reliance'
+  },
+  {
+    id: 'doc-12',
+    name: 'Environmental Impact Assessment.pdf',
+    type: 'PDF',
+    size: '6.3 MB',
+    uploadedBy: 'Emma Green',
+    uploadDate: '2023-08-15T09:30:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'Australia',
+    serviceLine: 'Advisory',
+    recordType: 'Environmental compliance',
+    entity: 'Mining',
+    clientApproved: false,
+    clientContact: 'Steve Hughes',
+    client: 'BHP'
+  },
+  {
+    id: 'doc-13',
+    name: 'IT Security Audit Report.pdf',
+    type: 'PDF',
+    size: '2.8 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-10-10T11:15:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'European Union',
+    serviceLine: 'Advisory',
+    recordType: 'IT audit',
+    entity: 'Technology',
+    clientApproved: true,
+    clientContact: 'Sophie Martin',
+    client: 'Spotify'
+  },
+  {
+    id: 'doc-14',
+    name: 'Form 990 - 2020.pdf',
+    type: 'PDF',
+    size: '2.0 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2020-12-12T13:45:00Z',
+    isArchived: true,
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: true,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
+  },
+  {
+    id: 'doc-15',
+    name: 'Corporate Governance Framework.docx',
+    type: 'Word',
+    size: '1.4 MB',
+    uploadedBy: 'Lisa Johnson',
+    uploadDate: '2023-07-25T14:30:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'United Kingdom',
+    serviceLine: 'Advisory',
+    recordType: 'Governance',
+    entity: 'Financial Services',
+    clientApproved: true,
+    clientContact: 'William Taylor',
+    client: 'HSBC'
+  },
+  {
+    id: 'doc-16',
+    name: 'Annual Financial Statements 2023.pdf',
+    type: 'PDF',
+    size: '4.5 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2024-01-20T10:15:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'Japan',
+    serviceLine: 'Assurance',
+    recordType: 'Financial reporting',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Takashi Yamamoto',
+    client: 'Toyota'
+  },
+  {
+    id: 'doc-17',
+    name: 'Transfer Pricing Documentation.pdf',
+    type: 'PDF',
+    size: '3.2 MB',
+    uploadedBy: 'Carlos Rodriguez',
+    uploadDate: '2023-11-18T09:45:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'Global',
+    serviceLine: 'Tax',
+    recordType: 'Transfer pricing',
+    entity: 'Multinational',
+    clientApproved: true,
+    clientContact: 'Maria Garcia',
+    client: 'Nestlé'
+  },
+  {
+    id: 'doc-18',
+    name: 'GDPR Compliance Report.pdf',
+    type: 'PDF',
+    size: '2.1 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-09-05T15:30:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'European Union',
+    serviceLine: 'Advisory',
+    recordType: 'Data privacy',
+    entity: 'Technology',
+    clientApproved: false,
+    clientContact: 'Hans Müller',
+    client: 'Siemens'
+  },
+  {
+    id: 'doc-19',
+    name: 'Pension Fund Valuation 2023.xlsx',
+    type: 'Excel',
+    size: '2.3 MB',
+    uploadedBy: 'Sarah Thompson',
+    uploadDate: '2023-12-01T11:20:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'Canada',
+    serviceLine: 'Assurance',
+    recordType: 'Actuarial valuation',
+    entity: 'Pension Fund',
+    clientApproved: true,
+    clientContact: 'John Williams',
+    client: 'Ontario Teachers'
+  },
+  {
+    id: 'doc-20',
+    name: 'Tax Audit Defense Strategy.docx',
+    type: 'Word',
+    size: '1.6 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-10-22T14:15:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax controversy',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Elizabeth Clark',
+    client: 'Amazon'
+  },
+  {
+    id: 'doc-21',
+    name: 'Form 990 - 2019.pdf',
+    type: 'PDF',
+    size: '1.9 MB',
+    uploadedBy: 'Michael Brown',
+    uploadDate: '2019-12-15T10:30:00Z',
+    isArchived: true,
+    category: 'form990',
+    jurisdiction: 'United States',
+    serviceLine: 'Tax',
+    recordType: 'Tax returns',
+    entity: 'Non-profit Organization',
+    clientApproved: true,
+    clientContact: 'Sarah Johnson',
+    client: 'Coke'
+  },
+  {
+    id: 'doc-22',
+    name: 'Sustainability Report 2023.pdf',
+    type: 'PDF',
+    size: '4.8 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-08-10T13:40:00Z',
+    isArchived: false,
+    category: 'other',
+    jurisdiction: 'Global',
+    serviceLine: 'Advisory',
+    recordType: 'ESG reporting',
+    entity: 'Corporate',
+    clientApproved: true,
+    clientContact: 'Daniel Lee',
+    client: 'Unilever'
+  },
+  {
+    id: 'doc-23',
+    name: 'R&D Tax Credit Analysis.xlsx',
+    type: 'Excel',
+    size: '1.7 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2023-11-30T09:20:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'United Kingdom',
+    serviceLine: 'Tax',
+    recordType: 'Tax incentives',
+    entity: 'Technology',
+    clientApproved: false,
+    clientContact: 'Andrew Wilson',
+    client: 'Dyson'
+  },
+  {
+    id: 'doc-24',
+    name: 'Quarterly Business Review Q1 2024.pptx',
+    type: 'PowerPoint',
+    size: '3.9 MB',
+    uploadedBy: 'Aswin Bhaskaran',
+    uploadDate: '2024-04-05T14:30:00Z',
+    isArchived: false,
+    category: 'financial',
+    jurisdiction: 'United States',
+    serviceLine: 'Advisory',
+    recordType: 'Business performance',
+    entity: 'Retail',
+    clientApproved: true,
+    clientContact: 'Jessica Martinez',
+    client: 'Walmart'
+  },
+  {
+    id: 'doc-25',
+    name: 'Customs and International Trade Report.pdf',
+    type: 'PDF',
+    size: '2.6 MB',
+    uploadedBy: 'Wei Chen',
+    uploadDate: '2023-09-18T11:05:00Z',
+    isArchived: false,
+    category: 'tax',
+    jurisdiction: 'China',
+    serviceLine: 'Tax',
+    recordType: 'International trade',
+    entity: 'Manufacturing',
+    clientApproved: true,
+    clientContact: 'Li Wei',
+    client: 'Lenovo'
+  }
+];
 
 const samplePermissions: Permission[] = [
   {
@@ -139,99 +552,7 @@ const DocumentRepository = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
-  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
-  const [githubToken, setGithubToken] = useState('');
   const { toast } = useToast();
-  
-  const [sortConfig, setSortConfig] = useState<{field: SortField, direction: SortDirection}>({
-    field: 'uploadDate',
-    direction: 'desc'
-  });
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    fileTypes: [],
-    clientApproved: null,
-    jurisdictions: [],
-    serviceLines: [],
-    recordTypes: [],
-    entities: []
-  });
-  
-  const [filterOptions, setFilterOptions] = useState<{
-    fileTypes: string[];
-    jurisdictions: string[];
-    serviceLines: string[];
-    recordTypes: string[];
-    entities: string[];
-  }>({
-    fileTypes: [],
-    jurisdictions: [],
-    serviceLines: [],
-    recordTypes: [],
-    entities: []
-  });
-  
-  useEffect(() => {
-    fetchDocuments();
-    
-    const token = localStorage.getItem('github_token');
-    if (token) {
-      setGithubToken(token);
-    }
-  }, []);
-  
-  useEffect(() => {
-    if (documents.length > 0) {
-      setFilterOptions({
-        fileTypes: [...new Set(documents.map(doc => doc.type))],
-        jurisdictions: [...new Set(documents.map(doc => doc.jurisdiction))],
-        serviceLines: [...new Set(documents.map(doc => doc.serviceLine))],
-        recordTypes: [...new Set(documents.map(doc => doc.recordType))],
-        entities: [...new Set(documents.map(doc => doc.entity))]
-      });
-    }
-  }, [documents]);
-  
-  const fetchDocuments = async () => {
-    setIsLoadingDocuments(true);
-    try {
-      const githubDocs = await fetchDocumentsFromGitHub();
-      console.log(`Total documents loaded: ${githubDocs.length}`);
-      setDocuments(githubDocs);
-      if (githubDocs.length > 0) {
-        toast({
-          title: "Documents loaded",
-          description: `${githubDocs.length} documents loaded from GitHub repository`,
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-      toast({
-        title: "Error loading documents",
-        description: "Failed to load documents from GitHub repository",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingDocuments(false);
-    }
-  };
-  
-  const handleRefresh = () => {
-    fetchDocuments();
-  };
-  
-  const saveGitHubToken = () => {
-    localStorage.setItem('github_token', githubToken);
-    toast({
-      title: "Token saved",
-      description: "Your GitHub token has been saved.",
-    });
-    setIsSettingsDialogOpen(false);
-    fetchDocuments();
-  };
   
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -254,112 +575,8 @@ const DocumentRepository = () => {
     }
   };
   
-  const handleSort = (field: SortField) => {
-    setSortConfig(prevConfig => ({
-      field,
-      direction: prevConfig.field === field && prevConfig.direction === 'asc' ? 'desc' : 'asc'
-    }));
-  };
-  
-  const sortDocuments = (docs: Document[]) => {
-    return [...docs].sort((a, b) => {
-      if (sortConfig.field === 'uploadDate') {
-        const dateA = new Date(a[sortConfig.field]).getTime();
-        const dateB = new Date(b[sortConfig.field]).getTime();
-        return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
-      }
-      
-      if (sortConfig.field === 'size') {
-        const sizeA = parseFileSize(a.size);
-        const sizeB = parseFileSize(b.size);
-        return sortConfig.direction === 'asc' ? sizeA - sizeB : sizeB - sizeA;
-      }
-      
-      const valueA = a[sortConfig.field]?.toString().toLowerCase() || '';
-      const valueB = b[sortConfig.field]?.toString().toLowerCase() || '';
-      
-      if (valueA < valueB) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (valueA > valueB) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  };
-  
-  const parseFileSize = (sizeStr: string): number => {
-    const match = sizeStr.match(/^(\d+(?:\.\d+)?)\s*(KB|MB)$/i);
-    if (!match) return 0;
-    
-    const [, size, unit] = match;
-    const numSize = parseFloat(size);
-    
-    return unit.toUpperCase() === 'MB' ? numSize * 1024 * 1024 : numSize * 1024;
-  };
-  
-  const applyFilters = (docs: Document[]) => {
-    return docs.filter(doc => {
-      if (filters.fileTypes.length > 0 && !filters.fileTypes.includes(doc.type)) {
-        return false;
-      }
-      
-      if (filters.clientApproved !== null && doc.clientApproved !== filters.clientApproved) {
-        return false;
-      }
-      
-      if (filters.jurisdictions.length > 0 && !filters.jurisdictions.includes(doc.jurisdiction)) {
-        return false;
-      }
-      
-      if (filters.serviceLines.length > 0 && !filters.serviceLines.includes(doc.serviceLine)) {
-        return false;
-      }
-      
-      if (filters.recordTypes.length > 0 && !filters.recordTypes.includes(doc.recordType)) {
-        return false;
-      }
-      
-      if (filters.entities.length > 0 && !filters.entities.includes(doc.entity)) {
-        return false;
-      }
-      
-      return true;
-    });
-  };
-  
-  const resetFilters = () => {
-    setFilters({
-      fileTypes: [],
-      clientApproved: null,
-      jurisdictions: [],
-      serviceLines: [],
-      recordTypes: [],
-      entities: []
-    });
-    
-    toast({
-      title: "Filters reset",
-      description: "All document filters have been cleared",
-    });
-    
-    setIsFilterOpen(false);
-  };
-  
-  const toggleFilter = (filterType: keyof FilterState, value: any) => {
-    setFilters(prev => {
-      if (filterType === 'clientApproved') {
-        return { ...prev, [filterType]: prev[filterType] === value ? null : value };
-      }
-      
-      const currentValues = prev[filterType] as string[];
-      return {
-        ...prev,
-        [filterType]: currentValues.includes(value)
-          ? currentValues.filter(v => v !== value)
-          : [...currentValues, value]
-      };
-    });
-  };
-  
   const getFilteredDocuments = () => {
-    let filteredDocs = documents;
+    let filteredDocs = sampleDocuments;
     
     if (activeTab === 'archived') {
       filteredDocs = filteredDocs.filter(doc => doc.isArchived);
@@ -373,77 +590,21 @@ const DocumentRepository = () => {
       filteredDocs = filteredDocs.filter(doc => 
         doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         doc.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.entity?.toLowerCase().includes(searchTerm.toLowerCase())
+        doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
-    filteredDocs = applyFilters(filteredDocs);
-    
-    filteredDocs = sortDocuments(filteredDocs);
     
     return filteredDocs;
   };
   
   const downloadSelectedDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select documents to download",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const docsToDownload = documents.filter(doc => 
-      selectedDocuments.includes(doc.id) && doc.downloadUrl
-    );
-    
-    docsToDownload.forEach(doc => {
-      if (doc.downloadUrl) {
-        window.open(doc.downloadUrl, '_blank');
-      }
-    });
-    
-    if (docsToDownload.length > 0) {
-      toast({
-        title: "Download started",
-        description: `Started downloading ${docsToDownload.length} document(s)`,
-      });
-    } else {
-      toast({
-        title: "Download failed",
-        description: "No download URLs available for selected documents",
-        variant: "destructive",
-      });
-    }
+    console.log('Downloading documents:', selectedDocuments);
+    alert(`Downloading ${selectedDocuments.length} document(s)`);
   };
   
   const archiveSelectedDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select documents to archive",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const updatedDocs = documents.map(doc => {
-      if (selectedDocuments.includes(doc.id)) {
-        return { ...doc, isArchived: true };
-      }
-      return doc;
-    });
-    
-    setDocuments(updatedDocs);
-    
-    toast({
-      title: "Documents archived",
-      description: `${selectedDocuments.length} document(s) archived successfully`,
-    });
-    
+    console.log('Archiving documents:', selectedDocuments);
+    alert(`Archived ${selectedDocuments.length} document(s)`);
     setSelectedDocuments([]);
   };
 
@@ -457,90 +618,11 @@ const DocumentRepository = () => {
       return;
     }
     
+    console.log('Copying documents:', selectedDocuments);
     toast({
       title: "Documents copied",
       description: `${selectedDocuments.length} document(s) copied successfully`,
     });
-  };
-
-  const moveSelectedDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select documents to move",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsMoveDialogOpen(true);
-  };
-
-  const handleMoveDocuments = (destination: string) => {
-    toast({
-      title: "Documents moved",
-      description: `${selectedDocuments.length} document(s) moved to ${destination}`,
-    });
-    setIsMoveDialogOpen(false);
-    setSelectedDocuments([]);
-  };
-
-  const handleUploadComplete = (fileDetails: {
-    name: string;
-    type: string;
-    size: string;
-    uploadedBy: string;
-    uploadDate: string;
-    url?: string;
-  }) => {
-    fetchDocuments();
-    
-    toast({
-      title: "Upload complete",
-      description: `${fileDetails.name} uploaded successfully`,
-    });
-  };
-
-  const handleDeleteDocuments = () => {
-    if (selectedDocuments.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select documents to delete",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const updatedDocs = documents.filter(doc => !selectedDocuments.includes(doc.id));
-    setDocuments(updatedDocs);
-    
-    toast({
-      title: "Documents deleted",
-      description: `${selectedDocuments.length} document(s) deleted`,
-    });
-    
-    setSelectedDocuments([]);
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortConfig.field !== field) {
-      return null;
-    }
-    
-    return sortConfig.direction === 'asc' ? 
-      <ArrowUp className="h-3 w-3 inline ml-1" /> : 
-      <ArrowDown className="h-3 w-3 inline ml-1" />;
-  };
-
-  const getActiveFilterCount = () => {
-    return (
-      filters.fileTypes.length +
-      filters.jurisdictions.length +
-      filters.serviceLines.length +
-      filters.recordTypes.length +
-      filters.entities.length +
-      (filters.clientApproved !== null ? 1 : 0)
-    );
   };
 
   return (
@@ -586,44 +668,39 @@ const DocumentRepository = () => {
                   Add files to your document repository. Supported formats: PDF, DOCX, XLSX, JPG, PNG.
                 </DialogDescription>
               </DialogHeader>
-              <DocumentUpload 
-                onUploadComplete={handleUploadComplete}
-                onClose={() => setIsUploadDialogOpen(false)}
-              />
+              <div className="grid gap-4 py-4">
+                <div className="border-2 border-dashed border-primary/20 rounded-lg p-8 text-center cursor-pointer hover:bg-secondary/50 transition-colors">
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-primary/60" />
+                  <p className="text-sm font-medium">Drag and drop files here or click to browse</p>
+                  <p className="text-xs text-muted-foreground mt-1">Maximum file size: 10MB</p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm font-medium">Category</div>
+                  <select className="border rounded-md p-2">
+                    <option value="form990">Form 990</option>
+                    <option value="financial">Financial Data</option>
+                    <option value="tax">Tax Documents</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" onClick={() => setIsUploadDialogOpen(false)}>
+                  Upload Files
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
-          
-          <Button 
-            variant="outline" 
-            onClick={handleRefresh}
-            disabled={isLoadingDocuments}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingDocuments ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={() => setIsSettingsDialogOpen(true)}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
           
           <Button 
             variant="outline" 
             onClick={copySelectedDocuments}
           >
             <Copy className="h-4 w-4 mr-2" />
-            Copy
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={moveSelectedDocuments}
-          >
-            <Move className="h-4 w-4 mr-2" />
-            Move
+            Copy Documents
           </Button>
           
           {selectedDocuments.length > 0 && (
@@ -646,7 +723,7 @@ const DocumentRepository = () => {
               
               <Button 
                 variant="outline" 
-                onClick={handleDeleteDocuments}
+                onClick={() => setSelectedDocuments([])}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
@@ -654,250 +731,37 @@ const DocumentRepository = () => {
             </>
           )}
           
-          <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <Popover>
             <PopoverTrigger asChild>
-              <Button 
-                variant={getActiveFilterCount() > 0 ? "default" : "outline"} 
-                className={getActiveFilterCount() > 0 ? "bg-primary" : ""}
-              >
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Filters {getActiveFilterCount() > 0 ? `(${getActiveFilterCount()})` : ''}
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
-              <div className="p-4 border-b">
+            <PopoverContent className="w-56">
+              <div className="space-y-2">
                 <h3 className="font-medium text-sm">Filter Documents</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Use multiple filters to narrow down results
-                </p>
-              </div>
-              <div className="p-4 max-h-96 overflow-y-auto space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">File Type</h4>
-                  <div className="space-y-2">
-                    {filterOptions.fileTypes.map(type => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-type-${type}`} 
-                          checked={filters.fileTypes.includes(type)}
-                          onCheckedChange={() => toggleFilter('fileTypes', type)}
-                        />
-                        <label 
-                          htmlFor={`filter-type-${type}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {type}
-                        </label>
-                      </div>
-                    ))}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="filter-pdf" />
+                    <label htmlFor="filter-pdf" className="text-sm">PDF Files</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="filter-excel" />
+                    <label htmlFor="filter-excel" className="text-sm">Excel Files</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="filter-word" />
+                    <label htmlFor="filter-word" className="text-sm">Word Files</label>
                   </div>
                 </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Client Approved</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="filter-approved-yes" 
-                        checked={filters.clientApproved === true}
-                        onCheckedChange={() => toggleFilter('clientApproved', true)}
-                      />
-                      <label 
-                        htmlFor="filter-approved-yes" 
-                        className="text-sm cursor-pointer"
-                      >
-                        Approved
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="filter-approved-no" 
-                        checked={filters.clientApproved === false}
-                        onCheckedChange={() => toggleFilter('clientApproved', false)}
-                      />
-                      <label 
-                        htmlFor="filter-approved-no" 
-                        className="text-sm cursor-pointer"
-                      >
-                        Not Approved
-                      </label>
-                    </div>
-                  </div>
+                <div className="pt-2">
+                  <Button size="sm" className="w-full">Apply Filters</Button>
                 </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Jurisdiction</h4>
-                  <div className="space-y-2">
-                    {filterOptions.jurisdictions.map(jurisdiction => (
-                      <div key={jurisdiction} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-jurisdiction-${jurisdiction}`} 
-                          checked={filters.jurisdictions.includes(jurisdiction)}
-                          onCheckedChange={() => toggleFilter('jurisdictions', jurisdiction)}
-                        />
-                        <label 
-                          htmlFor={`filter-jurisdiction-${jurisdiction}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {jurisdiction}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Service Line</h4>
-                  <div className="space-y-2">
-                    {filterOptions.serviceLines.map(serviceLine => (
-                      <div key={serviceLine} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-service-${serviceLine}`} 
-                          checked={filters.serviceLines.includes(serviceLine)}
-                          onCheckedChange={() => toggleFilter('serviceLines', serviceLine)}
-                        />
-                        <label 
-                          htmlFor={`filter-service-${serviceLine}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {serviceLine}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Record Type</h4>
-                  <div className="space-y-2">
-                    {filterOptions.recordTypes.map(recordType => (
-                      <div key={recordType} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-record-${recordType}`} 
-                          checked={filters.recordTypes.includes(recordType)}
-                          onCheckedChange={() => toggleFilter('recordTypes', recordType)}
-                        />
-                        <label 
-                          htmlFor={`filter-record-${recordType}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {recordType}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Entity</h4>
-                  <div className="space-y-2">
-                    {filterOptions.entities.map(entity => (
-                      <div key={entity} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`filter-entity-${entity}`} 
-                          checked={filters.entities.includes(entity)}
-                          onCheckedChange={() => toggleFilter('entities', entity)}
-                        />
-                        <label 
-                          htmlFor={`filter-entity-${entity}`} 
-                          className="text-sm cursor-pointer"
-                        >
-                          {entity}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="border-t p-4 flex justify-between">
-                <Button variant="outline" size="sm" onClick={resetFilters}>
-                  Reset Filters
-                </Button>
-                <Button size="sm" onClick={() => setIsFilterOpen(false)}>
-                  Apply Filters
-                </Button>
               </div>
             </PopoverContent>
           </Popover>
         </div>
       </div>
-      
-      <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Repository Settings</DialogTitle>
-            <DialogDescription>
-              Configure your GitHub integration settings.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">GitHub Personal Access Token</label>
-              <Input
-                type="text"
-                placeholder="Enter your GitHub token"
-                value={githubToken}
-                onChange={(e) => setGithubToken(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Token needs repo permissions. 
-                <a 
-                  href="https://github.com/settings/tokens/new" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary ml-1"
-                >
-                  Generate token
-                </a>
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsSettingsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" onClick={saveGitHubToken}>
-              Save Settings
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isMoveDialogOpen} onOpenChange={setIsMoveDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Move Documents</DialogTitle>
-            <DialogDescription>
-              Select a destination folder to move the selected documents.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Destination Folder</div>
-              <select 
-                className="w-full border rounded-md p-2"
-                defaultValue=""
-                onChange={(e) => e.target.value && handleMoveDocuments(e.target.value)}
-              >
-                <option value="" disabled>Select a folder</option>
-                <option value="Form 990">Form 990</option>
-                <option value="Financial Data">Financial Data</option>
-                <option value="Tax Documents">Tax Documents</option>
-                <option value="Client Documentation">Client Documentation</option>
-                <option value="Archived">Archived</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsMoveDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" onClick={() => handleMoveDocuments('Selected Folder')}>
-              Move Files
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
         <TabsList className="w-full max-w-md grid grid-cols-5">
@@ -924,83 +788,47 @@ const DocumentRepository = () => {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
-                        <div className="flex items-center">
-                          Name {getSortIcon('name')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('type')}>
-                        <div className="flex items-center">
-                          Type {getSortIcon('type')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('size')}>
-                        <div className="flex items-center">
-                          Size {getSortIcon('size')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('jurisdiction')}>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>
                         <div className="flex items-center gap-1">
                           <Flag className="h-3 w-3" />
                           <span>Jurisdiction</span>
-                          {getSortIcon('jurisdiction')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('serviceLine')}>
-                        <div className="flex items-center gap-1">
-                          <List className="h-3 w-3" />
-                          <span>Service Line</span>
-                          {getSortIcon('serviceLine')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('recordType')}>
-                        <div className="flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          <span>Record Type</span>
-                          {getSortIcon('recordType')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('entity')}>
-                        <div className="flex items-center gap-1">
-                          <Box className="h-3 w-3" />
-                          <span>Entity</span>
-                          {getSortIcon('entity')}
                         </div>
                       </TableHead>
                       <TableHead>
-                        Client Approved
+                        <div className="flex items-center gap-1">
+                          <List className="h-3 w-3" />
+                          <span>Service Line</span>
+                        </div>
                       </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" />
+                          <span>Record Type</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <Box className="h-3 w-3" />
+                          <span>Entity</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>Client Approved</TableHead>
                       <TableHead>
                         <div className="flex items-center gap-1">
                           <User className="h-3 w-3" />
                           <span>Client Contact</span>
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('client')}>
-                        <div className="flex items-center">
-                          Client {getSortIcon('client')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('uploadedBy')}>
-                        <div className="flex items-center">
-                          Uploaded By {getSortIcon('uploadedBy')}
-                        </div>
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('uploadDate')}>
-                        <div className="flex items-center">
-                          Date {getSortIcon('uploadDate')}
-                        </div>
-                      </TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Uploaded By</TableHead>
+                      <TableHead>Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {isLoadingDocuments ? (
-                      <TableRow>
-                        <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
-                          Loading documents...
-                        </TableCell>
-                      </TableRow>
-                    ) : getFilteredDocuments().length > 0 ? (
+                    {getFilteredDocuments().length > 0 ? (
                       getFilteredDocuments().map((doc) => (
                         <TableRow key={doc.id} className={doc.isArchived ? "opacity-70" : ""}>
                           <TableCell>
@@ -1024,14 +852,7 @@ const DocumentRepository = () => {
                               ) : (
                                 <File className="h-4 w-4" />
                               )}
-                              <a 
-                                href={doc.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="hover:underline"
-                              >
-                                {doc.name}
-                              </a>
+                              <span>{doc.name}</span>
                               {doc.isArchived && (
                                 <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full ml-1">
                                   Archived
@@ -1080,72 +901,66 @@ const DocumentRepository = () => {
             <h3 className="font-medium">Archival Management</h3>
           </div>
           <div className="text-muted-foreground text-sm">
-            {documents.filter(doc => doc.isArchived).length} archived items
+            {sampleDocuments.filter(doc => doc.isArchived).length} archived items
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent className="px-4 pb-4">
-          <div className="space-y-6">
+          <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Manage your archived documents. Archived items are not deleted but kept in a separate section for historical reference.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <Card className="border-border/60">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Archive Policies</CardTitle>
-                    <CardDescription>Configure automatic archival policies</CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-sm">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span>Archive documents older than 1 year</span>
-                        <input type="checkbox" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Archive superseded versions</span>
-                        <input type="checkbox" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Archive based on document category</span>
-                        <input type="checkbox" />
-                      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-border/60">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Archive Policies</CardTitle>
+                  <CardDescription>Configure automatic archival policies</CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span>Archive documents older than 1 year</span>
+                      <input type="checkbox" defaultChecked />
                     </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" size="sm" className="w-full">Save Preferences</Button>
-                  </CardFooter>
-                </Card>
-                
-                <Card className="border-border/60">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Archival Statistics</CardTitle>
-                    <CardDescription>Document archival metrics</CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-sm">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span>Total archived documents:</span>
-                        <span className="font-medium">{documents.filter(doc => doc.isArchived).length}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Archive storage used:</span>
-                        <span className="font-medium">5.4 MB</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Most recent archive:</span>
-                        <span className="font-medium">Nov 15, 2023</span>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <span>Archive superseded versions</span>
+                      <input type="checkbox" defaultChecked />
                     </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" size="sm" className="w-full">View Full Report</Button>
-                  </CardFooter>
-                </Card>
-              </div>
+                    <div className="flex items-center justify-between">
+                      <span>Archive based on document category</span>
+                      <input type="checkbox" />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" size="sm" className="w-full">Save Preferences</Button>
+                </CardFooter>
+              </Card>
               
-              <div>
-                <LyzrDocumentAgentChat />
-              </div>
+              <Card className="border-border/60">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Archival Statistics</CardTitle>
+                  <CardDescription>Document archival metrics</CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span>Total archived documents:</span>
+                      <span className="font-medium">{sampleDocuments.filter(doc => doc.isArchived).length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Archive storage used:</span>
+                      <span className="font-medium">5.4 MB</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Most recent archive:</span>
+                      <span className="font-medium">Nov 15, 2023</span>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" size="sm" className="w-full">View Full Report</Button>
+                </CardFooter>
+              </Card>
             </div>
           </div>
         </CollapsibleContent>

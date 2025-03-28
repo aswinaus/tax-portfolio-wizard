@@ -15,13 +15,11 @@ import {
   Trophy,
   Folder,
   ChevronRight,
-  Brain,
-  Bot,
-  Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
+// Sidebar item interface
 interface SidebarItemProps {
   icon: React.ElementType;
   label: string;
@@ -32,6 +30,7 @@ interface SidebarItemProps {
   children?: React.ReactNode;
 }
 
+// Sidebar section interface
 interface SidebarSectionProps {
   title: string;
   children: React.ReactNode;
@@ -216,8 +215,8 @@ export const MainSidebar: FC = () => {
           <SidebarItem 
             icon={Folder} 
             label="My Documents Repository" 
-            to="/documents" 
-            isActive={pathname === "/documents"} 
+            to="/" 
+            isActive={pathname === "/"} 
           />
           <SidebarItem 
             icon={FileText} 
@@ -230,21 +229,6 @@ export const MainSidebar: FC = () => {
             label="Transfer Pricing" 
             to="/business/transfer-pricing" 
             isActive={pathname === "/business/transfer-pricing"} 
-          />
-        </SidebarSection>
-        
-        <SidebarSection title="AI" collapsible={true}>
-          <SidebarItem 
-            icon={Bot} 
-            label="Agent as a Service" 
-            to="/ai/agent" 
-            isActive={pathname === "/ai/agent"} 
-          />
-          <SidebarItem 
-            icon={Wrench} 
-            label="Tools as a Service" 
-            to="/ai/tools" 
-            isActive={pathname === "/ai/tools"} 
           />
         </SidebarSection>
       </div>

@@ -1,14 +1,11 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, AlertTriangle, ExternalLink } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 
 // Import refactored components
 import FormTypes from '@/components/business/form990/FormTypes';
@@ -21,10 +18,6 @@ import FloatingChat from '@/components/business/form990/FloatingChat';
 const Form990 = () => {
   const [selectedFormType, setSelectedFormType] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  
-  // Count of pending submissions (in a real app, this would come from an API)
-  // Changed from a literal 2 to a number type
-  const pendingSubmissionsCount: number = 2;
   
   const handleCreateForm = () => {
     if (!selectedFormType) {
@@ -44,47 +37,20 @@ const Form990 = () => {
       transition={{ duration: 0.4 }}
       className="max-w-5xl mx-auto"
     >
-      <div className="mb-4 flex justify-between items-start">
-        <div>
-          <Badge variant="outline" className="mb-2">Business</Badge>
-          <h1 className="text-3xl font-display font-semibold">Tax Form 990 Filing</h1>
-          <p className="text-muted-foreground mt-1">
-            Complete and submit your Form 990 tax forms to the IRS
-          </p>
-        </div>
-        <Link to="/documents">
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
-            <FileText className="h-4 w-4" />
-            Document Repository
-            <ExternalLink className="h-3 w-3 ml-1" />
-          </Button>
-        </Link>
+      <div className="mb-8">
+        <Badge variant="outline" className="mb-2">Business</Badge>
+        <h1 className="text-3xl font-display font-semibold">Tax Form 990 Filing</h1>
+        <p className="text-muted-foreground mt-1">
+          Complete and submit your Form 990 tax forms to the IRS
+        </p>
       </div>
-      
-      {pendingSubmissionsCount > 0 && (
-        <Alert className="mb-6 border-amber-200 bg-amber-50 text-amber-800">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800">Attention Required</AlertTitle>
-          <AlertDescription>
-            You have {pendingSubmissionsCount} {pendingSubmissionsCount === 1 ? 'form' : 'forms'} pending submission to the IRS. 
-            Please review and submit them before their due dates.
-          </AlertDescription>
-        </Alert>
-      )}
       
       {/* Floating AI Assistant component */}
       <FloatingChat />
       
       <Tabs defaultValue={showForm ? "fill" : "forms"} className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger value="forms" className="text-sm">
-            My Forms
-            {pendingSubmissionsCount > 0 && (
-              <Badge variant="outline" className="ml-2 bg-amber-500/10 text-amber-700 border-amber-200">
-                {pendingSubmissionsCount}
-              </Badge>
-            )}
-          </TabsTrigger>
+          <TabsTrigger value="forms" className="text-sm">My Forms</TabsTrigger>
           <TabsTrigger value="create" className="text-sm">Create New Form</TabsTrigger>
           <TabsTrigger value="fill" className="text-sm">Fill Form</TabsTrigger>
           <TabsTrigger value="help" className="text-sm">Help & Resources</TabsTrigger>

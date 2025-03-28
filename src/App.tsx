@@ -11,6 +11,7 @@ import { lazy, Suspense } from "react";
 import MainLayout from "./layouts/MainLayout";
 
 // Pages
+import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 // Lazy loaded pages for better performance
@@ -21,10 +22,6 @@ const CreateBlog = lazy(() => import("./pages/portfolio/CreateBlog"));
 const Form990 = lazy(() => import("./pages/business/Form990"));
 const TransferPricing = lazy(() => import("./pages/business/TransferPricing"));
 const DocumentRepositoryPage = lazy(() => import("./pages/documents/DocumentRepositoryPage"));
-
-// AI Pages
-const AgentServicePage = lazy(() => import("./pages/ai/AgentServicePage"));
-const ToolsServicePage = lazy(() => import("./pages/ai/ToolsServicePage"));
 
 const queryClient = new QueryClient();
 
@@ -38,7 +35,7 @@ const App = () => (
           <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading...</div>}>
             <Routes>
               <Route path="/" element={<MainLayout />}>
-                <Route index element={<Portfolio />} />
+                <Route index element={<DocumentRepositoryPage />} />
                 
                 {/* Portfolio Routes */}
                 <Route path="portfolio" element={<Portfolio />} />
@@ -50,10 +47,6 @@ const App = () => (
                 <Route path="business/form990" element={<Form990 />} />
                 <Route path="business/transfer-pricing" element={<TransferPricing />} />
                 <Route path="documents" element={<DocumentRepositoryPage />} />
-                
-                {/* AI Routes */}
-                <Route path="ai/agent" element={<AgentServicePage />} />
-                <Route path="ai/tools" element={<ToolsServicePage />} />
                 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
