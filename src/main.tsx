@@ -20,19 +20,21 @@ window.isNetlifyDeployment = window.location.hostname.includes("papaya-kleicha-7
 window.isAzureDeployment = window.location.hostname.includes("aswin.ai") || 
                           window.location.hostname.includes("taxaiagents.azurewebsites.net");
 
-// Add better error handling to diagnose the forwardRef issue
+// Explicitly make React globally available before anything else
+window.React = window.React || React;
+
+console.log("=== Initializing Application ===");
 console.log("React version:", React.version);
 console.log("React.forwardRef exists:", !!React.forwardRef);
-
-// Ensure React is globally available
-if (window.React === undefined || window.React.forwardRef === undefined) {
-  console.log("Setting global React object");
-  window.React = React;
-}
+console.log("window.React exists:", !!window.React);
+console.log("window.React.forwardRef exists:", !!(window.React && window.React.forwardRef));
 
 // Add global error handler to prevent blank screens
 window.addEventListener('error', (event) => {
   console.error('Global error caught:', event.error);
+  // Log additional details about React
+  console.log("During error: React.forwardRef exists:", !!React.forwardRef);
+  console.log("During error: window.React.forwardRef exists:", !!(window.React && window.React.forwardRef));
   // Don't let JavaScript errors cause a blank screen
   event.preventDefault();
 });

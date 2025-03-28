@@ -11,11 +11,27 @@ interface ReactProviderProps {
  * It provides the React context needed for proper component rendering
  */
 const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
-  // Ensure forwardRef is available globally
+  // Ensure we have React available in the global scope
+  React.useEffect(() => {
+    // Make React globally available
+    if (typeof window !== 'undefined' && !window.React) {
+      console.log('Setting global React in ReactProvider');
+      window.React = React;
+    }
+    
+    // Check if forwardRef is available
+    if (typeof React.forwardRef !== 'function') {
+      console.error('React.forwardRef is still not available after ReactProvider mount');
+    } else {
+      console.log('React.forwardRef is available in ReactProvider');
+    }
+  }, []);
+  
+  // If forwardRef isn't available, create a polyfill
   if (typeof React.forwardRef !== 'function') {
-    console.error('React.forwardRef is not available. This will cause rendering errors.');
+    console.warn('Creating forwardRef polyfill in ReactProvider');
     // Create a fallback implementation if it's missing
-    (React as any).forwardRef = function forwardRefPolyfill(render) {
+    (React as any).forwardRef = function forwardRefPolyfill(render: Function) {
       return {
         $$typeof: Symbol.for('react.forward_ref'),
         render: render

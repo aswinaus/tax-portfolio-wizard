@@ -5,6 +5,11 @@ import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// Ensure forwardRef is available before using it
+if (typeof React.forwardRef !== 'function') {
+  console.error('React.forwardRef is not available in accordion.tsx');
+}
+
 const Accordion = AccordionPrimitive.Root
 
 const AccordionItem = React.forwardRef<
