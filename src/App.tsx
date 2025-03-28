@@ -67,6 +67,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    console.error("Error caught in ErrorBoundary getDerivedStateFromError:", error);
     return { hasError: true };
   }
 
@@ -95,6 +96,7 @@ const App = () => {
     // Simulate checking environment readiness
     const timeout = setTimeout(() => {
       setIsLoading(false);
+      console.log("App initialization complete, loading state removed");
     }, 300); // Reduced timing for faster loading
     
     return () => clearTimeout(timeout);

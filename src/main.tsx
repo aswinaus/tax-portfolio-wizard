@@ -27,7 +27,7 @@ if (typeof window !== 'undefined') {
       console.log("React.forwardRef is not a function, creating fallback");
       // Create a fallback implementation if necessary
       window.React.forwardRef = function(render) {
-        function ForwardRef(props, ref) {
+        function ForwardRef(props: any, ref: any) {
           return render(props, ref);
         }
         ForwardRef.displayName = render.displayName || render.name;
@@ -76,7 +76,7 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 });
 
-function renderFallbackUI(errorMessage) {
+function renderFallbackUI(errorMessage: string) {
   const rootElement = document.getElementById("root");
   if (rootElement) {
     // Check if we already rendered something

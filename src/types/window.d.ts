@@ -2,16 +2,16 @@
 interface Window {
   __APP_INITIALIZED__?: boolean;
   React?: typeof React & {
-    forwardRef?: any;
-    createElement?: any;
-    Fragment?: any;
-    createContext?: any;
-    useState?: any;
-    useEffect?: any;
-    useRef?: any;
-    memo?: any;
-    Suspense?: any;
-    lazy?: any;
+    forwardRef?: typeof React.forwardRef;
+    createElement?: typeof React.createElement;
+    Fragment?: typeof React.Fragment;
+    createContext?: typeof React.createContext;
+    useState?: typeof React.useState;
+    useEffect?: typeof React.useEffect;
+    useRef?: typeof React.useRef;
+    memo?: typeof React.memo;
+    Suspense?: typeof React.Suspense;
+    lazy?: typeof React.lazy;
     [key: string]: any;
   };
   process?: {
