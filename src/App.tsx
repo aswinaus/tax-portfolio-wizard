@@ -34,8 +34,8 @@ const TaxAgentNeo4jGraphDB = lazy(() => import("./templates/TaxAgentNeo4jGraphDB
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 3, // Increase retry for preview environment
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      retry: 2, // Reduced retry for faster feedback
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
       refetchOnWindowFocus: false,
       staleTime: 60000,
     },
@@ -51,24 +51,27 @@ const LoadingFallback = () => (
 );
 
 // Error boundary for Suspense fallbacks
-const SuspenseErrorBoundary = ({ children }) => {
-  const [hasError, setHasError] = useState(false);
-  
-  useEffect(() => {
-    // Reset error state when children change
-    setHasError(false);
-  }, [children]);
-  
-  if (hasError) {
-    return <FallbackPage />;
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
   }
-  
-  return (
-    <React.Fragment>
-      {children}
-    </React.Fragment>
-  );
-};
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Caught error in error boundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <FallbackPage />;
+    }
+    return this.props.children;
+  }
+}
 
 const App = () => {
   console.log("App component rendering");
@@ -83,13 +86,13 @@ const App = () => {
     // Simulate checking environment readiness
     const timeout = setTimeout(() => {
       setIsLoading(false);
-    }, 500); // Reduced timing for faster loading
+    }, 300); // Reduced timing for faster loading
     
     return () => clearTimeout(timeout);
   }, []);
   
   if (isLoading) {
-    return <FallbackPage />;
+    return <LoadingFallback />;
   }
   
   return (
@@ -101,7 +104,7 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter basename="/">
-                <SuspenseErrorBoundary>
+                <ErrorBoundary>
                   <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                       <Route path="/" element={<MainLayout />}>
@@ -111,28 +114,65 @@ const App = () => {
                         {/* Portfolio Routes */}
                         <Route path="portfolio" element={<Portfolio />} />
                         <Route path="portfolio/blogs" element={<Blogs />} />
-                        <Route path="portfolio/blogs/:id" element={<BlogPost />} />
-                        <Route path="portfolio/blogs/create" element={<CreateBlog />} />
+                        <Route path="portfolio/blogs/:id" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <BlogPost />
+                          </Suspense>
+                        } />
+                        <Route path="portfolio/blogs/create" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <CreateBlog />
+                          </Suspense>
+                        } />
                         
                         {/* Business Routes */}
-                        <Route path="business/form990" element={<Form990 />} />
-                        <Route path="business/transfer-pricing" element={<TransferPricing />} />
-                        <Route path="documents" element={<DocumentRepositoryPage />} />
+                        <Route path="business/form990" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Form990 />
+                          </Suspense>
+                        } />
+                        <Route path="business/transfer-pricing" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <TransferPricing />
+                          </Suspense>
+                        } />
+                        
+                        <Route path="documents" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <DocumentRepositoryPage />
+                          </Suspense>
+                        } />
                         
                         {/* AI Routes */}
-                        <Route path="ai/agent" element={<AgentServicePage />} />
-                        <Route path="ai/tools" element={<ToolsServicePage />} />
-                        <Route path="ai/applications" element={<ApplicationsPage />} />
+                        <Route path="ai/agent" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <AgentServicePage />
+                          </Suspense>
+                        } />
+                        <Route path="ai/tools" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ToolsServicePage />
+                          </Suspense>
+                        } />
+                        <Route path="ai/applications" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ApplicationsPage />
+                          </Suspense>
+                        } />
                         
                         {/* Template Routes */}
-                        <Route path="templates/tax-agent-neo4j" element={<TaxAgentNeo4jGraphDB />} />
+                        <Route path="templates/tax-agent-neo4j" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <TaxAgentNeo4jGraphDB />
+                          </Suspense>
+                        } />
                         
                         {/* Catch-all route */}
                         <Route path="*" element={<NotFound />} />
                       </Route>
                     </Routes>
                   </Suspense>
-                </SuspenseErrorBoundary>
+                </ErrorBoundary>
               </BrowserRouter>
             </div>
           </SidebarProvider>

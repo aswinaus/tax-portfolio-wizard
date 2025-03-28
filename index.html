@@ -36,7 +36,7 @@
           function Component(props, ref) { 
             return render(props, ref); 
           }
-          Component.displayName = "";
+          Component.displayName = render && render.displayName || render && render.name || "";
           return Component;
         },
         createElement: function() { return null; },
@@ -82,7 +82,10 @@
       <!-- Fallback content while app loads -->
       <div style="display: flex; height: 100vh; align-items: center; justify-content: center; flex-direction: column; font-family: Inter, sans-serif;">
         <div style="width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-        <p style="margin-top: 20px; font-size: 16px; color: #333;">Loading application...</p>
+        <p style="margin-top: 20px; font-size: 16px; color: #333;">Loading Aswin's Portfolio...</p>
+        <noscript>
+          <p style="color: #e53e3e; margin-top: 16px;">JavaScript is required to run this application.</p>
+        </noscript>
       </div>
       <style>
         @keyframes spin {
@@ -107,13 +110,27 @@
             <div style="padding: 20px; text-align: center; font-family: Inter, sans-serif;">
               <h1 style="color: #e53e3e; margin-bottom: 16px;">Application Error</h1>
               <p style="margin-bottom: 16px;">Sorry, there was a problem loading the application.</p>
-              <button onclick="window.location.href='/portfolio/blogs'" style="background: #3182ce; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
-                Refresh Page
-              </button>
+              <div style="margin-bottom: 20px">
+                <button onclick="window.location.href='/portfolio/blogs'" style="background: #3182ce; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 8px;">
+                  Go to Blogs
+                </button>
+                <button onclick="window.location.reload()" style="background: #718096; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                  Refresh Page
+                </button>
+              </div>
+              <p style="font-size: 12px; color: #666;">If problems persist, please try clearing your browser cache.</p>
             </div>
           `;
         }
       });
+      
+      // Safety timeout - if app doesn't load within 10 seconds, force redirect to blogs
+      setTimeout(function() {
+        if (!window.__APP_INITIALIZED__ && window.location.pathname === '/') {
+          console.log('App initialization timeout, redirecting to blogs');
+          window.location.href = '/portfolio/blogs';
+        }
+      }, 10000);
     </script>
   </body>
 </html>

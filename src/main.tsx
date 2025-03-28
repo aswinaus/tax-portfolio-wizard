@@ -112,10 +112,10 @@ const rootElement = document.getElementById("root");
 if (!rootElement) {
   console.error("Failed to find the root element");
 } else {
-  const root = createRoot(rootElement);
-  
   try {
     console.log("Rendering application...");
+    const root = createRoot(rootElement);
+    
     // For preview/staging environments, check if we should render the app or fallback
     const isPreviewEnv = window.location.hostname.includes('preview') || 
                          window.location.hostname.includes('staging') ||
@@ -130,7 +130,7 @@ if (!rootElement) {
           console.log("App initialization timeout in preview env, rendering fallback");
           root.render(<FallbackPage />);
         }
-      }, 5000);
+      }, 7000); // Increased timeout for more reliable loading
     }
     
     root.render(
