@@ -4,19 +4,6 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-// Create a robust forwardRef fallback with proper displayName support
-const forwardRefFallback = React.forwardRef || function(render) {
-  console.log("Using forwardRef fallback in alert.tsx");
-  // Create a proper named function to allow displayName to work properly
-  function AlertComponent(props, ref) {
-    return render(props, ref);
-  }
-  
-  // Ensure displayName can be set on the component
-  AlertComponent.displayName = "";
-  return AlertComponent;
-};
-
 const alertVariants = cva(
   "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
   {
@@ -33,7 +20,7 @@ const alertVariants = cva(
   }
 )
 
-const Alert = forwardRefFallback<
+const Alert = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
 >(({ className, variant, ...props }, ref) => (
@@ -46,7 +33,7 @@ const Alert = forwardRefFallback<
 ))
 Alert.displayName = "Alert"
 
-const AlertTitle = forwardRefFallback<
+const AlertTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
@@ -58,7 +45,7 @@ const AlertTitle = forwardRefFallback<
 ))
 AlertTitle.displayName = "AlertTitle"
 
-const AlertDescription = forwardRefFallback<
+const AlertDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (

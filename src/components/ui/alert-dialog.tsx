@@ -1,22 +1,8 @@
-
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
-
-// Instead of trying to modify React.forwardRef, create a fallback function
-const forwardRefFallback = React.forwardRef || function(render) {
-  console.error("React.forwardRef is not available in alert-dialog.tsx, using fallback");
-  // Create a named function to allow displayName to work properly
-  function FallbackComponent(props) {
-    return render(props, null);
-  }
-  
-  // Ensure displayName can be set on the component
-  FallbackComponent.displayName = '';
-  return FallbackComponent;
-};
 
 const AlertDialog = AlertDialogPrimitive.Root
 
@@ -24,7 +10,7 @@ const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
 const AlertDialogPortal = AlertDialogPrimitive.Portal
 
-const AlertDialogOverlay = forwardRefFallback<
+const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
@@ -39,7 +25,7 @@ const AlertDialogOverlay = forwardRefFallback<
 ))
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 
-const AlertDialogContent = forwardRefFallback<
+const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
 >(({ className, ...props }, ref) => (
@@ -85,7 +71,7 @@ const AlertDialogFooter = ({
 )
 AlertDialogFooter.displayName = "AlertDialogFooter"
 
-const AlertDialogTitle = forwardRefFallback<
+const AlertDialogTitle = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
@@ -97,7 +83,7 @@ const AlertDialogTitle = forwardRefFallback<
 ))
 AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName
 
-const AlertDialogDescription = forwardRefFallback<
+const AlertDialogDescription = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
@@ -109,7 +95,7 @@ const AlertDialogDescription = forwardRefFallback<
 ))
 AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName
 
-const AlertDialogAction = forwardRefFallback<
+const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
 >(({ className, ...props }, ref) => (
@@ -121,7 +107,7 @@ const AlertDialogAction = forwardRefFallback<
 ))
 AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName
 
-const AlertDialogCancel = forwardRefFallback<
+const AlertDialogCancel = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Cancel>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>
 >(({ className, ...props }, ref) => (

@@ -48,14 +48,16 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
         // Verify critical methods
         if (!window.React.forwardRef) {
           console.error("Failed to set forwardRef in ReactProvider, attempting direct assignment");
-          // Last resort - direct function assignment
-          window.React.forwardRef = function(render) {
-            function ForwardRef(props, ref) {
+          // We can't create a full implementation with $$typeof, so we'll use the original React.forwardRef
+          // or a type assertion to avoid TypeScript errors
+          window.React.forwardRef = React.forwardRef || (((render) => {
+            function ForwardRef(props: any, ref: any) {
               return render(props, ref);
             }
-            ForwardRef.displayName = render.displayName || render.name;
-            return ForwardRef;
-          };
+            ForwardRef.displayName = render.displayName || render.name || '';
+            // We need to cast this to avoid TypeScript errors
+            return ForwardRef as any;
+          }) as typeof React.forwardRef);
         } else {
           console.log("Successfully verified forwardRef in ReactProvider");
         }
