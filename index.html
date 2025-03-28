@@ -21,7 +21,6 @@
       // Create a fully initialized React placeholder with all essential methods
       window.React = {
         forwardRef: function(render) { 
-          console.warn("Using temporary forwardRef placeholder - React not fully loaded");
           function Component(props, ref) { 
             return render(props, ref); 
           }
