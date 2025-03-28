@@ -3,7 +3,7 @@ interface Window {
   __APP_INITIALIZED__?: boolean;
   React?: typeof React & {
     // Explicitly define forwardRef as any to allow for our fallback implementation
-    forwardRef?: any; 
+    forwardRef: any; 
     createElement?: typeof React.createElement;
     Fragment?: typeof React.Fragment;
     createContext?: typeof React.createContext;
