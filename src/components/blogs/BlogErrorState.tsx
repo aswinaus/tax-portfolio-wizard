@@ -14,26 +14,22 @@ const BlogErrorState = () => {
   };
 
   return (
-    <Alert variant="destructive" className="my-6 w-full">
-      <div className="flex items-start">
-        <AlertCircle className="h-5 w-5 mt-0.5" />
-        <div className="ml-3 w-full">
-          <AlertTitle className="font-semibold text-base">Failed to load blogs</AlertTitle>
-          <AlertDescription className="mt-2">
-            <p className="mb-4">
-              There was an error loading the blogs. Please try again.
-            </p>
-            <Button 
-              onClick={handleRetry} 
-              variant="outline" 
-              className="mt-1 bg-background"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Retry
-            </Button>
-          </AlertDescription>
-        </div>
-      </div>
+    <Alert variant="destructive" className="my-6">
+      <AlertCircle className="h-5 w-5" />
+      <AlertTitle className="ml-2">Failed to load blogs</AlertTitle>
+      <AlertDescription className="mt-2">
+        <p className="mb-4">
+          There was an error loading the blogs. Please try again.
+        </p>
+        <Button 
+          onClick={handleRetry} 
+          variant="outline" 
+          className="mt-2 bg-background"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Retry
+        </Button>
+      </AlertDescription>
     </Alert>
   );
 };
