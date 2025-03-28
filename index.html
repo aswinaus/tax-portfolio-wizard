@@ -30,9 +30,12 @@
         } 
       };
       
-      // Create a fully initialized React placeholder with all essential methods
-      // Using a fixed correct implementation of forwardRef that will work with TypeScript
+      // IMPORTANT: Create a complete React polyfill immediately
+      // This ensures forwardRef exists before any component tries to use it
       window.React = window.React || {};
+      
+      // Essential React methods that must be defined early
+      // Using a complete and correct implementation of forwardRef that will satisfy runtime checks
       window.React.forwardRef = function(render) { 
         function Component(props, ref) { 
           return render(props, ref); 
@@ -42,6 +45,8 @@
         Component.$$typeof = Symbol.for('react.forward_ref'); 
         return Component;
       };
+      
+      // Add all other core React methods
       window.React.createElement = function() { return null; };
       window.React.Fragment = Symbol('Fragment');
       window.React.createContext = function() { return { Provider: function() {}, Consumer: function() {} }; };

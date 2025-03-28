@@ -19,33 +19,25 @@ const ReactProvider: React.FC<ReactProviderProps> = ({ children }) => {
       console.log("Checking React initialization in ReactProvider");
       
       try {
-        // Create window.React if it doesn't exist
-        if (!window.React) {
-          console.log("Creating new window.React object in ReactProvider");
-          window.React = {} as typeof React;
-        }
-        
-        // Create a complete copy of React on window, with proper type casting
+        // Immediately assign React to window.React before anything else
         window.React = Object.assign({}, React) as typeof React;
         
-        // Double check that forwardRef is properly assigned
-        if (typeof React.forwardRef === 'function' && window.React.forwardRef !== React.forwardRef) {
+        // Important: Create the forwardRef function first as it's often needed early
+        if (typeof React.forwardRef === 'function') {
           console.log("Explicitly assigning forwardRef in ReactProvider");
           window.React.forwardRef = React.forwardRef;
-        } else if (typeof React.forwardRef !== 'function') {
+        } else {
           console.log("React.forwardRef is not a function, creating fallback");
-          // Define a correctly typed fallback that will pass the TypeScript check
-          window.React.forwardRef = (render => {
-            const ForwardRef = function(props, ref) {
+          // Define a correctly typed fallback that will pass runtime checks
+          window.React.forwardRef = function(render) {
+            function ForwardRef(props, ref) {
               return render(props, ref);
-            };
+            }
             ForwardRef.displayName = render.displayName || render.name || '';
-            
-            // Add required exotic component properties 
+            // Add required exotic component properties
             ForwardRef.$$typeof = Symbol.for('react.forward_ref');
-            
             return ForwardRef;
-          }) as any; // Use any to bypass the TypeScript check
+          } as any;
         }
         
         // Add other critical React functions 

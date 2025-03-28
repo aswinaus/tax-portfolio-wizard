@@ -11,12 +11,7 @@ if (typeof window !== 'undefined') {
   console.log("Setting global React in main.tsx with forwardRef:", !!React.forwardRef);
   
   try {
-    // Ensure window.React exists
-    if (!window.React) {
-      window.React = {} as typeof React;
-    }
-    
-    // Create a fully initialized React object on window using proper type casting
+    // Directly assign React to window.React - don't check if it exists first to ensure it's set
     window.React = Object.assign({}, React) as typeof React;
     
     // Explicitly ensure forwardRef is available with the correct value
@@ -25,18 +20,16 @@ if (typeof window !== 'undefined') {
       console.log("Set window.React.forwardRef directly from React.forwardRef");
     } else {
       console.log("React.forwardRef is not a function, creating fallback");
-      // Define a correctly typed fallback that will pass the TypeScript check
-      window.React.forwardRef = (render => {
-        const ForwardRef = function(props, ref) {
+      // Define a correctly typed fallback that will pass runtime checks
+      window.React.forwardRef = function(render) {
+        function ForwardRef(props, ref) {
           return render(props, ref);
-        };
+        }
         ForwardRef.displayName = render.displayName || render.name || '';
-        
         // Add required exotic component properties
         ForwardRef.$$typeof = Symbol.for('react.forward_ref');
-        
         return ForwardRef;
-      }) as any; // Use any to bypass the TypeScript check
+      } as any;
     }
     
     // Add other critical React functions 
