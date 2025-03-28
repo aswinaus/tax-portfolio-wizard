@@ -1,5 +1,4 @@
 
-import * as React from 'react' // Use namespace import for React
 import { motion } from 'framer-motion';
 import DocumentRepository from '@/components/business/document-repository/DocumentRepository';
 
@@ -10,7 +9,6 @@ const DocumentRepositoryPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col w-full"
       >
         <div className="mb-8">
           <h1 className="text-3xl font-display font-semibold tracking-tight mb-2">
@@ -22,7 +20,7 @@ const DocumentRepositoryPage = () => {
           <div className="mt-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
               New Feature
-            </span> <span className="ml-1">Enhanced document sorting and AI assistance with Tax Agent now available</span>
+            </span> <span className="ml-1">Enhanced document sorting and filtering now available</span>
           </div>
         </div>
         

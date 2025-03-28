@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, FileText, Shield, BookMarked, FileBarChart, Database } from 'lucide-react';
+import { ArrowRight, BookOpen, FileText, Shield, BookMarked, FileBarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,31 +19,6 @@ const BlogsSection = () => {
       </div>
       
       <div className="grid grid-cols-1 gap-4">
-        <Card className="overflow-hidden border-border/60 hover:shadow-sm transition-shadow">
-          <CardHeader>
-            <Badge variant="secondary" className="w-fit mb-2">Database</Badge>
-            <CardTitle className="text-lg font-display">
-              <Link to="/portfolio/blogs/template-tax-agent" className="hover:text-primary transition-colors">
-                Building a Tax Agent with Neo4j Graph Database Integration
-              </Link>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              A comprehensive guide to creating an intelligent Tax Agent that leverages Neo4j graph database
-              for answering tax-related queries with code examples.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Link to="/portfolio/blogs/template-tax-agent">
-              <Button variant="outline" className="mt-2">
-                <Database className="mr-2 h-4 w-4" />
-                Read Blog Post
-              </Button>
-            </Link>
-          </CardFooter>
-        </Card>
-        
         <Card className="overflow-hidden border-border/60 hover:shadow-sm transition-shadow">
           <CardHeader>
             <Badge variant="secondary" className="w-fit mb-2">AI</Badge>

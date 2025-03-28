@@ -1,10 +1,9 @@
 
 #root {
-  /* Removing max-width to allow full screen width */
-  width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0; /* Remove padding to fix white screen issues */
-  /* Removing text-align: center to fix alignment issues */
+  padding: 2rem;
+  text-align: center;
 }
 
 .logo {
@@ -41,15 +40,4 @@
 
 .read-the-docs {
   color: #888;  /* Reverted to original muted color */
-}
-
-/* Add fallback styles for when API requests fail */
-.api-error-fallback {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 2rem;
-  text-align: center;
 }
