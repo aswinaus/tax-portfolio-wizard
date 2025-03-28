@@ -278,7 +278,7 @@ LIMIT 10`;
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="timeout">Connection Timeout (seconds)</Label>
                 <Input
@@ -313,7 +313,7 @@ LIMIT 10`;
                   <option value="DISABLED">Disabled</option>
                 </select>
               </div>
-            </form>
+            </div>
           </CardContent>
           <CardFooter>
             <Button>Save Settings</Button>
@@ -328,7 +328,7 @@ LIMIT 10`;
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="maxTransactionRetryTime">
                   Max Transaction Retry Time (ms)
@@ -366,7 +366,7 @@ LIMIT 10`;
                   Enable Debug Logging
                 </Label>
               </div>
-            </form>
+            </div>
           </CardContent>
           <CardFooter>
             <Button>Save Advanced Settings</Button>
@@ -503,7 +503,7 @@ LIMIT 10`;
                     <CardContent>
                       <form onSubmit={handleQuerySubmit} className="space-y-4">
                         <div>
-                          <FormLabel htmlFor="query">Query</FormLabel>
+                          <Label htmlFor="query">Query</Label>
                           <div className="flex flex-col sm:flex-row gap-2 mt-2">
                             <Input 
                               id="query"

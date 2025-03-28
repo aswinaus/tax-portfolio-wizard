@@ -6,19 +6,18 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import './App.css';
 import ReactProvider from './components/ReactProvider';
 
 // Layouts
 import MainLayout from "./layouts/MainLayout";
 
-// Pages
+// Directly imported pages (not lazy loaded)
 import NotFound from "./pages/NotFound";
 import Portfolio from "./pages/portfolio/Portfolio";
-
-// Load Blogs component directly (not lazy loaded) since it's our main entry point
 import Blogs from "./pages/portfolio/Blogs";
+import FallbackPage from "./pages/FallbackPage";
 
 // Lazy loaded pages
 const BlogPost = lazy(() => import("./pages/portfolio/BlogPost"));
@@ -31,11 +30,12 @@ const ToolsServicePage = lazy(() => import("./pages/ai/ToolsServicePage"));
 const ApplicationsPage = lazy(() => import("./pages/ai/ApplicationsPage"));
 const TaxAgentNeo4jGraphDB = lazy(() => import("./templates/TaxAgentNeo4jGraphDB"));
 
-// Create a new QueryClient instance
+// Create a new QueryClient instance with improved options for preview environment
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1, // Increase retry to 1 for preview environment
+      retry: 3, // Increase retry for preview environment
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: false,
       staleTime: 60000,
     },
@@ -52,6 +52,20 @@ const LoadingFallback = () => (
 
 const App = () => {
   console.log("App component rendering");
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    // Simulate checking environment readiness
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timeout);
+  }, []);
+  
+  if (isLoading) {
+    return <FallbackPage />;
+  }
   
   return (
     <ReactProvider>
