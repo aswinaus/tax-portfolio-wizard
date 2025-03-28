@@ -12,9 +12,12 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap">
     <!-- Add base path for SPA routing -->
     <base href="/" />
-    <!-- Define React environment before any scripts -->
+    <!-- Define React and ReactDOM explicitly before any scripts -->
     <script>
       window.process = { env: { NODE_ENV: 'production' } };
+      // Ensure React and ReactDOM are defined globally
+      window.React = window.React || {};
+      window.ReactDOM = window.ReactDOM || {};
     </script>
   </head>
 

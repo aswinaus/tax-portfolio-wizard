@@ -44,8 +44,20 @@ const queryClient = new QueryClient({
   },
 });
 
+// Verify React.forwardRef is available before rendering
+if (!React.forwardRef) {
+  console.error("React.forwardRef is not available when App.tsx is evaluated");
+}
+
 const App = () => {
   console.log("App component rendering");
+  console.log("React.forwardRef available in App:", !!React.forwardRef);
+  
+  // Extra safety check to ensure React.forwardRef is available
+  React.useEffect(() => {
+    console.log("React in App useEffect:", React);
+    console.log("React.forwardRef in App useEffect:", React.forwardRef);
+  }, []);
   
   return (
     <QueryClientProvider client={queryClient}>

@@ -10,6 +10,8 @@ declare global {
   interface Window {
     isNetlifyDeployment: boolean;
     isAzureDeployment: boolean;
+    React?: any; // Allow for global React definition
+    ReactDOM?: any; // Allow for global ReactDOM definition
   }
 }
 
@@ -21,6 +23,12 @@ window.isAzureDeployment = window.location.hostname.includes("aswin.ai") ||
 // Add better error handling to diagnose the forwardRef issue
 console.log("React version:", React.version);
 console.log("React.forwardRef exists:", !!React.forwardRef);
+
+// Ensure React is globally available
+if (window.React === undefined || window.React.forwardRef === undefined) {
+  console.log("Setting global React object");
+  window.React = React;
+}
 
 // Add global error handler to prevent blank screens
 window.addEventListener('error', (event) => {
