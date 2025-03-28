@@ -1,3 +1,4 @@
+
 import { FC, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -15,11 +16,14 @@ import {
   Trophy,
   Folder,
   ChevronRight,
+  Brain,
+  Bot,
+  Wrench,
+  Layout,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
-// Sidebar item interface
 interface SidebarItemProps {
   icon: React.ElementType;
   label: string;
@@ -30,7 +34,6 @@ interface SidebarItemProps {
   children?: React.ReactNode;
 }
 
-// Sidebar section interface
 interface SidebarSectionProps {
   title: string;
   children: React.ReactNode;
@@ -214,9 +217,9 @@ export const MainSidebar: FC = () => {
         <SidebarSection title="Business" collapsible={true}>
           <SidebarItem 
             icon={Folder} 
-            label="My Documents Repository" 
-            to="/" 
-            isActive={pathname === "/"} 
+            label="Document Repository & Tax Agent" 
+            to="/documents" 
+            isActive={pathname === "/documents"} 
           />
           <SidebarItem 
             icon={FileText} 
@@ -229,6 +232,27 @@ export const MainSidebar: FC = () => {
             label="Transfer Pricing" 
             to="/business/transfer-pricing" 
             isActive={pathname === "/business/transfer-pricing"} 
+          />
+        </SidebarSection>
+        
+        <SidebarSection title="AI" collapsible={true}>
+          <SidebarItem 
+            icon={Bot} 
+            label="Agent as a Service" 
+            to="/ai/agent" 
+            isActive={pathname === "/ai/agent"} 
+          />
+          <SidebarItem 
+            icon={Wrench} 
+            label="Tools as a Service" 
+            to="/ai/tools" 
+            isActive={pathname === "/ai/tools"} 
+          />
+          <SidebarItem 
+            icon={Layout} 
+            label="Applications" 
+            to="/ai/applications" 
+            isActive={pathname === "/ai/applications"} 
           />
         </SidebarSection>
       </div>

@@ -1,9 +1,9 @@
 
 import { useState } from 'react';
-import { MessageSquare } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { MessageSquare, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import LyzrAgentChat from '@/components/business/LyzrAgentChat';
+import TaxAgentChat from '@/components/business/TaxAgentChat';
 
 const FloatingChat = () => {
   const [chatOpen, setChatOpen] = useState(false);
@@ -22,23 +22,29 @@ const FloatingChat = () => {
             className="h-14 w-14 rounded-full bg-primary shadow-lg hover:shadow-xl transition-all"
             size="icon"
           >
-            <MessageSquare className="h-6 w-6" />
+            {chatOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <MessageSquare className="h-6 w-6" />
+            )}
           </Button>
         </motion.div>
       </div>
       
       {/* AI Assistant Chat Panel */}
-      {chatOpen && (
-        <motion.div 
-          className="fixed bottom-24 right-6 w-[400px] z-10 shadow-xl"
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ duration: 0.3 }}
-        >
-          <LyzrAgentChat />
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {chatOpen && (
+          <motion.div 
+            className="fixed bottom-24 right-6 w-[400px] z-10 shadow-xl"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <TaxAgentChat useDirectConnection={true} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

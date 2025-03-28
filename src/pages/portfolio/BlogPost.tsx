@@ -36,7 +36,7 @@ const BlogPost = () => {
     queryFn: () => fetchBlogById(id!),
     enabled: !!id
   });
-  
+
   // Format date to readable format
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };

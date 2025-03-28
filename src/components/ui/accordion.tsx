@@ -1,12 +1,26 @@
+
 import * as React from "react"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// Instead of trying to modify React.forwardRef, create a fallback function
+const forwardRefFallback = React.forwardRef || function(render) {
+  console.error("React.forwardRef is not available in accordion.tsx, using fallback");
+  // Create a named function to allow displayName to work properly
+  function FallbackComponent(props) {
+    return render(props, null);
+  }
+  
+  // Ensure displayName can be set on the component
+  FallbackComponent.displayName = '';
+  return FallbackComponent;
+};
+
 const Accordion = AccordionPrimitive.Root
 
-const AccordionItem = React.forwardRef<
+const AccordionItem = forwardRefFallback<
   React.ElementRef<typeof AccordionPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
 >(({ className, ...props }, ref) => (
@@ -18,7 +32,7 @@ const AccordionItem = React.forwardRef<
 ))
 AccordionItem.displayName = "AccordionItem"
 
-const AccordionTrigger = React.forwardRef<
+const AccordionTrigger = forwardRefFallback<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
@@ -38,7 +52,7 @@ const AccordionTrigger = React.forwardRef<
 ))
 AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
 
-const AccordionContent = React.forwardRef<
+const AccordionContent = forwardRefFallback<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
 >(({ className, children, ...props }, ref) => (

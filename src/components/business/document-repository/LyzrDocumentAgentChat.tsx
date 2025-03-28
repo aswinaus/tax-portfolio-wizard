@@ -13,17 +13,17 @@ interface Message {
   timestamp: Date;
 }
 
-// Lyzr API response structure
 interface LyzrResponse {
   response: string;
   conversation_id?: string;
+  session_id?: string;
 }
 
-const LyzrAgentChat = () => {
+const LyzrDocumentAgentChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string>('67e2c4b7616a743aa6c8cb62');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,23 +33,19 @@ const LyzrAgentChat = () => {
 
   const callLyzrAPI = async (userMessage: string): Promise<LyzrResponse> => {
     try {
-      // Replace this URL with your Lyzr agent's API endpoint
-      // https://studio.lyzr.ai/agent-create/67d85a7eb0001308323789d0
-      const apiUrl = 'https://api.lyzr.ai/chat';
-      const agentId = '67d85a7eb0001308323789d0'; // Your agent ID from the URL
+      const apiUrl = 'https://agent-prod.studio.lyzr.ai/v3/inference/chat/';
+      const apiKey = 'sk-default-cou8kaWkBA01M8SIiVepiEYaiKE4DZMp';
       
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.LYZR_API_KEY || 'your-lyzr-api-key'}`
+        'x-api-key': apiKey
       };
       
       const payload = {
-        message: userMessage,
-        conversation_id: conversationId,
-        agent_id: agentId,
-        metadata: {
-          source: 'form990_assistant'
-        }
+        user_id: "aswinaus@gmail.com",
+        agent_id: "67e2c4b7616a743aa6c8cb62",
+        session_id: sessionId,
+        message: userMessage
       };
       
       const response = await fetch(apiUrl, {
@@ -88,9 +84,9 @@ const LyzrAgentChat = () => {
       // Call the Lyzr API with the user's message
       const lyzrResponse = await callLyzrAPI(userMessage.content);
       
-      // Save conversation ID for continued conversation
-      if (lyzrResponse.conversation_id) {
-        setConversationId(lyzrResponse.conversation_id);
+      // Save session ID for continued conversation
+      if (lyzrResponse.session_id) {
+        setSessionId(lyzrResponse.session_id);
       }
       
       const assistantMessage: Message = {
@@ -109,11 +105,11 @@ const LyzrAgentChat = () => {
   };
   
   return (
-    <Card className="h-[500px] flex flex-col">
+    <Card className="h-[350px] flex flex-col">
       <CardHeader className="pb-3 pt-5">
         <CardTitle className="text-lg flex items-center gap-2">
           <Bot className="h-5 w-5 text-primary" />
-          Form 990 Filing Assistant
+          Document Archiving Assistant
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow overflow-y-auto pb-0">
@@ -122,13 +118,13 @@ const LyzrAgentChat = () => {
             <div className="text-center py-8">
               <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
               <p className="text-muted-foreground">
-                Ask me anything about Form 990 filing requirements, deadlines, or procedures.
+                Ask me about document archiving best practices, retention policies, or compliance requirements.
               </p>
             </div>
           ) : (
             messages.map((msg, index) => (
               <motion.div
-                key={index}
+                key={`${msg.role}-${index}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -166,7 +162,7 @@ const LyzrAgentChat = () => {
             >
               <div className="bg-muted p-3 rounded-lg flex items-center">
                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                <span className="text-sm">Thinking...</span>
+                <span className="text-sm">Processing...</span>
               </div>
             </motion.div>
           )}
@@ -178,7 +174,7 @@ const LyzrAgentChat = () => {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about Form 990 requirements, deadlines, etc."
+            placeholder="Ask about document archiving..."
             disabled={isLoading}
             className="flex-grow"
           />
@@ -195,4 +191,4 @@ const LyzrAgentChat = () => {
   );
 };
 
-export default LyzrAgentChat;
+export default LyzrDocumentAgentChat;

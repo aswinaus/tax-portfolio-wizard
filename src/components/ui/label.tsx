@@ -1,14 +1,28 @@
+
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+// Instead of trying to modify React.forwardRef, create a fallback function
+const forwardRefFallback = React.forwardRef || function(render) {
+  console.error("React.forwardRef is not available in label.tsx, using fallback");
+  // Create a named function to allow displayName to work properly
+  function FallbackComponent(props) {
+    return render(props, null);
+  }
+  
+  // Ensure displayName can be set on the component
+  FallbackComponent.displayName = '';
+  return FallbackComponent;
+};
+
 const labelVariants = cva(
   "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 )
 
-const Label = React.forwardRef<
+const Label = forwardRefFallback<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
     VariantProps<typeof labelVariants>

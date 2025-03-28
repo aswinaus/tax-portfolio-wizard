@@ -1,11 +1,12 @@
 
+import React from 'react'; // Add explicit React import
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Import the newly created components
+// Import the components
 import Biography from '@/components/portfolio/Biography';
 import Skills from '@/components/portfolio/Skills';
 import GitHubProjects from '@/components/portfolio/GitHubProjects';

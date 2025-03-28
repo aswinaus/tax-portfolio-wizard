@@ -4,17 +4,116 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="text-size-adjust" content="100%">
     <title>Aswin Bhaskaran's Portfolio & Business Tools</title>
     <meta name="description" content="Portfolio, Form 990 Filing, and Transfer Pricing Tools" />
     <meta name="author" content="Aswin Bhaskaran" />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap">
+    
+    <!-- Vital meta tags for SPA routing -->
+    <base href="/" />
+    <meta name="fragment" content="!">
+    
+    <!-- Preload the app JavaScript -->
+    <link rel="preload" as="script" href="/src/main.tsx" />
+    
+    <!-- Setup React environment before any scripts load -->
+    <script>
+      // Create process.env for React
+      window.process = { 
+        env: { 
+          NODE_ENV: 'production',
+          REACT_APP_VERSION: '1.0.0',
+          PUBLIC_URL: window.location.origin
+        } 
+      };
+      
+      // Create a fully initialized React placeholder with all essential methods
+      window.React = {
+        forwardRef: function(render) { 
+          function Component(props, ref) { 
+            return render(props, ref); 
+          }
+          Component.displayName = "";
+          return Component;
+        },
+        createElement: function() { return null; },
+        Fragment: Symbol('Fragment'),
+        createContext: function() { return { Provider: function() {}, Consumer: function() {} }; },
+        useContext: function() { return {}; },
+        useState: function(initial) { return [initial, function() {}]; },
+        useEffect: function() {},
+        useRef: function(initial) { return { current: initial }; },
+        memo: function(component) { return component; },
+        lazy: function(loader) { return { $$typeof: Symbol.for('react.lazy'), _payload: { _status: -1, _result: loader }, _init: function() {} }; },
+        Suspense: function() { return null; }
+      };
+      
+      // Create essential browser polyfills
+      window.requestIdleCallback = window.requestIdleCallback || function(cb) {
+        return setTimeout(function() {
+          var start = Date.now();
+          cb({
+            didTimeout: false,
+            timeRemaining: function() {
+              return Math.max(0, 50 - (Date.now() - start));
+            }
+          });
+        }, 1);
+      };
+      window.cancelIdleCallback = window.cancelIdleCallback || function(id) {
+        clearTimeout(id);
+      };
+      
+      // Disable Lovable badge
+      window.LOVABLE_CONFIG = {
+        showBadge: false
+      };
+      
+      // Log that initialization has completed
+      console.log("Early React initialization complete");
+    </script>
   </head>
 
   <body>
-    <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <div id="root">
+      <!-- Fallback content while app loads -->
+      <div style="display: flex; height: 100vh; align-items: center; justify-content: center; flex-direction: column; font-family: Inter, sans-serif;">
+        <div style="width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <p style="margin-top: 20px; font-size: 16px; color: #333;">Loading application...</p>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
+
+    <!-- Script for GPT Engineer functionality -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    
+    <!-- Main application script -->
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Fallback error handler -->
+    <script>
+      window.addEventListener('error', function(event) {
+        console.error('Global error:', event.error);
+        if (document.getElementById('root').children.length <= 1) {
+          document.getElementById('root').innerHTML = `
+            <div style="padding: 20px; text-align: center; font-family: Inter, sans-serif;">
+              <h1 style="color: #e53e3e; margin-bottom: 16px;">Application Error</h1>
+              <p style="margin-bottom: 16px;">Sorry, there was a problem loading the application.</p>
+              <button onclick="window.location.reload()" style="background: #3182ce; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                Refresh Page
+              </button>
+            </div>
+          `;
+        }
+      });
+    </script>
   </body>
 </html>

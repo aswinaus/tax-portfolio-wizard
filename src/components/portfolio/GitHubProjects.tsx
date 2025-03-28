@@ -1,7 +1,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Github, ExternalLink, Search, Filter } from 'lucide-react';
+import { Github, ExternalLink, Search, Filter, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { fetchGitHubRepos, GitHubRepo } from '@/services/githubService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -26,28 +27,54 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('updated');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const githubRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+
+  const MAX_RETRIES = 3;
 
   useEffect(() => {
     const loadGitHubRepos = async () => {
       try {
+        console.log('Fetching GitHub repos, attempt:', retryCount + 1);
         setLoading(true);
         const fetchedRepos = await fetchGitHubRepos();
+        
+        if (fetchedRepos.length === 0 && retryCount < MAX_RETRIES) {
+          // If no repos were fetched and we haven't exceeded max retries
+          throw new Error('No repositories found or GitHub API rate limit exceeded');
+        }
+        
         setRepos(fetchedRepos);
         setFilteredRepos(fetchedRepos);
         setError(null);
+        console.log('Fetched repos successfully:', fetchedRepos.length);
       } catch (err) {
         console.error('Error in GitHub component:', err);
-        setError('Unable to load GitHub repositories');
-        toast.error('Failed to load GitHub repositories');
+        
+        if (retryCount < MAX_RETRIES) {
+          // Increment retry count and try again after a delay
+          setRetryCount(prev => prev + 1);
+          setTimeout(loadGitHubRepos, 2000 * (retryCount + 1)); // Exponential backoff
+        } else {
+          // After max retries, show error to user
+          setError('Unable to access GitHub repositories. This could be due to network issues, API rate limits, or the repository not being publicly accessible.');
+          toast.error('Failed to load GitHub repositories');
+        }
       } finally {
         setLoading(false);
       }
     };
     
     loadGitHubRepos();
-  }, []);
+  }, [retryCount]);
+
+  // Handle retry button click
+  const handleRetry = () => {
+    setRetryCount(0);
+    setError(null);
+    toast.info('Retrying GitHub repository fetch...');
+  };
 
   useEffect(() => {
     // Filter and sort repos based on user selections
@@ -87,8 +114,63 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
   // Get unique languages for filter
   const languages = ['all', ...Array.from(new Set(repos.map(repo => repo.language).filter(Boolean)))];
 
+  // Let's add a fallback component for empty/error state
+  if (error) {
+    return (
+      <section className="space-y-6 bg-background text-foreground" id={id} ref={githubRef}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 className="text-2xl font-display font-semibold">GitHub Projects</h2>
+          <a 
+            href="https://github.com/aswinaus" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center text-sm text-primary hover:underline"
+          >
+            View GitHub Profile <ExternalLink className="ml-1 h-3 w-3" />
+          </a>
+        </div>
+        
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Repository Access Error</AlertTitle>
+          <AlertDescription className="flex flex-col space-y-4">
+            <p>{error}</p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-2">
+              <Button onClick={handleRetry} size="sm" variant="outline" className="flex items-center gap-2">
+                <Github className="h-4 w-4" /> Retry Connection
+              </Button>
+              <a 
+                href="https://github.com/aswinaus" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex"
+              >
+                <Button variant="link" size="sm" className="flex items-center gap-2">
+                  Visit GitHub Profile <ExternalLink className="h-3 w-3" />
+                </Button>
+              </a>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </section>
+    );
+  }
+
+  if (loading) {
+    return (
+      <section className="space-y-6 bg-background text-foreground" id={id} ref={githubRef}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 className="text-2xl font-display font-semibold">GitHub Projects</h2>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="space-y-6" id={id} ref={githubRef}>
+    <section className="space-y-6 bg-background text-foreground" id={id} ref={githubRef}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-2xl font-display font-semibold">GitHub Projects</h2>
         <a 
@@ -101,15 +183,7 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
         </a>
       </div>
       
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      ) : error ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">{error}</p>
-        </div>
-      ) : repos.length === 0 ? (
+      {repos.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-muted-foreground">No repositories found</p>
         </div>
