@@ -1,27 +1,50 @@
 
-// Jest dom testing extensions
 import '@testing-library/jest-dom';
 
-// Mock the ResizeObserver which isn't available in the test environment
-global.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-};
+// Mock IntersectionObserver
+class MockIntersectionObserver {
+  readonly root: Element | null = null;
+  readonly rootMargin: string = '';
+  readonly thresholds: ReadonlyArray<number> = [];
+  
+  constructor() {
+    this.observe = jest.fn();
+    this.unobserve = jest.fn();
+    this.disconnect = jest.fn();
+    this.takeRecords = jest.fn().mockReturnValue([]);
+  }
+  
+  observe = jest.fn();
+  unobserve = jest.fn();
+  disconnect = jest.fn();
+  takeRecords = jest.fn().mockReturnValue([]);
+}
 
-// Mock for IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-};
-
-// Mock match media
-window.matchMedia = window.matchMedia || function() {
+// Mock window resize events
+window.matchMedia = jest.fn().mockImplementation((query) => {
   return {
     matches: false,
-    addListener: function() {},
-    removeListener: function() {},
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
   };
-};
+});
+
+// Assign mocks to window
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  value: MockIntersectionObserver,
+});
+
+// Mock chart.js to prevent loading issues
+jest.mock('chart.js', () => ({
+  Chart: jest.fn(),
+  registerables: [],
+  register: jest.fn(),
+}));
+
+export {};
