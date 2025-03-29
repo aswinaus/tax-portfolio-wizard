@@ -1,15 +1,11 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Github, ExternalLink, Search, Filter, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { GitFork, Search, Star, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 import { fetchGitHubRepos, GitHubRepo } from '@/services/githubService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -25,8 +21,7 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('updated');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<string>('recent');
   const [retryCount, setRetryCount] = useState(0);
   const githubRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -102,7 +97,7 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
       case 'forks':
         result.sort((a, b) => b.forks_count - a.forks_count);
         break;
-      case 'updated':
+      case 'recent':
       default:
         result.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
         break;
@@ -137,7 +132,7 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
             <p>{error}</p>
             <div className="flex flex-col sm:flex-row gap-3 mt-2">
               <Button onClick={handleRetry} size="sm" variant="outline" className="flex items-center gap-2">
-                <Github className="h-4 w-4" /> Retry Connection
+                <Search className="h-4 w-4" /> Retry Connection
               </Button>
               <a 
                 href="https://github.com/aswinaus" 
@@ -190,8 +185,8 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
       ) : (
         <>
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
+            <div className="flex flex-col sm:flex-row gap-3 justify-between">
+              <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
@@ -202,49 +197,48 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
                 />
               </div>
               
-              <Collapsible 
-                open={!isMobile || isFilterOpen}
-                onOpenChange={isMobile ? setIsFilterOpen : undefined}
-                className={isMobile ? "w-full" : "sm:flex sm:items-center sm:gap-3"}
-              >
-                {isMobile && (
-                  <CollapsibleTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-2">
-                      <Filter className="h-4 w-4" />
-                      Filter & Sort
-                      {isFilterOpen ? ' ▲' : ' ▼'}
-                    </Button>
-                  </CollapsibleTrigger>
-                )}
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <select
+                    value={selectedLanguage}
+                    onChange={(e) => setSelectedLanguage(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
+                  >
+                    {languages.map(lang => (
+                      <option key={lang || 'null'} value={lang || 'null'}>
+                        {lang === 'all' ? 'All Languages' : lang || 'Unspecified'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 
-                <CollapsibleContent className={`flex flex-col sm:flex-row gap-3 ${isMobile ? 'mt-3' : ''}`}>
-                  <div className={isMobile ? "w-full" : "w-auto"}>
-                    <Select
-                      value={selectedLanguage}
-                      onValueChange={setSelectedLanguage}
-                    >
-                      <SelectTrigger className="w-full sm:w-[180px]">
-                        <SelectValue placeholder="Filter by language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {languages.map(lang => (
-                          <SelectItem key={lang || 'null'} value={lang || 'null'}>
-                            {lang === 'all' ? 'All Languages' : lang || 'Unspecified'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className={isMobile ? "w-full mt-2" : "w-auto"}>
-                    <ToggleGroup type="single" value={sortBy} onValueChange={(value) => value && setSortBy(value)}>
-                      <ToggleGroupItem value="updated" size="sm">Recent</ToggleGroupItem>
-                      <ToggleGroupItem value="stars" size="sm">Stars</ToggleGroupItem>
-                      <ToggleGroupItem value="forks" size="sm">Forks</ToggleGroupItem>
-                    </ToggleGroup>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                <div className="flex bg-muted rounded-md p-0.5">
+                  <Button 
+                    variant={sortBy === 'recent' ? 'default' : 'ghost'} 
+                    size="sm" 
+                    onClick={() => setSortBy('recent')}
+                    className="rounded-r-none"
+                  >
+                    Recent
+                  </Button>
+                  <Button 
+                    variant={sortBy === 'stars' ? 'default' : 'ghost'} 
+                    size="sm" 
+                    onClick={() => setSortBy('stars')}
+                    className="rounded-none"
+                  >
+                    Stars
+                  </Button>
+                  <Button 
+                    variant={sortBy === 'forks' ? 'default' : 'ghost'} 
+                    size="sm" 
+                    onClick={() => setSortBy('forks')}
+                    className="rounded-l-none"
+                  >
+                    Forks
+                  </Button>
+                </div>
+              </div>
             </div>
             
             {filteredRepos.length === 0 ? (
@@ -255,7 +249,7 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
                   onClick={() => {
                     setSearchQuery('');
                     setSelectedLanguage('all');
-                    setSortBy('updated');
+                    setSortBy('recent');
                   }}
                 >
                   Clear Filters
@@ -270,29 +264,27 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                   >
-                    <Card className="h-full border-border/60 hover:shadow-sm transition-shadow">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg flex items-center truncate">
-                            <Github className="h-4 w-4 mr-2 flex-shrink-0" />
-                            <span className="truncate">{repo.name}</span>
-                          </CardTitle>
-                          {repo.language && (
-                            <Badge variant="outline" className="ml-2 flex-shrink-0">
-                              {repo.language}
-                            </Badge>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pb-2">
-                        <CardDescription className="line-clamp-2 h-10">
-                          {repo.description || "No description available"}
-                        </CardDescription>
-                      </CardContent>
-                      <CardFooter className="flex justify-between text-xs text-muted-foreground">
-                        <div className="flex space-x-3">
-                          <span title="Stars">⭐ {repo.stargazers_count}</span>
-                          <span title="Forks">🔄 {repo.forks_count}</span>
+                    <div className="h-full border border-border/60 rounded-md p-5 hover:shadow-sm transition-shadow">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="text-xl">📁</div>
+                        <h3 className="font-medium truncate">{repo.name}</h3>
+                        {repo.language && (
+                          <span className="ml-auto px-3 py-0.5 text-xs bg-muted rounded-full">
+                            {repo.language}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2 h-10">
+                        {repo.description || "No description available"}
+                      </p>
+                      <div className="flex justify-between text-xs text-muted-foreground mt-auto">
+                        <div className="flex space-x-4">
+                          <span className="flex items-center gap-1">
+                            <Star className="h-4 w-4" /> {repo.stargazers_count}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <GitFork className="h-4 w-4" /> {repo.forks_count}
+                          </span>
                         </div>
                         <a 
                           href={repo.html_url} 
@@ -302,8 +294,8 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
                         >
                           View <ExternalLink className="ml-1 h-3 w-3" />
                         </a>
-                      </CardFooter>
-                    </Card>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </div>
