@@ -19,7 +19,7 @@
   "error_page": "index.html",
   "redirects": {
     "/": {
-      "url": "/portfolio/blogs",
+      "url": "/portfolio",
       "status": 302
     }
   }

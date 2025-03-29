@@ -120,8 +120,8 @@ const App = () => {
                   <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                       <Route path="/" element={<MainLayout />}>
-                        {/* Make Blogs the default landing page */}
-                        <Route index element={<Navigate to="/portfolio/blogs" replace />} />
+                        {/* Make Portfolio/About Me the default landing page */}
+                        <Route index element={<Navigate to="/portfolio" replace />} />
                         
                         {/* Portfolio Routes */}
                         <Route path="portfolio" element={<Portfolio />} />
