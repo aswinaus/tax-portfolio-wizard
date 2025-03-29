@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { GitFork, Search, Star, ExternalLink } from 'lucide-react';
@@ -36,7 +35,6 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
         const fetchedRepos = await fetchGitHubRepos();
         
         if (fetchedRepos.length === 0 && retryCount < MAX_RETRIES) {
-          // If no repos were fetched and we haven't exceeded max retries
           throw new Error('No repositories found or GitHub API rate limit exceeded');
         }
         
@@ -48,11 +46,9 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
         console.error('Error in GitHub component:', err);
         
         if (retryCount < MAX_RETRIES) {
-          // Increment retry count and try again after a delay
           setRetryCount(prev => prev + 1);
-          setTimeout(loadGitHubRepos, 2000 * (retryCount + 1)); // Exponential backoff
+          setTimeout(loadGitHubRepos, 2000 * (retryCount + 1));
         } else {
-          // After max retries, show error to user
           setError('Unable to access GitHub repositories. This could be due to network issues, API rate limits, or the repository not being publicly accessible.');
           toast.error('Failed to load GitHub repositories');
         }
@@ -64,7 +60,6 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
     loadGitHubRepos();
   }, [retryCount]);
 
-  // Handle retry button click
   const handleRetry = () => {
     setRetryCount(0);
     setError(null);
@@ -72,15 +67,12 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
   };
 
   useEffect(() => {
-    // Filter and sort repos based on user selections
     let result = [...repos];
     
-    // Apply language filter
     if (selectedLanguage !== 'all') {
       result = result.filter(repo => repo.language === selectedLanguage);
     }
     
-    // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(repo => 
@@ -89,7 +81,6 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
       );
     }
     
-    // Apply sorting
     switch (sortBy) {
       case 'stars':
         result.sort((a, b) => b.stargazers_count - a.stargazers_count);
@@ -106,10 +97,8 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
     setFilteredRepos(result);
   }, [repos, selectedLanguage, searchQuery, sortBy]);
 
-  // Get unique languages for filter
   const languages = ['all', ...Array.from(new Set(repos.map(repo => repo.language).filter(Boolean)))];
 
-  // Let's add a fallback component for empty/error state
   if (error) {
     return (
       <section className="space-y-6 bg-background text-foreground" id={id} ref={githubRef}>
@@ -163,6 +152,25 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
       </section>
     );
   }
+
+  const FolderIcon = () => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="text-amber-400"
+    >
+      <path
+        d="M3 8.2V17C3 19.2091 4.79086 21 7 21H17C19.2091 21 21 19.2091 21 17V8M3 8.2V7C3 4.79086 4.79086 3 7 3H9.5C10.0523 3 10.5 3.44772 10.5 4V5C10.5 5.55228 10.9477 6 11.5 6H17C19.2091 6 21 7.79086 21 10V8M3 8.2C3 7.53726 3.53726 7 4.2 7H19.8C20.4627 7 21 7.53726 21 8.2"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="currentColor"
+        fillOpacity="0.4"
+      />
+    </svg>
+  );
 
   return (
     <section className="space-y-6 bg-background text-foreground" id={id} ref={githubRef}>
@@ -266,17 +274,18 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
                   >
                     <div className="h-full border border-border/60 rounded-md p-5 hover:shadow-sm transition-shadow">
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="text-xl">📁</div>
+                        <FolderIcon />
                         <h3 className="font-medium truncate">{repo.name}</h3>
-                        {repo.language && (
-                          <span className="ml-auto px-3 py-0.5 text-xs bg-muted rounded-full">
-                            {repo.language}
-                          </span>
-                        )}
+                        
+                        <span className="ml-auto px-3 py-0.5 text-xs bg-muted rounded-full">
+                          {repo.language || "Unspecified"}
+                        </span>
                       </div>
+                      
                       <p className="text-sm text-muted-foreground mb-4 line-clamp-2 h-10">
                         {repo.description || "No description available"}
                       </p>
+                      
                       <div className="flex justify-between text-xs text-muted-foreground mt-auto">
                         <div className="flex space-x-4">
                           <span className="flex items-center gap-1">
@@ -286,6 +295,7 @@ const GitHubProjects = ({ id }: GitHubProjectsProps) => {
                             <GitFork className="h-4 w-4" /> {repo.forks_count}
                           </span>
                         </div>
+                        
                         <a 
                           href={repo.html_url} 
                           target="_blank" 
