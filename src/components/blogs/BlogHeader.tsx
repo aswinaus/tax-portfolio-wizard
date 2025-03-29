@@ -260,7 +260,7 @@ const BlogHeader = () => {
       toast.success("LLM Evals blog post created successfully!");
       navigate(`/portfolio/blogs/${newBlog.id}`);
     } else if (template === 'tax-agent-neo4j') {
-      // Create the Tax Agent Neo4j GraphDB blog post
+      // Create the Tax Agent Neo4j blog post
       const taxAgentContent = `
 <h2>Building a Tax Agent with Neo4j Graph Database Integration</h2>
 <p>A comprehensive guide to creating an intelligent Tax Agent that leverages Neo4j graph database
@@ -491,11 +491,11 @@ prompt templates with domain-specific knowledge.</p>
 `;
 
       const newBlog = createBlogPost({
-        title: "Building a Tax Agent with Neo4J GraphDB Integration",
-        excerpt: "A comprehensive guide to creating an intelligent Tax Agent that leverages Neo4J GraphDB for answering tax-related queries with code examples for implementation.",
+        title: "Building a Tax Agent with Neo4j Graph Database Integration",
+        excerpt: "A comprehensive guide to creating an intelligent Tax Agent that leverages Neo4j graph database for answering tax-related queries with code examples for implementation.",
         content: taxAgentContent,
         author: "Aswin Bhaskaran",
-        tags: ["Neo4J", "GraphDB", "Tax", "LangChain", "OpenAI"],
+        tags: ["Neo4j", "Graph Database", "Tax", "LangChain", "OpenAI"],
         image: "https://images.unsplash.com/photo-1616077168087-712f9c233d07?q=80&w=1280",
         category: "technology"
       });
@@ -504,7 +504,7 @@ prompt templates with domain-specific knowledge.</p>
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
       
       // Navigate to the newly created blog post
-      toast.success("Tax Agent Neo4J GraphDB blog post created successfully!");
+      toast.success("Tax Agent Neo4j blog post created successfully!");
       navigate(`/portfolio/blogs/${newBlog.id}`);
     }
   };
@@ -522,7 +522,7 @@ prompt templates with domain-specific knowledge.</p>
           <Badge variant="outline" className="mb-2">Blog</Badge>
           <h1 className="text-3xl font-display font-bold">My Blog Posts</h1>
           <p className="text-muted-foreground mt-1">
-            Thoughts, insights, and expertise on technology and business
+            Thoughts, insights, and expertise from abtechnet.com
           </p>
         </div>
         <div className="flex gap-2">

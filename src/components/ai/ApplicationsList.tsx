@@ -1,4 +1,4 @@
-import React from 'react'; // Add explicit React import
+
 import { useState } from 'react';
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 

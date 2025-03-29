@@ -1,5 +1,4 @@
 
-import * as React from 'react'; // Use namespace import for React
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { MainSidebar } from '@/components/sidebar/MainSidebar';
@@ -34,11 +33,11 @@ const MainLayout = () => {
   }, [location.pathname, isMobile]);
 
   return (
-    <div className="flex min-h-screen w-full bg-white text-black overflow-hidden">
+    <div className="flex min-h-screen w-full bg-background overflow-hidden">
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-20 flex flex-col w-64 transition-transform duration-300 ease-in-out bg-white border-r border-gray-200",
+          "fixed inset-y-0 left-0 z-20 flex flex-col w-64 transition-transform duration-300 ease-in-out bg-sidebar border-r border-border",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full",
           isMobile ? "shadow-xl" : ""
         )}
@@ -57,15 +56,15 @@ const MainLayout = () => {
       {/* Main Content */}
       <div 
         className={cn(
-          "flex-1 flex flex-col transition-all duration-300 ease-in-out bg-white text-black",
+          "flex-1 flex flex-col transition-all duration-300 ease-in-out",
           isSidebarOpen && !isMobile ? "ml-64" : "ml-0"
         )}
       >
         {/* Top Navigation */}
-        <header className="sticky top-0 z-10 w-full h-16 border-b border-gray-200 bg-white/80 backdrop-blur-md flex items-center px-4">
+        <header className="sticky top-0 z-10 w-full h-16 border-b border-border bg-background/80 backdrop-blur-md flex items-center px-4">
           <button
             onClick={() => setSidebarOpen(!isSidebarOpen)}
-            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-md hover:bg-secondary transition-colors"
             aria-label="Toggle sidebar"
           >
             {isSidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
@@ -80,7 +79,7 @@ const MainLayout = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 p-6 md:p-8 max-w-full overflow-auto bg-white text-black text-left"
+            className="flex-1 p-6 md:p-8 max-w-full overflow-auto"
           >
             <Outlet />
           </motion.main>

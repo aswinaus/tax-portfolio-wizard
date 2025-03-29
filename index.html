@@ -4,155 +4,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta name="text-size-adjust" content="100%">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>Aswin Bhaskaran's Portfolio & Business Tools</title>
     <meta name="description" content="Portfolio, Form 990 Filing, and Transfer Pricing Tools" />
     <meta name="author" content="Aswin Bhaskaran" />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap">
-    
-    <!-- Vital meta tags for SPA routing -->
+    <!-- Add base path for SPA routing -->
     <base href="/" />
-    <meta name="fragment" content="!">
-    
-    <!-- Preload the app JavaScript -->
-    <link rel="preload" as="script" href="/src/main.tsx" />
-    
-    <!-- Setup React environment before any scripts load -->
-    <script>
-      // Create process.env for React
-      window.process = { 
-        env: { 
-          NODE_ENV: 'production',
-          REACT_APP_VERSION: '1.0.0',
-          PUBLIC_URL: window.location.origin
-        } 
-      };
-      
-      // CRITICAL: Create a complete React polyfill immediately
-      // This ensures forwardRef exists before any component tries to use it
-      window.React = window.React || {};
-      
-      // Essential React methods that must be defined early
-      // Using a complete and correct implementation of forwardRef that will satisfy runtime checks
-      window.React.forwardRef = function(render) { 
-        function Component(props, ref) { 
-          return render(props, ref); 
-        }
-        Component.displayName = render && render.displayName || render && render.name || "";
-        // Add required property for exotic component
-        Component.$$typeof = Symbol.for('react.forward_ref'); 
-        return Component;
-      };
-      
-      // Verify forwardRef is initialized
-      if (!window.React.forwardRef) {
-        console.error("Critical: React.forwardRef failed to initialize");
-        
-        // Last resort emergency fallback
-        window.React.forwardRef = function(render) {
-          return function ForwardRef(props) {
-            return render(props, null);
-          };
-        };
-      }
-      
-      // Add all other core React methods
-      window.React.createElement = function() { return null; };
-      window.React.Fragment = Symbol('Fragment');
-      window.React.createContext = function() { return { Provider: function() {}, Consumer: function() {} }; };
-      window.React.useContext = function() { return {}; };
-      window.React.useState = function(initial) { return [initial, function() {}]; };
-      window.React.useEffect = function() {};
-      window.React.useRef = function(initial) { return { current: initial }; };
-      window.React.memo = function(component) { return component; };
-      window.React.lazy = function(loader) { return { $$typeof: Symbol.for('react.lazy'), _payload: { _status: -1, _result: loader }, _init: function() {} }; };
-      window.React.Suspense = function() { return null; };
-      
-      // Create essential browser polyfills
-      window.requestIdleCallback = window.requestIdleCallback || function(cb) {
-        return setTimeout(function() {
-          var start = Date.now();
-          cb({
-            didTimeout: false,
-            timeRemaining: function() {
-              return Math.max(0, 50 - (Date.now() - start));
-            }
-          });
-        }, 1);
-      };
-      window.cancelIdleCallback = window.cancelIdleCallback || function(id) {
-        clearTimeout(id);
-      };
-      
-      // Initialize app flag
-      window.__APP_INITIALIZED__ = false;
-      
-      // Disable Lovable badge
-      window.LOVABLE_CONFIG = {
-        showBadge: false
-      };
-      
-      // Log that initialization has completed
-      console.log("Early React initialization complete, forwardRef available:", !!window.React.forwardRef);
-    </script>
   </head>
 
   <body>
-    <div id="root">
-      <!-- Fallback content while app loads -->
-      <div style="display: flex; height: 100vh; align-items: center; justify-content: center; flex-direction: column; font-family: Inter, sans-serif;">
-        <div style="width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-        <p style="margin-top: 20px; font-size: 16px; color: #333;">Loading Aswin's Portfolio...</p>
-        <noscript>
-          <p style="color: #e53e3e; margin-top: 16px;">JavaScript is required to run this application.</p>
-        </noscript>
-      </div>
-      <style>
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      </style>
-    </div>
-
-    <!-- Script for GPT Engineer functionality -->
+    <div id="root"></div>
+    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    
-    <!-- Main application script -->
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Fallback error handler -->
-    <script>
-      window.addEventListener('error', function(event) {
-        console.error('Global error:', event.error);
-        if (document.getElementById('root').children.length <= 1) {
-          document.getElementById('root').innerHTML = `
-            <div style="padding: 20px; text-align: center; font-family: Inter, sans-serif;">
-              <h1 style="color: #e53e3e; margin-bottom: 16px;">Application Error</h1>
-              <p style="margin-bottom: 16px;">Sorry, there was a problem loading the application.</p>
-              <div style="margin-bottom: 20px">
-                <button onclick="window.location.href='/portfolio/blogs'" style="background: #3182ce; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 8px;">
-                  Go to Blogs
-                </button>
-                <button onclick="window.location.reload()" style="background: #718096; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
-                  Refresh Page
-                </button>
-              </div>
-              <p style="font-size: 12px; color: #666;">If problems persist, please try clearing your browser cache.</p>
-            </div>
-          `;
-        }
-      });
-      
-      // Safety timeout - if app doesn't load within 12 seconds, force redirect to blogs
-      setTimeout(function() {
-        if (!window.__APP_INITIALIZED__ && !window.location.pathname.includes('/portfolio/blogs')) {
-          console.log('App initialization timeout, redirecting to blogs');
-          window.location.href = '/portfolio/blogs';
-        }
-      }, 12000); // Increased from 8000ms to 12000ms to give more time
-    </script>
   </body>
 </html>

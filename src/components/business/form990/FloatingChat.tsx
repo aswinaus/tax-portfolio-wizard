@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import TaxAgentChat from '@/components/business/TaxAgentChat';
+import LyzrAgentChat from '@/components/business/LyzrAgentChat';
 
 const FloatingChat = () => {
   const [chatOpen, setChatOpen] = useState(false);
@@ -41,7 +41,7 @@ const FloatingChat = () => {
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
           >
-            <TaxAgentChat useDirectConnection={true} />
+            <LyzrAgentChat />
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,6 +1,6 @@
 
 import { Info, Bot } from 'lucide-react';
-import TaxAgentChat from '@/components/business/TaxAgentChat';
+import LyzrAgentChat from '@/components/business/LyzrAgentChat';
 import { Card } from '@/components/ui/card';
 
 const ChatAssistant = () => {
@@ -21,7 +21,7 @@ const ChatAssistant = () => {
         </div>
       </div>
       
-      <TaxAgentChat useDirectConnection={true} />
+      <LyzrAgentChat />
       
       <Card className="p-4 bg-muted/50 border-dashed">
         <div className="flex items-start gap-3">

@@ -1,6 +1,0 @@
-
-# Redirects for SPA routing
-/*    /index.html   200
-
-# Specific portfolio/blog redirects
-/portfolio/blogs/*    /index.html   200

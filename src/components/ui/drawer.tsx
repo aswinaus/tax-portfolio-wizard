@@ -1,21 +1,7 @@
-
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
-
-// Create a fallback function for forwardRef to ensure the component works
-const forwardRefFallback = React.forwardRef || function(render) {
-  console.error("React.forwardRef is not available in drawer.tsx, using fallback");
-  // Create a named function to allow displayName to work properly
-  function FallbackComponent(props) {
-    return render(props, null);
-  }
-  
-  // Ensure displayName can be set on the component
-  FallbackComponent.displayName = '';
-  return FallbackComponent;
-};
 
 const Drawer = ({
   shouldScaleBackground = true,
@@ -34,7 +20,7 @@ const DrawerPortal = DrawerPrimitive.Portal
 
 const DrawerClose = DrawerPrimitive.Close
 
-const DrawerOverlay = forwardRefFallback<
+const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
@@ -46,7 +32,7 @@ const DrawerOverlay = forwardRefFallback<
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
-const DrawerContent = forwardRefFallback<
+const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
@@ -89,7 +75,7 @@ const DrawerFooter = ({
 )
 DrawerFooter.displayName = "DrawerFooter"
 
-const DrawerTitle = forwardRefFallback<
+const DrawerTitle = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Title>
 >(({ className, ...props }, ref) => (
@@ -104,7 +90,7 @@ const DrawerTitle = forwardRefFallback<
 ))
 DrawerTitle.displayName = DrawerPrimitive.Title.displayName
 
-const DrawerDescription = forwardRefFallback<
+const DrawerDescription = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Description>
 >(({ className, ...props }, ref) => (

@@ -67,7 +67,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import DocumentUpload from './DocumentUpload';
 import LyzrDocumentAgentChat from './LyzrDocumentAgentChat';
-import TaxAgentChat from '@/components/business/TaxAgentChat';
 import { GitHubDocument, fetchDocumentsFromGitHub } from '@/services/githubService';
 
 interface Document {
@@ -1144,19 +1143,8 @@ const DocumentRepository = () => {
                 </Card>
               </div>
               
-              <div className="space-y-4">
-                <Tabs defaultValue="document" className="w-full">
-                  <TabsList className="w-full grid grid-cols-2">
-                    <TabsTrigger value="document">Document Agent</TabsTrigger>
-                    <TabsTrigger value="tax">Tax Agent</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="document" className="mt-4">
-                    <LyzrDocumentAgentChat />
-                  </TabsContent>
-                  <TabsContent value="tax" className="mt-4">
-                    <TaxAgentChat useDirectConnection={false} />
-                  </TabsContent>
-                </Tabs>
+              <div>
+                <LyzrDocumentAgentChat />
               </div>
             </div>
           </div>

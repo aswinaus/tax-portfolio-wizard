@@ -1,22 +1,8 @@
-
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-
-// Create a fallback function for forwardRef to ensure the component works
-const forwardRefFallback = React.forwardRef || function(render) {
-  console.error("React.forwardRef is not available in dialog.tsx, using fallback");
-  // Create a named function to allow displayName to work properly
-  function FallbackComponent(props) {
-    return render(props, null);
-  }
-  
-  // Ensure displayName can be set on the component
-  FallbackComponent.displayName = '';
-  return FallbackComponent;
-};
 
 const Dialog = DialogPrimitive.Root
 
@@ -26,7 +12,7 @@ const DialogPortal = DialogPrimitive.Portal
 
 const DialogClose = DialogPrimitive.Close
 
-const DialogOverlay = forwardRefFallback<
+const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
@@ -41,7 +27,7 @@ const DialogOverlay = forwardRefFallback<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
-const DialogContent = forwardRefFallback<
+const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
@@ -93,7 +79,7 @@ const DialogFooter = ({
 )
 DialogFooter.displayName = "DialogFooter"
 
-const DialogTitle = forwardRefFallback<
+const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
@@ -108,7 +94,7 @@ const DialogTitle = forwardRefFallback<
 ))
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
-const DialogDescription = forwardRefFallback<
+const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
