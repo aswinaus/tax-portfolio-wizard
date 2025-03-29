@@ -1,7 +1,7 @@
 
+import React from 'react';
+import { CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { BadgeCheck, BookOpen, Award } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Certifications data
 const certifications = [
@@ -58,42 +58,42 @@ const Certifications = () => {
     <section className="space-y-4">
       <h2 className="text-2xl font-display font-semibold text-teal-600">Professional Certifications</h2>
       
-      <div className="space-y-4">
+      <div className="space-y-6 mt-5">
         {certifications.map((certification, index) => (
           <motion.div
             key={certification.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
+            className="border rounded-lg p-6 hover:shadow-md transition-shadow"
           >
-            <Card className="overflow-hidden border-border/60">
-              <CardHeader className="pb-3 flex flex-row items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
-                  <BadgeCheck className="h-6 w-6 text-teal-600" />
+            <div className="flex items-start gap-3">
+              <div className="mt-1 bg-teal-50 rounded-full p-2 flex-shrink-0">
+                <CheckCircle className="h-5 w-5 text-teal-600" />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-teal-700">{certification.title}</h3>
+                <div className="flex items-center text-gray-500 text-sm gap-2">
+                  <span>{certification.organization}</span>
+                  <span>•</span>
+                  <span>{certification.year}</span>
                 </div>
-                <div>
-                  <CardTitle className="text-xl text-teal-700">{certification.title}</CardTitle>
-                  <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-1">
-                    <span>{certification.organization}</span>
-                    <span className="hidden sm:inline">•</span>
-                    <span>{certification.year}</span>
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-teal-600">{certification.description}</p>
+                
+                <p className="text-gray-600 mt-2">{certification.description}</p>
+                
                 {certification.credentialUrl && (
                   <a 
                     href={certification.credentialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-3 inline-block text-sm text-teal-600 hover:text-teal-800 underline underline-offset-4"
+                    className="inline-flex items-center text-teal-600 hover:text-teal-800 mt-2 text-sm font-medium"
                   >
                     View Credential →
                   </a>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
         ))}
       </div>
