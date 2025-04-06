@@ -1,6 +1,4 @@
-
 import { format } from 'date-fns';
-import readingTime from 'reading-time';
 import { v4 as uuidv4 } from 'uuid';
 
 // Define the BlogPost type
@@ -610,8 +608,12 @@ export const createBlogPost = (blogData: Omit<BlogPost, 'id' | 'date' | 'readTim
  * Calculate read time for a blog post
  */
 const calculateReadTime = (content: string) => {
-  const stats = readingTime(content);
-  return `${Math.ceil(stats.minutes)} min read`;
+  // Simple implementation that doesn't rely on the reading-time package
+  // Average reading speed is about 200-250 words per minute
+  const wordsPerMinute = 225;
+  const wordCount = content.trim().split(/\s+/).length;
+  const readTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
+  return `${readTimeMinutes} min read`;
 };
 
 /**
