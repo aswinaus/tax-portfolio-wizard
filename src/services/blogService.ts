@@ -558,6 +558,33 @@ export const getAllBlogPosts = () => {
 };
 
 /**
+ * Fetch all blogs - this function is needed by the Blogs component
+ */
+export const fetchBlogs = async (): Promise<BlogPost[]> => {
+  // In a real app, this would be an API call
+  // For now, we'll just return the local data
+  return getAllBlogPosts();
+};
+
+/**
+ * Fetch technology blogs - this function is needed by the Blogs component
+ */
+export const fetchTechnologyBlogs = async (): Promise<BlogPost[]> => {
+  // In a real app, this would be an API call filtering by category
+  // For now, we'll filter the local data
+  return getAllBlogPosts().filter(blog => blog.category === 'technology');
+};
+
+/**
+ * Fetch a blog by ID - this function is needed by the BlogPost component
+ */
+export const fetchBlogById = async (id: string): Promise<BlogPost | undefined> => {
+  // In a real app, this would be an API call
+  // For now, we'll just return the local data
+  return getBlogPostById(id);
+};
+
+/**
  * Get a specific blog post by ID
  */
 export const getBlogPostById = (id: string) => {
